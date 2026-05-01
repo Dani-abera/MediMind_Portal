@@ -8,6 +8,18 @@ import '../../features/auth/presentation/pages/forgot_password_page.dart';
 import '../../features/auth/presentation/pages/reset_password_page.dart';
 import '../../features/doctor/doctor_workspace.dart';
 import '../../features/doctor/presentation/pages/doctor_dashboard_page.dart';
+import '../../features/doctor/presentation/pages/queue_page.dart';
+import '../../features/doctor/presentation/pages/appointments_list_page.dart';
+import '../../features/doctor/presentation/pages/appointments_calendar_page.dart';
+import '../../features/doctor/presentation/pages/patients_list_page.dart';
+import '../../features/doctor/presentation/pages/patient_detail_page.dart';
+import '../../features/doctor/presentation/pages/consultations_page.dart';
+import '../../features/doctor/presentation/pages/video_call_page.dart';
+import '../../features/doctor/presentation/pages/prescriptions_list_page.dart';
+import '../../features/doctor/presentation/pages/create_prescription_page.dart';
+import '../../features/doctor/presentation/pages/prescription_templates_page.dart';
+import '../../features/doctor/presentation/pages/schedule_page.dart';
+import '../../features/doctor/presentation/pages/doctor_profile_page.dart';
 import '../../features/admin/admin_workspace.dart';
 import '../../features/admin/presentation/pages/admin_dashboard_page.dart';
 import '../../features/super_admin/super_admin_workspace.dart';
@@ -33,6 +45,13 @@ class AppRouter {
         builder: (_, state) => ResetPasswordPage(token: state.uri.queryParameters['token']),
       ),
 
+      // ── Video call (full-screen, no shell) ──────────────────────────────
+      GoRoute(
+        path: '/doctor/video-call/:id',
+        builder: (_, state) =>
+            VideoCallPage(consultationId: state.pathParameters['id']!),
+      ),
+
       // ── Doctor workspace ────────────────────────────────────────────────
       StatefulShellRoute.indexedStack(
         builder: (_, __, shell) => DoctorWorkspace(navigationShell: shell),
@@ -48,7 +67,7 @@ class AppRouter {
           StatefulShellBranch(routes: [
             GoRoute(
               path: RouteNames.doctorQueue,
-              builder: (_, __) => const ShellPlaceholderPage(title: "Today's Queue"),
+              builder: (_, __) => const QueuePage(),
             ),
           ]),
           // Appointments
@@ -59,54 +78,61 @@ class AppRouter {
             ),
             GoRoute(
               path: RouteNames.doctorAppointmentsCalendar,
-              builder: (_, __) => const ShellPlaceholderPage(title: 'Appointments — Calendar'),
+              builder: (_, __) => const AppointmentsCalendarPage(),
             ),
             GoRoute(
               path: RouteNames.doctorAppointmentsList,
-              builder: (_, __) => const ShellPlaceholderPage(title: 'Appointments — List'),
+              builder: (_, __) => const AppointmentsListPage(),
             ),
           ]),
           // Patients
           StatefulShellBranch(routes: [
             GoRoute(
               path: RouteNames.doctorPatients,
-              builder: (_, __) => const ShellPlaceholderPage(title: 'My Patients'),
+              builder: (_, __) => const PatientsListPage(),
+              routes: [
+                GoRoute(
+                  path: ':id',
+                  builder: (_, state) =>
+                      PatientDetailPage(patientId: state.pathParameters['id']!),
+                ),
+              ],
             ),
           ]),
           // Consultations
           StatefulShellBranch(routes: [
             GoRoute(
               path: RouteNames.doctorConsultations,
-              builder: (_, __) => const ShellPlaceholderPage(title: 'Consultations'),
+              builder: (_, __) => const ConsultationsPage(),
             ),
           ]),
           // Prescriptions
           StatefulShellBranch(routes: [
             GoRoute(
               path: RouteNames.doctorPrescriptions,
-              builder: (_, __) => const ShellPlaceholderPage(title: 'Prescriptions'),
+              builder: (_, __) => const PrescriptionsListPage(),
             ),
             GoRoute(
               path: RouteNames.doctorPrescriptionsTemplates,
-              builder: (_, __) => const ShellPlaceholderPage(title: 'Prescription Templates'),
+              builder: (_, __) => const PrescriptionTemplatesPage(),
             ),
             GoRoute(
               path: RouteNames.doctorPrescriptionsNew,
-              builder: (_, __) => const ShellPlaceholderPage(title: 'Create Prescription'),
+              builder: (_, __) => const CreatePrescriptionPage(),
             ),
           ]),
           // Schedule
           StatefulShellBranch(routes: [
             GoRoute(
               path: RouteNames.doctorSchedule,
-              builder: (_, __) => const ShellPlaceholderPage(title: 'My Schedule'),
+              builder: (_, __) => const SchedulePage(),
             ),
           ]),
           // Profile
           StatefulShellBranch(routes: [
             GoRoute(
               path: RouteNames.doctorProfile,
-              builder: (_, __) => const ShellPlaceholderPage(title: 'Profile'),
+              builder: (_, __) => const DoctorProfilePage(),
             ),
           ]),
           // Settings
