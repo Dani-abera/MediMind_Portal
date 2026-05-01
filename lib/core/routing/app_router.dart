@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../network/user_context.dart';
-import '../widgets/shell/workspace_shell.dart';
+import '../widgets/shell/placeholder_page.dart';
 import '../../features/auth/presentation/pages/splash_page.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/forgot_password_page.dart';
 import '../../features/auth/presentation/pages/reset_password_page.dart';
+import '../../features/doctor/doctor_workspace.dart';
 import '../../features/doctor/presentation/pages/doctor_dashboard_page.dart';
+import '../../features/admin/admin_workspace.dart';
 import '../../features/admin/presentation/pages/admin_dashboard_page.dart';
+import '../../features/super_admin/super_admin_workspace.dart';
 import '../../features/super_admin/presentation/pages/super_admin_dashboard_page.dart';
 import 'route_names.dart';
 
@@ -21,94 +24,127 @@ class AppRouter {
     debugLogDiagnostics: true,
     redirect: _redirect,
     routes: [
-      GoRoute(
-        path: RouteNames.splash,
-        builder: (_, __) => const SplashPage(),
-      ),
-      GoRoute(
-        path: RouteNames.login,
-        builder: (_, __) => const LoginPage(),
-      ),
-      GoRoute(
-        path: RouteNames.forgotPassword,
-        builder: (_, __) => const ForgotPasswordPage(),
-      ),
+      // ── Public ─────────────────────────────────────────────────────────
+      GoRoute(path: RouteNames.splash, builder: (_, __) => const SplashPage()),
+      GoRoute(path: RouteNames.login, builder: (_, __) => const LoginPage()),
+      GoRoute(path: RouteNames.forgotPassword, builder: (_, __) => const ForgotPasswordPage()),
       GoRoute(
         path: RouteNames.resetPassword,
-        builder: (_, state) => ResetPasswordPage(
-          token: state.uri.queryParameters['token'],
-        ),
+        builder: (_, state) => ResetPasswordPage(token: state.uri.queryParameters['token']),
       ),
-      // Doctor shell
+
+      // ── Doctor workspace ────────────────────────────────────────────────
       StatefulShellRoute.indexedStack(
-        builder: (ctx, state, shell) => WorkspaceShell(
-          branding: WorkspaceBranding.doctor,
-          navigationShell: shell,
-        ),
+        builder: (_, __, shell) => DoctorWorkspace(navigationShell: shell),
         branches: [
+          // Dashboard
           StatefulShellBranch(routes: [
             GoRoute(
               path: RouteNames.doctorDashboard,
               builder: (_, __) => const DoctorDashboardPage(),
             ),
           ]),
-          StatefulShellBranch(routes: [
-            GoRoute(
-              path: RouteNames.doctorAppointments,
-              redirect: (_, __) => RouteNames.doctorAppointmentsPending,
-            ),
-            GoRoute(
-              path: RouteNames.doctorAppointmentsPending,
-              builder: (_, __) => const _PlaceholderPage('Appointments / Pending'),
-            ),
-            GoRoute(
-              path: RouteNames.doctorAppointmentsCalendar,
-              builder: (_, __) => const _PlaceholderPage('Appointments / Calendar'),
-            ),
-            GoRoute(
-              path: RouteNames.doctorAppointmentsAll,
-              builder: (_, __) => const _PlaceholderPage('Appointments / All'),
-            ),
-          ]),
-          StatefulShellBranch(routes: [
-            GoRoute(
-              path: RouteNames.doctorPatients,
-              builder: (_, __) => const _PlaceholderPage('Patients'),
-            ),
-          ]),
+          // Queue
           StatefulShellBranch(routes: [
             GoRoute(
               path: RouteNames.doctorQueue,
-              builder: (_, __) => const _PlaceholderPage('Queue'),
+              builder: (_, __) => const ShellPlaceholderPage(title: "Today's Queue"),
             ),
           ]),
+          // Appointments
+          StatefulShellBranch(routes: [
+            GoRoute(
+              path: RouteNames.doctorAppointments,
+              redirect: (_, __) => RouteNames.doctorAppointmentsCalendar,
+            ),
+            GoRoute(
+              path: RouteNames.doctorAppointmentsCalendar,
+              builder: (_, __) => const ShellPlaceholderPage(title: 'Appointments — Calendar'),
+            ),
+            GoRoute(
+              path: RouteNames.doctorAppointmentsList,
+              builder: (_, __) => const ShellPlaceholderPage(title: 'Appointments — List'),
+            ),
+          ]),
+          // Patients
+          StatefulShellBranch(routes: [
+            GoRoute(
+              path: RouteNames.doctorPatients,
+              builder: (_, __) => const ShellPlaceholderPage(title: 'My Patients'),
+            ),
+          ]),
+          // Consultations
+          StatefulShellBranch(routes: [
+            GoRoute(
+              path: RouteNames.doctorConsultations,
+              builder: (_, __) => const ShellPlaceholderPage(title: 'Consultations'),
+            ),
+          ]),
+          // Prescriptions
+          StatefulShellBranch(routes: [
+            GoRoute(
+              path: RouteNames.doctorPrescriptions,
+              builder: (_, __) => const ShellPlaceholderPage(title: 'Prescriptions'),
+            ),
+            GoRoute(
+              path: RouteNames.doctorPrescriptionsTemplates,
+              builder: (_, __) => const ShellPlaceholderPage(title: 'Prescription Templates'),
+            ),
+            GoRoute(
+              path: RouteNames.doctorPrescriptionsNew,
+              builder: (_, __) => const ShellPlaceholderPage(title: 'Create Prescription'),
+            ),
+          ]),
+          // Schedule
+          StatefulShellBranch(routes: [
+            GoRoute(
+              path: RouteNames.doctorSchedule,
+              builder: (_, __) => const ShellPlaceholderPage(title: 'My Schedule'),
+            ),
+          ]),
+          // Profile
+          StatefulShellBranch(routes: [
+            GoRoute(
+              path: RouteNames.doctorProfile,
+              builder: (_, __) => const ShellPlaceholderPage(title: 'Profile'),
+            ),
+          ]),
+          // Settings
           StatefulShellBranch(routes: [
             GoRoute(
               path: RouteNames.doctorSettings,
-              builder: (_, __) => const _PlaceholderPage('Settings'),
+              builder: (_, __) => const ShellPlaceholderPage(title: 'Settings'),
+            ),
+          ]),
+          // Notifications
+          StatefulShellBranch(routes: [
+            GoRoute(
+              path: RouteNames.doctorNotifications,
+              builder: (_, __) => const ShellPlaceholderPage(title: 'Notifications'),
             ),
           ]),
         ],
       ),
-      // Admin shell
+
+      // ── Admin workspace ──────────────────────────────────────────────────
       StatefulShellRoute.indexedStack(
-        builder: (ctx, state, shell) => WorkspaceShell(
-          branding: WorkspaceBranding.admin,
-          navigationShell: shell,
-        ),
+        builder: (_, __, shell) => AdminWorkspace(navigationShell: shell),
         branches: [
+          // Dashboard
           StatefulShellBranch(routes: [
             GoRoute(
               path: RouteNames.adminDashboard,
               builder: (_, __) => const AdminDashboardPage(),
             ),
           ]),
+          // Queue
           StatefulShellBranch(routes: [
             GoRoute(
-              path: RouteNames.adminDoctors,
-              builder: (_, __) => const _PlaceholderPage('Doctors'),
+              path: RouteNames.adminQueue,
+              builder: (_, __) => const ShellPlaceholderPage(title: 'Live Queue'),
             ),
           ]),
+          // Appointments
           StatefulShellBranch(routes: [
             GoRoute(
               path: RouteNames.adminAppointments,
@@ -116,80 +152,218 @@ class AppRouter {
             ),
             GoRoute(
               path: RouteNames.adminAppointmentsPending,
-              builder: (_, __) => const _PlaceholderPage('Appointments / Pending'),
+              builder: (_, __) => const ShellPlaceholderPage(title: 'Pending Appointments'),
             ),
             GoRoute(
-              path: RouteNames.adminAppointmentsAll,
-              builder: (_, __) => const _PlaceholderPage('Appointments / All'),
+              path: RouteNames.adminAppointmentsCalendar,
+              builder: (_, __) => const ShellPlaceholderPage(title: 'Appointments — Calendar'),
+            ),
+            GoRoute(
+              path: RouteNames.adminAppointmentsList,
+              builder: (_, __) => const ShellPlaceholderPage(title: 'All Appointments'),
             ),
           ]),
+          // Doctors
           StatefulShellBranch(routes: [
             GoRoute(
-              path: RouteNames.adminQueue,
-              builder: (_, __) => const _PlaceholderPage('Queue'),
+              path: RouteNames.adminDoctors,
+              builder: (_, __) => const ShellPlaceholderPage(title: 'Doctors'),
             ),
           ]),
+          // Patients
           StatefulShellBranch(routes: [
             GoRoute(
               path: RouteNames.adminPatients,
-              builder: (_, __) => const _PlaceholderPage('Patients'),
+              builder: (_, __) => const ShellPlaceholderPage(title: 'Patients'),
             ),
           ]),
+          // Payments
           StatefulShellBranch(routes: [
             GoRoute(
-              path: RouteNames.adminReports,
-              builder: (_, __) => const _PlaceholderPage('Reports'),
+              path: RouteNames.adminPayments,
+              builder: (_, __) => const ShellPlaceholderPage(title: 'Payments'),
             ),
           ]),
+          // Prescriptions
+          StatefulShellBranch(routes: [
+            GoRoute(
+              path: RouteNames.adminPrescriptions,
+              builder: (_, __) => const ShellPlaceholderPage(title: 'Prescriptions'),
+            ),
+          ]),
+          // Analytics
+          StatefulShellBranch(routes: [
+            GoRoute(
+              path: RouteNames.adminAnalytics,
+              redirect: (_, __) => RouteNames.adminAnalyticsDashboard,
+            ),
+            GoRoute(
+              path: RouteNames.adminAnalyticsDashboard,
+              builder: (_, __) => const ShellPlaceholderPage(title: 'Analytics Overview'),
+            ),
+            GoRoute(
+              path: RouteNames.adminAnalyticsRevenue,
+              builder: (_, __) => const ShellPlaceholderPage(title: 'Revenue Analytics'),
+            ),
+            GoRoute(
+              path: RouteNames.adminAnalyticsDoctors,
+              builder: (_, __) => const ShellPlaceholderPage(title: 'Per-Doctor Analytics'),
+            ),
+            GoRoute(
+              path: RouteNames.adminAnalyticsExport,
+              builder: (_, __) => const ShellPlaceholderPage(title: 'Export Analytics'),
+            ),
+          ]),
+          // Staff & Admins
+          StatefulShellBranch(routes: [
+            GoRoute(
+              path: RouteNames.adminAdmins,
+              builder: (_, __) => const ShellPlaceholderPage(title: 'Staff & Admins'),
+            ),
+          ]),
+          // Audit log
+          StatefulShellBranch(routes: [
+            GoRoute(
+              path: RouteNames.adminAuditLog,
+              builder: (_, __) => const ShellPlaceholderPage(title: 'Audit Log'),
+            ),
+          ]),
+          // Settings
           StatefulShellBranch(routes: [
             GoRoute(
               path: RouteNames.adminSettings,
-              builder: (_, __) => const _PlaceholderPage('Settings'),
+              redirect: (_, __) => RouteNames.adminSettingsCenter,
+            ),
+            GoRoute(
+              path: RouteNames.adminSettingsCenter,
+              builder: (_, __) => const ShellPlaceholderPage(title: 'Center Settings — General'),
+            ),
+            GoRoute(
+              path: RouteNames.adminSettingsBranding,
+              builder: (_, __) => const ShellPlaceholderPage(title: 'Center Settings — Branding'),
+            ),
+            GoRoute(
+              path: RouteNames.adminSettingsHours,
+              builder: (_, __) => const ShellPlaceholderPage(title: 'Center Settings — Working Hours'),
+            ),
+            GoRoute(
+              path: RouteNames.adminSettingsBooking,
+              builder: (_, __) => const ShellPlaceholderPage(title: 'Center Settings — Booking Rules'),
+            ),
+          ]),
+          // Profile
+          StatefulShellBranch(routes: [
+            GoRoute(
+              path: RouteNames.adminProfile,
+              builder: (_, __) => const ShellPlaceholderPage(title: 'Profile'),
+            ),
+          ]),
+          // Notifications
+          StatefulShellBranch(routes: [
+            GoRoute(
+              path: RouteNames.adminNotifications,
+              builder: (_, __) => const ShellPlaceholderPage(title: 'Notifications'),
             ),
           ]),
         ],
       ),
-      // SuperAdmin shell
+
+      // ── SuperAdmin workspace ─────────────────────────────────────────────
       StatefulShellRoute.indexedStack(
-        builder: (ctx, state, shell) => WorkspaceShell(
-          branding: WorkspaceBranding.superAdmin,
-          navigationShell: shell,
-        ),
+        builder: (_, __, shell) => SuperAdminWorkspace(navigationShell: shell),
         branches: [
+          // Dashboard
           StatefulShellBranch(routes: [
             GoRoute(
               path: RouteNames.superAdminDashboard,
               builder: (_, __) => const SuperAdminDashboardPage(),
             ),
           ]),
+          // Centers
           StatefulShellBranch(routes: [
             GoRoute(
               path: RouteNames.superAdminCenters,
-              builder: (_, __) => const _PlaceholderPage('Centers'),
+              builder: (_, __) => const ShellPlaceholderPage(title: 'Health Centers'),
+            ),
+            GoRoute(
+              path: RouteNames.superAdminCentersPending,
+              builder: (_, __) => const ShellPlaceholderPage(title: 'Centers — Pending Approval'),
+            ),
+            GoRoute(
+              path: RouteNames.superAdminCentersSuspended,
+              builder: (_, __) => const ShellPlaceholderPage(title: 'Centers — Suspended'),
             ),
           ]),
+          // Doctors
           StatefulShellBranch(routes: [
             GoRoute(
               path: RouteNames.superAdminDoctors,
-              builder: (_, __) => const _PlaceholderPage('Doctors'),
+              builder: (_, __) => const ShellPlaceholderPage(title: 'Doctors'),
+            ),
+            GoRoute(
+              path: RouteNames.superAdminDoctorsPending,
+              builder: (_, __) => const ShellPlaceholderPage(title: 'Doctors — Pending Verification'),
             ),
           ]),
+          // Users
+          StatefulShellBranch(routes: [
+            GoRoute(
+              path: RouteNames.superAdminUsers,
+              builder: (_, __) => const ShellPlaceholderPage(title: 'Users'),
+            ),
+          ]),
+          // Subscriptions
           StatefulShellBranch(routes: [
             GoRoute(
               path: RouteNames.superAdminSubscriptions,
-              builder: (_, __) => const _PlaceholderPage('Subscriptions'),
+              builder: (_, __) => const ShellPlaceholderPage(title: 'Subscriptions'),
             ),
           ]),
+          // Analytics
           StatefulShellBranch(routes: [
             GoRoute(
               path: RouteNames.superAdminAnalytics,
-              builder: (_, __) => const _PlaceholderPage('Analytics'),
+              redirect: (_, __) => RouteNames.superAdminAnalyticsDashboard,
+            ),
+            GoRoute(
+              path: RouteNames.superAdminAnalyticsDashboard,
+              builder: (_, __) => const ShellPlaceholderPage(title: 'Platform Analytics'),
+            ),
+            GoRoute(
+              path: RouteNames.superAdminAnalyticsRevenue,
+              builder: (_, __) => const ShellPlaceholderPage(title: 'Revenue Analytics'),
+            ),
+            GoRoute(
+              path: RouteNames.superAdminAnalyticsGrowth,
+              builder: (_, __) => const ShellPlaceholderPage(title: 'Growth Analytics'),
             ),
           ]),
+          // Audit Log
+          StatefulShellBranch(routes: [
+            GoRoute(
+              path: RouteNames.superAdminAuditLog,
+              builder: (_, __) => const ShellPlaceholderPage(title: 'Audit Log'),
+            ),
+          ]),
+          // Settings
           StatefulShellBranch(routes: [
             GoRoute(
               path: RouteNames.superAdminSettings,
-              builder: (_, __) => const _PlaceholderPage('Settings'),
+              builder: (_, __) => const ShellPlaceholderPage(title: 'Platform Settings'),
+            ),
+          ]),
+          // Profile
+          StatefulShellBranch(routes: [
+            GoRoute(
+              path: RouteNames.superAdminProfile,
+              builder: (_, __) => const ShellPlaceholderPage(title: 'Profile'),
+            ),
+          ]),
+          // Notifications
+          StatefulShellBranch(routes: [
+            GoRoute(
+              path: RouteNames.superAdminNotifications,
+              builder: (_, __) => const ShellPlaceholderPage(title: 'Notifications'),
             ),
           ]),
         ],
@@ -199,7 +373,7 @@ class AppRouter {
 
   String? _redirect(BuildContext context, GoRouterState state) {
     final path = state.matchedLocation;
-    final publicPaths = {
+    const publicPaths = {
       RouteNames.splash,
       RouteNames.login,
       RouteNames.forgotPassword,
@@ -220,17 +394,5 @@ class AppRouter {
         return RouteNames.login;
     }
     return null;
-  }
-}
-
-class _PlaceholderPage extends StatelessWidget {
-  final String title;
-  const _PlaceholderPage(this.title);
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Text(title, style: Theme.of(context).textTheme.headlineMedium),
-    );
   }
 }

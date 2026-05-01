@@ -11,6 +11,7 @@ class SidebarItem {
   final String route;
   final int? badgeCount;
   final List<SidebarItem>? children;
+  final bool isDivider;
 
   const SidebarItem({
     required this.label,
@@ -18,6 +19,7 @@ class SidebarItem {
     required this.route,
     this.badgeCount,
     this.children,
+    this.isDivider = false,
   });
 }
 
@@ -27,6 +29,7 @@ class Sidebar extends StatefulWidget {
   final VoidCallback onToggleCollapse;
   final String workspaceName;
   final Color accentColor;
+  final Color? backgroundTint;
   final String? userName;
   final String? userRole;
   final String? userAvatarUrl;
@@ -38,6 +41,7 @@ class Sidebar extends StatefulWidget {
     required this.onToggleCollapse,
     required this.workspaceName,
     required this.accentColor,
+    this.backgroundTint,
     this.userName,
     this.userRole,
     this.userAvatarUrl,
@@ -47,7 +51,7 @@ class Sidebar extends StatefulWidget {
   State<Sidebar> createState() => _SidebarState();
 }
 
-class _SidebarState extends State<Sidebar> with SingleTickerProviderStateMixin {
+class _SidebarState extends State<Sidebar> {
   final Set<String> _expandedGroups = {};
 
   @override
@@ -57,13 +61,21 @@ class _SidebarState extends State<Sidebar> with SingleTickerProviderStateMixin {
     final width = isCollapsed
         ? AppSpacing.sidebarCollapsedWidth
         : AppSpacing.sidebarWidth;
+    final tint = widget.backgroundTint;
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
       curve: Curves.easeInOut,
       width: width,
       decoration: BoxDecoration(
-        color: colors.surface,
+        gradient: tint != null
+            ? LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [tint.withAlpha(22), colors.surface],
+              )
+            : null,
+        color: tint == null ? colors.surface : null,
         border: Border(right: BorderSide(color: AppColors.neutral200)),
       ),
       child: Column(
@@ -80,7 +92,7 @@ class _SidebarState extends State<Sidebar> with SingleTickerProviderStateMixin {
           ),
           const Divider(height: 1),
           _buildUserCard(colors, isCollapsed),
-          _buildCollapseToggle(colors, isCollapsed),
+          _buildCollapseToggle(isCollapsed),
         ],
       ),
     );
@@ -123,6 +135,13 @@ class _SidebarState extends State<Sidebar> with SingleTickerProviderStateMixin {
   }
 
   Widget _buildItem(BuildContext context, SidebarItem item, bool isCollapsed) {
+    if (item.isDivider) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+        child: Divider(height: 1, color: AppColors.neutral200),
+      );
+    }
+
     final loc = GoRouterState.of(context).matchedLocation;
     final isSelected = loc == item.route ||
         (item.children?.any((c) => c.route == loc) ?? false);
@@ -131,35 +150,31 @@ class _SidebarState extends State<Sidebar> with SingleTickerProviderStateMixin {
 
     if (hasChildren && !isCollapsed) {
       return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildNavTile(
             context,
             item,
             isSelected: isSelected,
             isCollapsed: false,
-            trailing: Icon(
+            trailing: FaIcon(
               isExpanded
                   ? FontAwesomeIcons.chevronDown
                   : FontAwesomeIcons.chevronRight,
               size: 10,
               color: AppColors.neutral400,
             ),
-            onTap: () => setState(() {
-              if (isExpanded) {
-                _expandedGroups.remove(item.route);
-              } else {
-                _expandedGroups.add(item.route);
-              }
-            }),
+            onTap: () => setState(() => isExpanded
+                ? _expandedGroups.remove(item.route)
+                : _expandedGroups.add(item.route)),
           ),
           if (isExpanded)
             Padding(
               padding: const EdgeInsets.only(left: 16),
               child: Column(
                 children: item.children!
-                    .map((child) => _buildNavTile(context, child,
-                        isSelected: loc == child.route,
-                        isCollapsed: false))
+                    .map((c) => _buildNavTile(context, c,
+                        isSelected: loc == c.route, isCollapsed: false))
                     .toList(),
               ),
             ),
@@ -198,9 +213,7 @@ class _SidebarState extends State<Sidebar> with SingleTickerProviderStateMixin {
               vertical: 8,
             ),
             child: isCollapsed
-                ? Center(
-                    child: _itemIcon(item, isSelected),
-                  )
+                ? Center(child: _itemIcon(item, isSelected))
                 : Row(
                     children: [
                       _itemIcon(item, isSelected),
@@ -260,9 +273,9 @@ class _SidebarState extends State<Sidebar> with SingleTickerProviderStateMixin {
           radius: 16,
           backgroundColor: AppColors.primaryLight,
           child: Text(
-            (widget.userName?.isNotEmpty == true
+            widget.userName?.isNotEmpty == true
                 ? widget.userName![0].toUpperCase()
-                : 'U'),
+                : 'U',
             style: AppTypography.caption.copyWith(
               color: AppColors.primary,
               fontWeight: FontWeight.w700,
@@ -324,7 +337,7 @@ class _SidebarState extends State<Sidebar> with SingleTickerProviderStateMixin {
     );
   }
 
-  Widget _buildCollapseToggle(ColorScheme colors, bool isCollapsed) {
+  Widget _buildCollapseToggle(bool isCollapsed) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: IconButton(

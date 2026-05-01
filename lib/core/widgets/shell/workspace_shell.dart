@@ -1,14 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'bloc/shell_bloc.dart';
+import 'bloc/shell_event.dart';
+import 'bloc/shell_state.dart';
+import 'env_badge.dart';
 import 'sidebar.dart';
 import 'top_bar.dart';
-import '../../theme/app_colors.dart';
-import '../../../features/auth/presentation/bloc/auth_bloc.dart';
-import '../../../features/auth/presentation/bloc/auth_event.dart';
+import '../../di/service_locator.dart';
 import '../../routing/route_names.dart';
 import '../../routing/sidebar_configs.dart';
-import '../../di/service_locator.dart';
+import '../../theme/app_colors.dart';
+import '../../theme/theme_cubit.dart';
+import '../../../features/auth/presentation/bloc/auth_bloc.dart';
+import '../../../features/auth/presentation/bloc/auth_event.dart';
+import '../../../shared/blocs/notification_bloc.dart';
+
+export 'bloc/shell_event.dart' show AppConnectionStatus;
 
 enum WorkspaceBranding { doctor, admin, superAdmin }
 
@@ -27,128 +36,173 @@ class WorkspaceShell extends StatefulWidget {
 }
 
 class _WorkspaceShellState extends State<WorkspaceShell> {
-  bool _sidebarCollapsed = false;
-  bool _isDarkMode = false;
+  late final ShellBloc _shellBloc;
+  late final NotificationBloc _notifBloc;
+
+  @override
+  void initState() {
+    super.initState();
+    _shellBloc = sl<ShellBloc>();
+    _notifBloc = sl<NotificationBloc>()
+      ..add(const NotificationStarted());
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final route = GoRouterState.of(context).matchedLocation;
+    if (route != _shellBloc.state.currentRoute) {
+      _shellBloc.add(RouteChanged(route));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final config = _brandingConfig;
+    final cfg = _config;
 
-    return KeyboardListener(
-      focusNode: FocusNode(),
-      onKeyEvent: _handleKeyEvent,
-      autofocus: true,
-      child: Row(
-        children: [
-          Sidebar(
-            items: config.items,
-            collapsed: _sidebarCollapsed,
-            onToggleCollapse: () =>
-                setState(() => _sidebarCollapsed = !_sidebarCollapsed),
-            workspaceName: config.name,
-            accentColor: config.color,
-          ),
-          Expanded(
-            child: Column(
-              children: [
-                TopBar(
-                  breadcrumbs: _buildBreadcrumbs(context),
-                  isDarkMode: _isDarkMode,
-                  onToggleTheme: () =>
-                      setState(() => _isDarkMode = !_isDarkMode),
-                  onNotifications: () {},
-                  onProfile: () => context.go(_profileRoute),
-                  onSettings: () => context.go(_settingsRoute),
-                  onLogout: _handleLogout,
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider.value(value: _shellBloc),
+        BlocProvider.value(value: _notifBloc),
+      ],
+      child: BlocBuilder<ShellBloc, ShellState>(
+        builder: (ctx, shell) => KeyboardListener(
+          focusNode: FocusNode(),
+          autofocus: true,
+          onKeyEvent: (e) => _onKey(e, ctx),
+          child: Row(
+            children: [
+              Sidebar(
+                items: cfg.items,
+                collapsed: shell.sidebarCollapsed,
+                onToggleCollapse: () => _shellBloc.add(const SidebarToggled()),
+                workspaceName: cfg.name,
+                accentColor: cfg.accent,
+                backgroundTint: cfg.backgroundTint,
+              ),
+              Expanded(
+                child: Column(
+                  children: [
+                    BlocBuilder<NotificationBloc, NotificationState>(
+                      builder: (_, ns) => TopBar(
+                        breadcrumbs: shell.breadcrumbs,
+                        connectionStatus: shell.connectionStatus,
+                        unreadNotificationCount: ns.unreadCount,
+                        notifications: ns.recent,
+                        notificationsRoute: _notifRoute,
+                        profileRoute: _profileRoute,
+                        settingsRoute: _settingsRoute,
+                        onToggleTheme: () => ctx.read<ThemeCubit>().toggle(),
+                        onLogout: () {
+                          ctx.read<AuthBloc>().add(const AuthLogoutRequested());
+                          ctx.go(RouteNames.login);
+                        },
+                        trailing: cfg.trailingExtra,
+                      ),
+                    ),
+                    Expanded(
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 150),
+                        switchInCurve: Curves.easeOut,
+                        child: KeyedSubtree(
+                          key: ValueKey(shell.currentRoute),
+                          child: widget.navigationShell,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                Expanded(child: widget.navigationShell),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
 
-  void _handleKeyEvent(KeyEvent event) {
+  void _onKey(KeyEvent event, BuildContext ctx) {
     if (event is! KeyDownEvent) return;
     final ctrl = HardwareKeyboard.instance.isControlPressed ||
         HardwareKeyboard.instance.isMetaPressed;
-
     if (ctrl && event.logicalKey == LogicalKeyboardKey.keyB) {
-      setState(() => _sidebarCollapsed = !_sidebarCollapsed);
+      _shellBloc.add(const SidebarToggled());
     }
   }
 
-  List<String> _buildBreadcrumbs(BuildContext context) {
-    final path = GoRouterState.of(context).matchedLocation;
-    final parts = path.split('/').where((p) => p.isNotEmpty).toList();
-    return parts.map((p) => p.replaceAll('-', ' ').capitalize()).toList();
-  }
-
-  void _handleLogout() {
-    sl<AuthBloc>().add(const AuthLogoutRequested());
-    context.go(RouteNames.login);
-  }
-
-  _BrandingConfig get _brandingConfig {
+  _ShellConfig get _config {
     switch (widget.branding) {
       case WorkspaceBranding.doctor:
-        return _BrandingConfig(
+        return _ShellConfig(
           name: 'Doctor Portal',
-          color: AppColors.primary,
+          accent: AppColors.primary,
           items: SidebarConfigs.doctor,
         );
       case WorkspaceBranding.admin:
-        return _BrandingConfig(
+        return _ShellConfig(
           name: 'Admin Portal',
-          color: AppColors.info,
+          accent: AppColors.info,
           items: SidebarConfigs.admin,
+          trailingExtra: _AddAppointmentButton(),
         );
       case WorkspaceBranding.superAdmin:
-        return _BrandingConfig(
-          name: 'SuperAdmin',
-          color: AppColors.warning,
+        return _ShellConfig(
+          name: 'Platform Admin',
+          accent: AppColors.danger,
+          backgroundTint: AppColors.danger,
           items: SidebarConfigs.superAdmin,
+          trailingExtra: const EnvBadge(),
         );
     }
   }
 
-  String get _profileRoute {
-    switch (widget.branding) {
-      case WorkspaceBranding.doctor:
-        return RouteNames.doctorProfile;
-      case WorkspaceBranding.admin:
-        return RouteNames.adminProfile;
-      case WorkspaceBranding.superAdmin:
-        return RouteNames.superAdminProfile;
-    }
-  }
+  String get _profileRoute => switch (widget.branding) {
+        WorkspaceBranding.doctor => RouteNames.doctorProfile,
+        WorkspaceBranding.admin => RouteNames.adminProfile,
+        WorkspaceBranding.superAdmin => RouteNames.superAdminProfile,
+      };
 
-  String get _settingsRoute {
-    switch (widget.branding) {
-      case WorkspaceBranding.doctor:
-        return RouteNames.doctorSettings;
-      case WorkspaceBranding.admin:
-        return RouteNames.adminSettings;
-      case WorkspaceBranding.superAdmin:
-        return RouteNames.superAdminSettings;
-    }
-  }
+  String get _settingsRoute => switch (widget.branding) {
+        WorkspaceBranding.doctor => RouteNames.doctorSettings,
+        WorkspaceBranding.admin => RouteNames.adminSettingsCenter,
+        WorkspaceBranding.superAdmin => RouteNames.superAdminSettings,
+      };
+
+  String get _notifRoute => switch (widget.branding) {
+        WorkspaceBranding.doctor => RouteNames.doctorNotifications,
+        WorkspaceBranding.admin => RouteNames.adminNotifications,
+        WorkspaceBranding.superAdmin => RouteNames.superAdminNotifications,
+      };
 }
 
-class _BrandingConfig {
+class _ShellConfig {
   final String name;
-  final Color color;
+  final Color accent;
+  final Color? backgroundTint;
   final List<SidebarItem> items;
-  const _BrandingConfig({
+  final Widget? trailingExtra;
+
+  const _ShellConfig({
     required this.name,
-    required this.color,
+    required this.accent,
     required this.items,
+    this.backgroundTint,
+    this.trailingExtra,
   });
 }
 
-extension _StringExt on String {
-  String capitalize() =>
-      isEmpty ? this : '${this[0].toUpperCase()}${substring(1)}';
+class _AddAppointmentButton extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return FilledButton.icon(
+      onPressed: () => context.go(RouteNames.adminAppointmentsPending),
+      icon: const Icon(Icons.add, size: 16),
+      label: const Text('Add Appointment'),
+      style: FilledButton.styleFrom(
+        backgroundColor: AppColors.info,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+        minimumSize: const Size(0, 36),
+      ),
+    );
+  }
 }

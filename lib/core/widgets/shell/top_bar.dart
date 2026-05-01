@@ -4,36 +4,46 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_typography.dart';
 import '../command_palette/command_palette.dart';
+import 'bloc/shell_state.dart';
+import 'breadcrumb_bar.dart';
+import 'connection_status.dart';
+import 'notification_bell.dart';
+import 'user_menu.dart';
+import 'workspace_shell.dart';
 
 class TopBar extends StatelessWidget {
-  final List<String> breadcrumbs;
-  final bool isRealtimeConnected;
-  final int notificationCount;
-  final bool isDarkMode;
+  final List<BreadcrumbSegment> breadcrumbs;
+  final AppConnectionStatus connectionStatus;
+  final int unreadNotificationCount;
+  final List<Map<String, dynamic>> notifications;
+  final String notificationsRoute;
+  final String profileRoute;
+  final String settingsRoute;
   final VoidCallback onToggleTheme;
-  final VoidCallback onNotifications;
-  final VoidCallback onProfile;
-  final VoidCallback onSettings;
   final VoidCallback onLogout;
   final Widget? trailing;
+  // branding is needed to know which workspace we're in
+  final WorkspaceBranding? branding;
 
   const TopBar({
     super.key,
     this.breadcrumbs = const [],
-    this.isRealtimeConnected = false,
-    this.notificationCount = 0,
-    required this.isDarkMode,
+    this.connectionStatus = AppConnectionStatus.offline,
+    this.unreadNotificationCount = 0,
+    this.notifications = const [],
+    required this.notificationsRoute,
+    required this.profileRoute,
+    required this.settingsRoute,
     required this.onToggleTheme,
-    required this.onNotifications,
-    required this.onProfile,
-    required this.onSettings,
     required this.onLogout,
     this.trailing,
+    this.branding,
   });
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
       height: AppSpacing.topBarHeight,
@@ -47,45 +57,61 @@ class TopBar extends StatelessWidget {
           // Breadcrumb
           Expanded(
             flex: 2,
-            child: _Breadcrumb(crumbs: breadcrumbs),
+            child: BreadcrumbBar(segments: breadcrumbs),
           ),
-          // Search
+          // Search bar
           Expanded(
             flex: 2,
-            child: _SearchBar(onTap: () => CommandPalette.show(context)),
+            child: _SearchHint(
+              onTap: () => CommandPalette.show(context),
+            ),
           ),
           // Right actions
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              _ConnectionDot(connected: isRealtimeConnected),
+              if (trailing != null) ...[
+                trailing!,
+                const SizedBox(width: 8),
+              ],
+              ConnectionStatusDot(status: connectionStatus),
               const SizedBox(width: 8),
-              _NotificationButton(
-                count: notificationCount,
-                onTap: onNotifications,
+              NotificationBell(
+                unreadCount: unreadNotificationCount,
+                notifications: notifications,
+                viewAllRoute: notificationsRoute,
               ),
               const SizedBox(width: 4),
               IconButton(
                 icon: FaIcon(
-                  isDarkMode
-                      ? FontAwesomeIcons.sun
-                      : FontAwesomeIcons.moon,
+                  isDark ? FontAwesomeIcons.sun : FontAwesomeIcons.moon,
                   size: 16,
                   color: AppColors.neutral500,
                 ),
-                tooltip: isDarkMode ? 'Light mode' : 'Dark mode',
+                tooltip: isDark ? 'Light mode' : 'Dark mode',
                 onPressed: onToggleTheme,
               ),
               const SizedBox(width: 4),
-              _UserAvatarDropdown(
-                onProfile: onProfile,
-                onSettings: onSettings,
-                onLogout: onLogout,
+              UserMenu(
+                profileRoute: profileRoute,
+                settingsRoute: settingsRoute,
+                extraItems: branding == WorkspaceBranding.superAdmin
+                    ? [
+                        PopupMenuItem<String>(
+                          value: 'readonly',
+                          child: Row(
+                            children: [
+                              FaIcon(FontAwesomeIcons.eye,
+                                  size: 13, color: AppColors.neutral700),
+                              const SizedBox(width: 10),
+                              Text('Switch to read-only mode',
+                                  style: AppTypography.bodySmall),
+                            ],
+                          ),
+                        ),
+                      ]
+                    : null,
               ),
-              if (trailing != null) ...[
-                const SizedBox(width: 8),
-                trailing!,
-              ],
             ],
           ),
         ],
@@ -94,49 +120,9 @@ class TopBar extends StatelessWidget {
   }
 }
 
-class _Breadcrumb extends StatelessWidget {
-  final List<String> crumbs;
-  const _Breadcrumb({required this.crumbs});
-
-  @override
-  Widget build(BuildContext context) {
-    if (crumbs.isEmpty) return const SizedBox.shrink();
-
-    return Row(
-      children: crumbs
-          .asMap()
-          .entries
-          .expand((entry) {
-            final isLast = entry.key == crumbs.length - 1;
-            return [
-              Text(
-                entry.value,
-                style: AppTypography.bodySmall.copyWith(
-                  color: isLast
-                      ? Theme.of(context).colorScheme.onSurface
-                      : AppColors.neutral400,
-                  fontWeight: isLast ? FontWeight.w600 : FontWeight.w400,
-                ),
-              ),
-              if (!isLast)
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 6),
-                  child: FaIcon(
-                    FontAwesomeIcons.chevronRight,
-                    size: 10,
-                    color: AppColors.neutral300,
-                  ),
-                ),
-            ];
-          })
-          .toList(),
-    );
-  }
-}
-
-class _SearchBar extends StatelessWidget {
+class _SearchHint extends StatelessWidget {
   final VoidCallback onTap;
-  const _SearchBar({required this.onTap});
+  const _SearchHint({required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -159,9 +145,7 @@ class _SearchBar extends StatelessWidget {
             Expanded(
               child: Text(
                 'Search... (Ctrl+K)',
-                style: AppTypography.bodySmall.copyWith(
-                  color: AppColors.neutral400,
-                ),
+                style: AppTypography.bodySmall.copyWith(color: AppColors.neutral400),
               ),
             ),
             Container(
@@ -180,137 +164,6 @@ class _SearchBar extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _ConnectionDot extends StatelessWidget {
-  final bool connected;
-  const _ConnectionDot({required this.connected});
-
-  @override
-  Widget build(BuildContext context) {
-    return Tooltip(
-      message: connected ? 'Realtime: Connected' : 'Realtime: Disconnected',
-      child: Container(
-        width: 8,
-        height: 8,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: connected ? AppColors.success : AppColors.neutral300,
-        ),
-      ),
-    );
-  }
-}
-
-class _NotificationButton extends StatelessWidget {
-  final int count;
-  final VoidCallback onTap;
-  const _NotificationButton({required this.count, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        IconButton(
-          icon: const FaIcon(FontAwesomeIcons.bell,
-              size: 16, color: AppColors.neutral500),
-          onPressed: onTap,
-          tooltip: 'Notifications',
-        ),
-        if (count > 0)
-          Positioned(
-            top: 6,
-            right: 6,
-            child: Container(
-              padding: const EdgeInsets.all(3),
-              decoration: const BoxDecoration(
-                color: AppColors.accent,
-                shape: BoxShape.circle,
-              ),
-              constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
-              child: Text(
-                count > 99 ? '99+' : '$count',
-                style: AppTypography.caption.copyWith(
-                  color: Colors.white,
-                  fontSize: 9,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ),
-          ),
-      ],
-    );
-  }
-}
-
-class _UserAvatarDropdown extends StatelessWidget {
-  final VoidCallback onProfile;
-  final VoidCallback onSettings;
-  final VoidCallback onLogout;
-
-  const _UserAvatarDropdown({
-    required this.onProfile,
-    required this.onSettings,
-    required this.onLogout,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return PopupMenuButton<String>(
-      offset: const Offset(0, 40),
-      child: CircleAvatar(
-        radius: 15,
-        backgroundColor: AppColors.primaryLight,
-        child: Text(
-          'U',
-          style: AppTypography.caption.copyWith(
-            color: AppColors.primary,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-      ),
-      itemBuilder: (_) => [
-        _menuItem('profile', FontAwesomeIcons.user, 'Profile'),
-        _menuItem('settings', FontAwesomeIcons.gear, 'Settings'),
-        const PopupMenuDivider(),
-        _menuItem('logout', FontAwesomeIcons.rightFromBracket, 'Logout',
-            isDestructive: true),
-      ],
-      onSelected: (value) {
-        switch (value) {
-          case 'profile':
-            onProfile();
-          case 'settings':
-            onSettings();
-          case 'logout':
-            onLogout();
-        }
-      },
-    );
-  }
-
-  PopupMenuItem<String> _menuItem(
-    String value,
-    IconData icon,
-    String label, {
-    bool isDestructive = false,
-  }) {
-    final color =
-        isDestructive ? AppColors.danger : AppColors.neutral700;
-    return PopupMenuItem(
-      value: value,
-      height: 36,
-      child: Row(
-        children: [
-          FaIcon(icon, size: 13, color: color),
-          const SizedBox(width: 10),
-          Text(label,
-              style: AppTypography.bodySmall.copyWith(color: color)),
-        ],
       ),
     );
   }
