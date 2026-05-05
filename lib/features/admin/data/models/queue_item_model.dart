@@ -21,17 +21,17 @@ class QueueItemModel extends QueueItem {
   });
 
   factory QueueItemModel.fromJson(Map<String, dynamic> j) {
-    String _s(String a, [String? b]) =>
+    String s(String a, [String? b]) =>
         (j[a] ?? (b != null ? j[b] : null))?.toString() ?? '';
     return QueueItemModel(
-      id: _s('id'),
+      id: s('id'),
       queueNumber: j['queueNumber'] as int? ?? j['queue_number'] as int? ?? 0,
-      patientId: _s('patientId', 'patient_id'),
-      patientName: _s('patientName', 'patient_name'),
+      patientId: s('patientId', 'patient_id'),
+      patientName: s('patientName', 'patient_name'),
       patientAge: j['patientAge'] as int? ?? j['patient_age'] as int?,
-      appointmentId: _s('appointmentId', 'appointment_id'),
-      doctorId: _s('doctorId', 'doctor_id'),
-      doctorName: _s('doctorName', 'doctor_name'),
+      appointmentId: s('appointmentId', 'appointment_id'),
+      doctorId: s('doctorId', 'doctor_id'),
+      doctorName: s('doctorName', 'doctor_name'),
       room: j['room'] as String?,
       status: QueueStatus.fromString(j['status'] as String?),
       estimatedWaitMinutes: j['estimatedWaitMinutes'] as int? ?? j['estimated_wait_minutes'] as int?,
@@ -39,7 +39,7 @@ class QueueItemModel extends QueueItem {
       checkedInAt: DateTime.tryParse(j['checkedInAt'] as String? ?? j['checked_in_at'] as String? ?? ''),
       startedAt: DateTime.tryParse(j['startedAt'] as String? ?? j['started_at'] as String? ?? ''),
       completedAt: DateTime.tryParse(j['completedAt'] as String? ?? j['completed_at'] as String? ?? ''),
-      reason: _s('reason'),
+      reason: s('reason'),
     );
   }
 }

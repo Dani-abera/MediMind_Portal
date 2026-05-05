@@ -48,23 +48,23 @@ class AdminAppointmentModel extends AdminAppointment {
   });
 
   factory AdminAppointmentModel.fromJson(Map<String, dynamic> j) {
-    String _s(String a, [String? b]) =>
+    String s(String a, [String? b]) =>
         (j[a] ?? (b != null ? j[b] : null))?.toString() ?? '';
     return AdminAppointmentModel(
-      id: _s('id'),
-      patientId: _s('patientId', 'patient_id'),
-      patientName: _s('patientName', 'patient_name'),
+      id: s('id'),
+      patientId: s('patientId', 'patient_id'),
+      patientName: s('patientName', 'patient_name'),
       patientAge: j['patientAge'] as int? ?? j['patient_age'] as int?,
       patientPhone: j['patientPhone'] as String? ?? j['patient_phone'] as String?,
-      doctorId: _s('doctorId', 'doctor_id'),
-      doctorName: _s('doctorName', 'doctor_name'),
+      doctorId: s('doctorId', 'doctor_id'),
+      doctorName: s('doctorName', 'doctor_name'),
       doctorSpecialization: j['doctorSpecialization'] as String? ?? j['doctor_specialization'] as String?,
-      centerId: _s('centerId', 'center_id'),
+      centerId: s('centerId', 'center_id'),
       dateTime: DateTime.tryParse(j['dateTime'] as String? ?? j['date_time'] as String? ?? '') ?? DateTime.now(),
       durationMinutes: j['durationMinutes'] as int? ?? j['duration_minutes'] as int? ?? 30,
       type: AppointmentType.fromString(j['type'] as String?),
       status: AppointmentStatus.fromString(j['status'] as String?),
-      reason: _s('reason'),
+      reason: s('reason'),
       symptoms: (j['symptoms'] as List?)?.map((e) => e.toString()).toList() ?? [],
       notes: j['notes'] as String?,
       adminNotes: j['adminNotes'] as String? ?? j['admin_notes'] as String?,

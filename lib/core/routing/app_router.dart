@@ -30,6 +30,12 @@ import '../../features/admin/presentation/pages/doctors/roster_page.dart';
 import '../../features/admin/presentation/pages/patients/directory_page.dart';
 import '../../features/admin/presentation/pages/patients/patient_detail_page.dart';
 import '../../features/admin/presentation/pages/queue/live_queue_page.dart';
+import '../../features/admin/analytics/analytics_dashboard_page.dart';
+import '../../features/admin/analytics/revenue_page.dart';
+import '../../features/admin/analytics/per_doctor_page.dart';
+import '../../features/admin/analytics/export_wizard_page.dart';
+import '../../features/admin/payments/ledger_page.dart';
+import '../../features/admin/audit_log/audit_log_page.dart';
 import '../../features/super_admin/super_admin_workspace.dart';
 import '../../features/super_admin/presentation/pages/super_admin_dashboard_page.dart';
 import 'route_names.dart';
@@ -222,7 +228,7 @@ class AppRouter {
           StatefulShellBranch(routes: [
             GoRoute(
               path: RouteNames.adminPayments,
-              builder: (_, __) => const ShellPlaceholderPage(title: 'Payments'),
+              builder: (_, __) => const PaymentsLedgerPage(),
             ),
           ]),
           // Prescriptions
@@ -240,19 +246,19 @@ class AppRouter {
             ),
             GoRoute(
               path: RouteNames.adminAnalyticsDashboard,
-              builder: (_, __) => const ShellPlaceholderPage(title: 'Analytics Overview'),
+              builder: (_, __) => const AnalyticsDashboardPage(),
             ),
             GoRoute(
               path: RouteNames.adminAnalyticsRevenue,
-              builder: (_, __) => const ShellPlaceholderPage(title: 'Revenue Analytics'),
+              builder: (_, __) => const RevenuePage(),
             ),
             GoRoute(
               path: RouteNames.adminAnalyticsDoctors,
-              builder: (_, __) => const ShellPlaceholderPage(title: 'Per-Doctor Analytics'),
+              builder: (_, __) => const PerDoctorAnalyticsPage(),
             ),
             GoRoute(
               path: RouteNames.adminAnalyticsExport,
-              builder: (_, __) => const ShellPlaceholderPage(title: 'Export Analytics'),
+              builder: (_, __) => const ExportWizardPage(),
             ),
           ]),
           // Staff & Admins
@@ -266,7 +272,7 @@ class AppRouter {
           StatefulShellBranch(routes: [
             GoRoute(
               path: RouteNames.adminAuditLog,
-              builder: (_, __) => const ShellPlaceholderPage(title: 'Audit Log'),
+              builder: (_, __) => const AuditLogPage(),
             ),
           ]),
           // Settings

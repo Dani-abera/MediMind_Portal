@@ -8,11 +8,17 @@ import '../../shared/blocs/notification_bloc.dart';
 // Data — datasources
 import 'data/datasources/admin_appointment_remote_datasource.dart';
 import 'data/datasources/admin_dashboard_remote_datasource.dart';
+import 'data/datasources/analytics_remote_datasource.dart';
+import 'data/datasources/payments_remote_datasource.dart';
+import 'data/datasources/audit_log_remote_datasource.dart';
 import 'data/datasources/admin_doctor_remote_datasource.dart';
 import 'data/datasources/admin_patient_remote_datasource.dart';
 import 'data/datasources/admin_queue_remote_datasource.dart';
 import 'data/datasources/admin_staff_remote_datasource.dart';
 // Data — repositories
+import 'data/repositories/analytics_repository_impl.dart';
+import 'data/repositories/payments_repository_impl.dart';
+import 'data/repositories/audit_log_repository_impl.dart';
 import 'data/repositories/admin_appointment_repository_impl.dart';
 import 'data/repositories/admin_dashboard_repository_impl.dart';
 import 'data/repositories/admin_doctor_repository_impl.dart';
@@ -20,6 +26,9 @@ import 'data/repositories/admin_patient_repository_impl.dart';
 import 'data/repositories/admin_queue_repository_impl.dart';
 import 'data/repositories/admin_staff_repository_impl.dart';
 // Domain — repository interfaces
+import 'domain/repositories/analytics_repository.dart';
+import 'domain/repositories/payments_repository.dart';
+import 'domain/repositories/audit_log_repository.dart';
 import 'domain/repositories/admin_appointment_repository.dart';
 import 'domain/repositories/admin_dashboard_repository.dart';
 import 'domain/repositories/admin_doctor_repository.dart';
@@ -27,6 +36,12 @@ import 'domain/repositories/admin_patient_repository.dart';
 import 'domain/repositories/admin_queue_repository.dart';
 import 'domain/repositories/admin_staff_repository.dart';
 // Domain — use cases
+import 'domain/usecases/get_analytics_summary_usecase.dart';
+import 'domain/usecases/get_revenue_summary_usecase.dart';
+import 'domain/usecases/get_doctor_analytics_usecase.dart';
+import 'domain/usecases/export_analytics_usecase.dart';
+import 'domain/usecases/get_payments_usecase.dart';
+import 'domain/usecases/get_audit_log_usecase.dart';
 import 'domain/usecases/get_admin_queue_usecase.dart';
 import 'domain/usecases/call_next_usecase.dart';
 import 'domain/usecases/mark_arrived_usecase.dart';
@@ -55,6 +70,12 @@ import 'domain/usecases/get_admins_usecase.dart';
 import 'domain/usecases/add_admin_usecase.dart';
 import 'domain/usecases/deactivate_admin_usecase.dart';
 // Presentation — blocs
+import 'presentation/bloc/analytics/analytics_dashboard_bloc.dart';
+import 'presentation/bloc/revenue/revenue_bloc.dart';
+import 'presentation/bloc/per_doctor/per_doctor_bloc.dart';
+import 'presentation/bloc/export_wizard/export_wizard_bloc.dart';
+import 'presentation/bloc/payments/payments_ledger_bloc.dart';
+import 'presentation/bloc/audit_log/audit_log_bloc.dart';
 import 'presentation/bloc/queue/admin_queue_bloc.dart';
 import 'presentation/bloc/pending_appointments/pending_appointments_bloc.dart';
 import 'presentation/bloc/all_appointments/all_appointments_bloc.dart';
@@ -85,6 +106,9 @@ Future<void> initAdminFeature() async {
   }
 
   // ── Data sources ───────────────────────────────────────────────────────
+  sl.registerLazySingleton(() => AnalyticsRemoteDataSource(sl<DioClient>()));
+  sl.registerLazySingleton(() => PaymentsRemoteDataSource(sl<DioClient>()));
+  sl.registerLazySingleton(() => AuditLogRemoteDataSource(sl<DioClient>()));
   sl.registerLazySingleton(() => AdminQueueRemoteDataSource(sl<DioClient>()));
   sl.registerLazySingleton(() => AdminAppointmentRemoteDataSource(sl<DioClient>()));
   sl.registerLazySingleton(() => AdminDashboardRemoteDataSource(sl<DioClient>()));
@@ -93,6 +117,15 @@ Future<void> initAdminFeature() async {
   sl.registerLazySingleton(() => AdminStaffRemoteDataSource(sl<DioClient>()));
 
   // ── Repositories ───────────────────────────────────────────────────────
+  sl.registerLazySingleton<AnalyticsRepository>(
+    () => AnalyticsRepositoryImpl(sl<AnalyticsRemoteDataSource>(), sl<NetworkInfo>()),
+  );
+  sl.registerLazySingleton<PaymentsRepository>(
+    () => PaymentsRepositoryImpl(sl<PaymentsRemoteDataSource>(), sl<NetworkInfo>()),
+  );
+  sl.registerLazySingleton<AuditLogRepository>(
+    () => AuditLogRepositoryImpl(sl<AuditLogRemoteDataSource>(), sl<NetworkInfo>()),
+  );
   sl.registerLazySingleton<AdminQueueRepository>(
     () => AdminQueueRepositoryImpl(sl<AdminQueueRemoteDataSource>(), sl<NetworkInfo>()),
   );
@@ -111,6 +144,18 @@ Future<void> initAdminFeature() async {
   sl.registerLazySingleton<AdminStaffRepository>(
     () => AdminStaffRepositoryImpl(sl<AdminStaffRemoteDataSource>(), sl<NetworkInfo>()),
   );
+
+  // ── Use cases — Analytics / Revenue / Payments / Audit ────────────────
+  sl.registerLazySingleton(() => GetAnalyticsSummaryUseCase(sl<AnalyticsRepository>()));
+  sl.registerLazySingleton(() => GetRevenueSummaryUseCase(sl<AnalyticsRepository>()));
+  sl.registerLazySingleton(() => GetDoctorAnalyticsUseCase(sl<AnalyticsRepository>()));
+  sl.registerLazySingleton(() => ExportAnalyticsCsvUseCase(sl<AnalyticsRepository>()));
+  sl.registerLazySingleton(() => ExportAnalyticsPdfUseCase(sl<AnalyticsRepository>()));
+  sl.registerLazySingleton(() => ExportRevenueCsvUseCase(sl<AnalyticsRepository>()));
+  sl.registerLazySingleton(() => GetPaymentsUseCase(sl<PaymentsRepository>()));
+  sl.registerLazySingleton(() => GetPaymentReceiptUseCase(sl<PaymentsRepository>()));
+  sl.registerLazySingleton(() => MarkPaymentResolvedUseCase(sl<PaymentsRepository>()));
+  sl.registerLazySingleton(() => GetAuditLogUseCase(sl<AuditLogRepository>()));
 
   // ── Use cases — Queue ──────────────────────────────────────────────────
   sl.registerLazySingleton(() => GetAdminQueueUseCase(sl<AdminQueueRepository>()));
@@ -152,6 +197,39 @@ Future<void> initAdminFeature() async {
   sl.registerLazySingleton(() => DeactivateAdminUseCase(sl<AdminStaffRepository>()));
 
   // ── BLoCs (factory — new instance per BlocProvider.create call) ────────
+  sl.registerFactory(
+    () => AnalyticsDashboardBloc(
+      getSummary: sl<GetAnalyticsSummaryUseCase>(),
+      exportCsv: sl<ExportAnalyticsCsvUseCase>(),
+      exportPdf: sl<ExportAnalyticsPdfUseCase>(),
+    ),
+  );
+  sl.registerFactory(
+    () => RevenueBloc(
+      getRevenue: sl<GetRevenueSummaryUseCase>(),
+      exportCsv: sl<ExportRevenueCsvUseCase>(),
+    ),
+  );
+  sl.registerFactory(
+    () => PerDoctorBloc(getDoctorAnalytics: sl<GetDoctorAnalyticsUseCase>()),
+  );
+  sl.registerFactory(
+    () => ExportWizardBloc(
+      exportAnalyticsCsv: sl<ExportAnalyticsCsvUseCase>(),
+      exportAnalyticsPdf: sl<ExportAnalyticsPdfUseCase>(),
+      exportRevenueCsv: sl<ExportRevenueCsvUseCase>(),
+    ),
+  );
+  sl.registerFactory(
+    () => PaymentsLedgerBloc(
+      getPayments: sl<GetPaymentsUseCase>(),
+      markResolved: sl<MarkPaymentResolvedUseCase>(),
+      getReceipt: sl<GetPaymentReceiptUseCase>(),
+    ),
+  );
+  sl.registerFactory(
+    () => AuditLogBloc(getAuditLog: sl<GetAuditLogUseCase>()),
+  );
   sl.registerFactory(
     () => AdminDashboardBloc(getDashboardData: sl<GetAdminDashboardUseCase>()),
   );
