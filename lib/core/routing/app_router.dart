@@ -22,6 +22,14 @@ import '../../features/doctor/presentation/pages/schedule_page.dart';
 import '../../features/doctor/presentation/pages/doctor_profile_page.dart';
 import '../../features/admin/admin_workspace.dart';
 import '../../features/admin/presentation/pages/admin_dashboard_page.dart';
+import '../../features/admin/presentation/pages/admins/admins_list_page.dart';
+import '../../features/admin/presentation/pages/appointments/all_page.dart';
+import '../../features/admin/presentation/pages/appointments/calendar_page.dart';
+import '../../features/admin/presentation/pages/appointments/pending_page.dart';
+import '../../features/admin/presentation/pages/doctors/roster_page.dart';
+import '../../features/admin/presentation/pages/patients/directory_page.dart';
+import '../../features/admin/presentation/pages/patients/patient_detail_page.dart';
+import '../../features/admin/presentation/pages/queue/live_queue_page.dart';
 import '../../features/super_admin/super_admin_workspace.dart';
 import '../../features/super_admin/presentation/pages/super_admin_dashboard_page.dart';
 import 'route_names.dart';
@@ -167,7 +175,7 @@ class AppRouter {
           StatefulShellBranch(routes: [
             GoRoute(
               path: RouteNames.adminQueue,
-              builder: (_, __) => const ShellPlaceholderPage(title: 'Live Queue'),
+              builder: (_, __) => const LiveQueuePage(),
             ),
           ]),
           // Appointments
@@ -178,29 +186,36 @@ class AppRouter {
             ),
             GoRoute(
               path: RouteNames.adminAppointmentsPending,
-              builder: (_, __) => const ShellPlaceholderPage(title: 'Pending Appointments'),
+              builder: (_, __) => const PendingAppointmentsPage(),
             ),
             GoRoute(
               path: RouteNames.adminAppointmentsCalendar,
-              builder: (_, __) => const ShellPlaceholderPage(title: 'Appointments — Calendar'),
+              builder: (_, __) => const AdminCalendarPage(),
             ),
             GoRoute(
               path: RouteNames.adminAppointmentsList,
-              builder: (_, __) => const ShellPlaceholderPage(title: 'All Appointments'),
+              builder: (_, __) => const AllAppointmentsPage(),
             ),
           ]),
           // Doctors
           StatefulShellBranch(routes: [
             GoRoute(
               path: RouteNames.adminDoctors,
-              builder: (_, __) => const ShellPlaceholderPage(title: 'Doctors'),
+              builder: (_, __) => const DoctorsRosterPage(),
             ),
           ]),
           // Patients
           StatefulShellBranch(routes: [
             GoRoute(
               path: RouteNames.adminPatients,
-              builder: (_, __) => const ShellPlaceholderPage(title: 'Patients'),
+              builder: (_, __) => const PatientDirectoryPage(),
+              routes: [
+                GoRoute(
+                  path: ':id',
+                  builder: (_, state) =>
+                      AdminPatientDetailPage(patientId: state.pathParameters['id']!),
+                ),
+              ],
             ),
           ]),
           // Payments
@@ -244,7 +259,7 @@ class AppRouter {
           StatefulShellBranch(routes: [
             GoRoute(
               path: RouteNames.adminAdmins,
-              builder: (_, __) => const ShellPlaceholderPage(title: 'Staff & Admins'),
+              builder: (_, __) => const AdminsListPage(),
             ),
           ]),
           // Audit log
