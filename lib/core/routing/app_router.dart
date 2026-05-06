@@ -36,8 +36,20 @@ import '../../features/admin/analytics/per_doctor_page.dart';
 import '../../features/admin/analytics/export_wizard_page.dart';
 import '../../features/admin/payments/ledger_page.dart';
 import '../../features/admin/audit_log/audit_log_page.dart';
+import '../../features/admin/center_settings/general_page.dart';
+import '../../features/admin/center_settings/branding_page.dart';
+import '../../features/admin/center_settings/hours_page.dart';
+import '../../features/admin/center_settings/booking_rules_page.dart';
 import '../../features/super_admin/super_admin_workspace.dart';
 import '../../features/super_admin/presentation/pages/super_admin_dashboard_page.dart';
+import '../../features/super_admin/presentation/pages/centers/centers_page.dart';
+import '../../features/super_admin/presentation/pages/centers/center_detail_page.dart';
+import '../../features/super_admin/presentation/pages/doctors/platform_doctors_page.dart';
+import '../../features/super_admin/presentation/pages/users/platform_users_page.dart';
+import '../../features/super_admin/presentation/pages/subscriptions/platform_subscriptions_page.dart';
+import '../../features/super_admin/presentation/pages/analytics/platform_analytics_page.dart';
+import '../../features/super_admin/presentation/pages/audit_log/global_audit_log_page.dart';
+import '../../features/super_admin/presentation/pages/platform_settings/platform_settings_page.dart';
 import 'route_names.dart';
 
 class AppRouter {
@@ -50,7 +62,6 @@ class AppRouter {
     debugLogDiagnostics: true,
     redirect: _redirect,
     routes: [
-      // ── Public ─────────────────────────────────────────────────────────
       GoRoute(path: RouteNames.splash, builder: (_, __) => const SplashPage()),
       GoRoute(path: RouteNames.login, builder: (_, __) => const LoginPage()),
       GoRoute(path: RouteNames.forgotPassword, builder: (_, __) => const ForgotPasswordPage()),
@@ -59,32 +70,27 @@ class AppRouter {
         builder: (_, state) => ResetPasswordPage(token: state.uri.queryParameters['token']),
       ),
 
-      // ── Video call (full-screen, no shell) ──────────────────────────────
       GoRoute(
         path: '/doctor/video-call/:id',
         builder: (_, state) =>
             VideoCallPage(consultationId: state.pathParameters['id']!),
       ),
 
-      // ── Doctor workspace ────────────────────────────────────────────────
       StatefulShellRoute.indexedStack(
         builder: (_, __, shell) => DoctorWorkspace(navigationShell: shell),
         branches: [
-          // Dashboard
           StatefulShellBranch(routes: [
             GoRoute(
               path: RouteNames.doctorDashboard,
               builder: (_, __) => const DoctorDashboardPage(),
             ),
           ]),
-          // Queue
           StatefulShellBranch(routes: [
             GoRoute(
               path: RouteNames.doctorQueue,
               builder: (_, __) => const QueuePage(),
             ),
           ]),
-          // Appointments
           StatefulShellBranch(routes: [
             GoRoute(
               path: RouteNames.doctorAppointments,
@@ -99,7 +105,6 @@ class AppRouter {
               builder: (_, __) => const AppointmentsListPage(),
             ),
           ]),
-          // Patients
           StatefulShellBranch(routes: [
             GoRoute(
               path: RouteNames.doctorPatients,
@@ -113,14 +118,12 @@ class AppRouter {
               ],
             ),
           ]),
-          // Consultations
           StatefulShellBranch(routes: [
             GoRoute(
               path: RouteNames.doctorConsultations,
               builder: (_, __) => const ConsultationsPage(),
             ),
           ]),
-          // Prescriptions
           StatefulShellBranch(routes: [
             GoRoute(
               path: RouteNames.doctorPrescriptions,
@@ -135,28 +138,24 @@ class AppRouter {
               builder: (_, __) => const CreatePrescriptionPage(),
             ),
           ]),
-          // Schedule
           StatefulShellBranch(routes: [
             GoRoute(
               path: RouteNames.doctorSchedule,
               builder: (_, __) => const SchedulePage(),
             ),
           ]),
-          // Profile
           StatefulShellBranch(routes: [
             GoRoute(
               path: RouteNames.doctorProfile,
               builder: (_, __) => const DoctorProfilePage(),
             ),
           ]),
-          // Settings
           StatefulShellBranch(routes: [
             GoRoute(
               path: RouteNames.doctorSettings,
               builder: (_, __) => const ShellPlaceholderPage(title: 'Settings'),
             ),
           ]),
-          // Notifications
           StatefulShellBranch(routes: [
             GoRoute(
               path: RouteNames.doctorNotifications,
@@ -166,25 +165,21 @@ class AppRouter {
         ],
       ),
 
-      // ── Admin workspace ──────────────────────────────────────────────────
       StatefulShellRoute.indexedStack(
         builder: (_, __, shell) => AdminWorkspace(navigationShell: shell),
         branches: [
-          // Dashboard
           StatefulShellBranch(routes: [
             GoRoute(
               path: RouteNames.adminDashboard,
               builder: (_, __) => const AdminDashboardPage(),
             ),
           ]),
-          // Queue
           StatefulShellBranch(routes: [
             GoRoute(
               path: RouteNames.adminQueue,
               builder: (_, __) => const LiveQueuePage(),
             ),
           ]),
-          // Appointments
           StatefulShellBranch(routes: [
             GoRoute(
               path: RouteNames.adminAppointments,
@@ -203,14 +198,12 @@ class AppRouter {
               builder: (_, __) => const AllAppointmentsPage(),
             ),
           ]),
-          // Doctors
           StatefulShellBranch(routes: [
             GoRoute(
               path: RouteNames.adminDoctors,
               builder: (_, __) => const DoctorsRosterPage(),
             ),
           ]),
-          // Patients
           StatefulShellBranch(routes: [
             GoRoute(
               path: RouteNames.adminPatients,
@@ -224,21 +217,18 @@ class AppRouter {
               ],
             ),
           ]),
-          // Payments
           StatefulShellBranch(routes: [
             GoRoute(
               path: RouteNames.adminPayments,
               builder: (_, __) => const PaymentsLedgerPage(),
             ),
           ]),
-          // Prescriptions
           StatefulShellBranch(routes: [
             GoRoute(
               path: RouteNames.adminPrescriptions,
               builder: (_, __) => const ShellPlaceholderPage(title: 'Prescriptions'),
             ),
           ]),
-          // Analytics
           StatefulShellBranch(routes: [
             GoRoute(
               path: RouteNames.adminAnalytics,
@@ -261,21 +251,18 @@ class AppRouter {
               builder: (_, __) => const ExportWizardPage(),
             ),
           ]),
-          // Staff & Admins
           StatefulShellBranch(routes: [
             GoRoute(
               path: RouteNames.adminAdmins,
               builder: (_, __) => const AdminsListPage(),
             ),
           ]),
-          // Audit log
           StatefulShellBranch(routes: [
             GoRoute(
               path: RouteNames.adminAuditLog,
               builder: (_, __) => const AuditLogPage(),
             ),
           ]),
-          // Settings
           StatefulShellBranch(routes: [
             GoRoute(
               path: RouteNames.adminSettings,
@@ -283,29 +270,27 @@ class AppRouter {
             ),
             GoRoute(
               path: RouteNames.adminSettingsCenter,
-              builder: (_, __) => const ShellPlaceholderPage(title: 'Center Settings — General'),
+              builder: (_, __) => const CenterGeneralPage(),
             ),
             GoRoute(
               path: RouteNames.adminSettingsBranding,
-              builder: (_, __) => const ShellPlaceholderPage(title: 'Center Settings — Branding'),
+              builder: (_, __) => const CenterBrandingPage(),
             ),
             GoRoute(
               path: RouteNames.adminSettingsHours,
-              builder: (_, __) => const ShellPlaceholderPage(title: 'Center Settings — Working Hours'),
+              builder: (_, __) => const CenterHoursPage(),
             ),
             GoRoute(
               path: RouteNames.adminSettingsBooking,
-              builder: (_, __) => const ShellPlaceholderPage(title: 'Center Settings — Booking Rules'),
+              builder: (_, __) => const BookingRulesPage(),
             ),
           ]),
-          // Profile
           StatefulShellBranch(routes: [
             GoRoute(
               path: RouteNames.adminProfile,
               builder: (_, __) => const ShellPlaceholderPage(title: 'Profile'),
             ),
           ]),
-          // Notifications
           StatefulShellBranch(routes: [
             GoRoute(
               path: RouteNames.adminNotifications,
@@ -315,58 +300,58 @@ class AppRouter {
         ],
       ),
 
-      // ── SuperAdmin workspace ─────────────────────────────────────────────
       StatefulShellRoute.indexedStack(
         builder: (_, __, shell) => SuperAdminWorkspace(navigationShell: shell),
         branches: [
-          // Dashboard
           StatefulShellBranch(routes: [
             GoRoute(
               path: RouteNames.superAdminDashboard,
               builder: (_, __) => const SuperAdminDashboardPage(),
             ),
           ]),
-          // Centers
           StatefulShellBranch(routes: [
             GoRoute(
               path: RouteNames.superAdminCenters,
-              builder: (_, __) => const ShellPlaceholderPage(title: 'Health Centers'),
+              builder: (_, __) => const CentersPage(initialTab: 0),
+              routes: [
+                GoRoute(
+                  path: ':id',
+                  builder: (_, state) =>
+                      CenterDetailPage(centerId: state.pathParameters['id']!),
+                ),
+              ],
             ),
             GoRoute(
               path: RouteNames.superAdminCentersPending,
-              builder: (_, __) => const ShellPlaceholderPage(title: 'Centers — Pending Approval'),
+              builder: (_, __) => const CentersPage(initialTab: 1),
             ),
             GoRoute(
               path: RouteNames.superAdminCentersSuspended,
-              builder: (_, __) => const ShellPlaceholderPage(title: 'Centers — Suspended'),
+              builder: (_, __) => const CentersPage(initialTab: 3),
             ),
           ]),
-          // Doctors
           StatefulShellBranch(routes: [
             GoRoute(
               path: RouteNames.superAdminDoctors,
-              builder: (_, __) => const ShellPlaceholderPage(title: 'Doctors'),
+              builder: (_, __) => const PlatformDoctorsPage(),
             ),
             GoRoute(
               path: RouteNames.superAdminDoctorsPending,
-              builder: (_, __) => const ShellPlaceholderPage(title: 'Doctors — Pending Verification'),
+              builder: (_, __) => const PlatformDoctorsPage(),
             ),
           ]),
-          // Users
           StatefulShellBranch(routes: [
             GoRoute(
               path: RouteNames.superAdminUsers,
-              builder: (_, __) => const ShellPlaceholderPage(title: 'Users'),
+              builder: (_, __) => const PlatformUsersPage(),
             ),
           ]),
-          // Subscriptions
           StatefulShellBranch(routes: [
             GoRoute(
               path: RouteNames.superAdminSubscriptions,
-              builder: (_, __) => const ShellPlaceholderPage(title: 'Subscriptions'),
+              builder: (_, __) => const PlatformSubscriptionsPage(),
             ),
           ]),
-          // Analytics
           StatefulShellBranch(routes: [
             GoRoute(
               path: RouteNames.superAdminAnalytics,
@@ -374,39 +359,35 @@ class AppRouter {
             ),
             GoRoute(
               path: RouteNames.superAdminAnalyticsDashboard,
-              builder: (_, __) => const ShellPlaceholderPage(title: 'Platform Analytics'),
+              builder: (_, __) => const PlatformAnalyticsPage(initialTab: 0),
             ),
             GoRoute(
               path: RouteNames.superAdminAnalyticsRevenue,
-              builder: (_, __) => const ShellPlaceholderPage(title: 'Revenue Analytics'),
+              builder: (_, __) => const PlatformAnalyticsPage(initialTab: 1),
             ),
             GoRoute(
               path: RouteNames.superAdminAnalyticsGrowth,
-              builder: (_, __) => const ShellPlaceholderPage(title: 'Growth Analytics'),
+              builder: (_, __) => const PlatformAnalyticsPage(initialTab: 2),
             ),
           ]),
-          // Audit Log
           StatefulShellBranch(routes: [
             GoRoute(
               path: RouteNames.superAdminAuditLog,
-              builder: (_, __) => const ShellPlaceholderPage(title: 'Audit Log'),
+              builder: (_, __) => const GlobalAuditLogPage(),
             ),
           ]),
-          // Settings
           StatefulShellBranch(routes: [
             GoRoute(
               path: RouteNames.superAdminSettings,
-              builder: (_, __) => const ShellPlaceholderPage(title: 'Platform Settings'),
+              builder: (_, __) => const PlatformSettingsPage(),
             ),
           ]),
-          // Profile
           StatefulShellBranch(routes: [
             GoRoute(
               path: RouteNames.superAdminProfile,
               builder: (_, __) => const ShellPlaceholderPage(title: 'Profile'),
             ),
           ]),
-          // Notifications
           StatefulShellBranch(routes: [
             GoRoute(
               path: RouteNames.superAdminNotifications,

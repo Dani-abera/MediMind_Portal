@@ -1,6 +1,22 @@
 import '../../core/di/service_locator.dart';
 import '../../core/network/dio_client.dart';
 import '../../core/network/network_info.dart';
+import 'data/datasources/center_settings_remote_datasource.dart';
+import 'data/repositories/center_settings_repository_impl.dart';
+import 'domain/repositories/center_settings_repository.dart';
+import 'domain/usecases/get_center_config_usecase.dart';
+import 'domain/usecases/save_center_config_usecase.dart';
+import 'domain/usecases/get_working_hours_usecase.dart';
+import 'domain/usecases/save_working_hours_usecase.dart';
+import 'domain/usecases/get_booking_rules_usecase.dart';
+import 'domain/usecases/save_booking_rules_usecase.dart';
+import 'domain/usecases/get_center_branding_usecase.dart';
+import 'domain/usecases/save_center_branding_usecase.dart';
+import 'domain/usecases/upload_center_image_usecase.dart';
+import 'presentation/bloc/center_settings/center_settings_bloc.dart';
+import 'presentation/bloc/working_hours/working_hours_bloc.dart';
+import 'presentation/bloc/booking_rules/booking_rules_bloc.dart';
+import 'presentation/bloc/branding/branding_bloc.dart';
 import '../../core/network/realtime_service.dart';
 import '../../core/storage/preferences_storage.dart';
 import '../../core/widgets/shell/bloc/shell_bloc.dart';
@@ -289,4 +305,35 @@ Future<void> initAdminFeature() async {
       deactivate: sl<DeactivateAdminUseCase>(),
     ),
   );
+
+  sl.registerLazySingleton(() => CenterSettingsRemoteDataSource(sl<DioClient>()));
+  sl.registerLazySingleton<CenterSettingsRepository>(
+    () => CenterSettingsRepositoryImpl(sl<CenterSettingsRemoteDataSource>(), sl<NetworkInfo>()),
+  );
+  sl.registerLazySingleton(() => GetCenterConfigUseCase(sl<CenterSettingsRepository>()));
+  sl.registerLazySingleton(() => SaveCenterConfigUseCase(sl<CenterSettingsRepository>()));
+  sl.registerLazySingleton(() => GetWorkingHoursUseCase(sl<CenterSettingsRepository>()));
+  sl.registerLazySingleton(() => SaveWorkingHoursUseCase(sl<CenterSettingsRepository>()));
+  sl.registerLazySingleton(() => GetBookingRulesUseCase(sl<CenterSettingsRepository>()));
+  sl.registerLazySingleton(() => SaveBookingRulesUseCase(sl<CenterSettingsRepository>()));
+  sl.registerLazySingleton(() => GetCenterBrandingUseCase(sl<CenterSettingsRepository>()));
+  sl.registerLazySingleton(() => SaveCenterBrandingUseCase(sl<CenterSettingsRepository>()));
+  sl.registerLazySingleton(() => UploadCenterImageUseCase(sl<CenterSettingsRepository>()));
+  sl.registerFactory(() => CenterSettingsBloc(
+    getCenterConfig: sl<GetCenterConfigUseCase>(),
+    saveCenterConfig: sl<SaveCenterConfigUseCase>(),
+  ));
+  sl.registerFactory(() => WorkingHoursBloc(
+    getWorkingHours: sl<GetWorkingHoursUseCase>(),
+    saveWorkingHours: sl<SaveWorkingHoursUseCase>(),
+  ));
+  sl.registerFactory(() => BookingRulesBloc(
+    getBookingRules: sl<GetBookingRulesUseCase>(),
+    saveBookingRules: sl<SaveBookingRulesUseCase>(),
+  ));
+  sl.registerFactory(() => BrandingBloc(
+    getCenterBranding: sl<GetCenterBrandingUseCase>(),
+    saveCenterBranding: sl<SaveCenterBrandingUseCase>(),
+    uploadCenterImage: sl<UploadCenterImageUseCase>(),
+  ));
 }
