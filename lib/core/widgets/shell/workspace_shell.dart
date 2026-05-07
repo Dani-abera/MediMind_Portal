@@ -11,6 +11,7 @@ import 'top_bar.dart';
 import '../../di/service_locator.dart';
 import '../../routing/route_names.dart';
 import '../../routing/sidebar_configs.dart';
+import '../../services/inactivity_service.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/theme_cubit.dart';
 import '../../../features/auth/presentation/bloc/auth_bloc.dart';
@@ -45,6 +46,22 @@ class _WorkspaceShellState extends State<WorkspaceShell> {
     _shellBloc = sl<ShellBloc>();
     _notifBloc = sl<NotificationBloc>()
       ..add(const NotificationStarted());
+    _setupInactivityLogout();
+  }
+
+  void _setupInactivityLogout() {
+    sl<InactivityService>().configure(
+      timeout: const Duration(minutes: 30),
+      onTimeout: () {
+        if (!mounted) return;
+        sl<InactivityService>().dispose();
+        context.read<AuthBloc>().add(const AuthLogoutRequested());
+        context.go(RouteNames.login);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Logged out due to inactivity')),
+        );
+      },
+    );
   }
 
   @override
@@ -66,54 +83,56 @@ class _WorkspaceShellState extends State<WorkspaceShell> {
         BlocProvider.value(value: _notifBloc),
       ],
       child: BlocBuilder<ShellBloc, ShellState>(
-        builder: (ctx, shell) => KeyboardListener(
-          focusNode: FocusNode(),
-          autofocus: true,
-          onKeyEvent: (e) => _onKey(e, ctx),
-          child: Row(
-            children: [
-              Sidebar(
-                items: cfg.items,
-                collapsed: shell.sidebarCollapsed,
-                onToggleCollapse: () => _shellBloc.add(const SidebarToggled()),
-                workspaceName: cfg.name,
-                accentColor: cfg.accent,
-                backgroundTint: cfg.backgroundTint,
-              ),
-              Expanded(
-                child: Column(
-                  children: [
-                    BlocBuilder<NotificationBloc, NotificationState>(
-                      builder: (_, ns) => TopBar(
-                        breadcrumbs: shell.breadcrumbs,
-                        connectionStatus: shell.connectionStatus,
-                        unreadNotificationCount: ns.unreadCount,
-                        notifications: ns.recent,
-                        notificationsRoute: _notifRoute,
-                        profileRoute: _profileRoute,
-                        settingsRoute: _settingsRoute,
-                        onToggleTheme: () => ctx.read<ThemeCubit>().toggle(),
-                        onLogout: () {
-                          ctx.read<AuthBloc>().add(const AuthLogoutRequested());
-                          ctx.go(RouteNames.login);
-                        },
-                        trailing: cfg.trailingExtra,
-                      ),
-                    ),
-                    Expanded(
-                      child: AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 150),
-                        switchInCurve: Curves.easeOut,
-                        child: KeyedSubtree(
-                          key: ValueKey(shell.currentRoute),
-                          child: widget.navigationShell,
+        builder: (ctx, shell) => InactivityDetector(
+          child: KeyboardListener(
+            focusNode: FocusNode(),
+            autofocus: true,
+            onKeyEvent: (e) => _onKey(e, ctx),
+            child: Row(
+              children: [
+                Sidebar(
+                  items: cfg.items,
+                  collapsed: shell.sidebarCollapsed,
+                  onToggleCollapse: () => _shellBloc.add(const SidebarToggled()),
+                  workspaceName: cfg.name,
+                  accentColor: cfg.accent,
+                  backgroundTint: cfg.backgroundTint,
+                ),
+                Expanded(
+                  child: Column(
+                    children: [
+                      BlocBuilder<NotificationBloc, NotificationState>(
+                        builder: (_, ns) => TopBar(
+                          breadcrumbs: shell.breadcrumbs,
+                          connectionStatus: shell.connectionStatus,
+                          unreadNotificationCount: ns.unreadCount,
+                          notifications: ns.recent,
+                          notificationsRoute: _notifRoute,
+                          profileRoute: _profileRoute,
+                          settingsRoute: _settingsRoute,
+                          onToggleTheme: () => ctx.read<ThemeCubit>().toggle(),
+                          onLogout: () {
+                            ctx.read<AuthBloc>().add(const AuthLogoutRequested());
+                            ctx.go(RouteNames.login);
+                          },
+                          trailing: cfg.trailingExtra,
                         ),
                       ),
-                    ),
-                  ],
+                      Expanded(
+                        child: AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 150),
+                          switchInCurve: Curves.easeOut,
+                          child: KeyedSubtree(
+                            key: ValueKey(shell.currentRoute),
+                            child: widget.navigationShell,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

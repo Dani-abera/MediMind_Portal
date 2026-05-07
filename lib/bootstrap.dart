@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -33,16 +34,29 @@ Future<void> bootstrap() async {
     await sl<WindowService>().initialize();
   }
 
-  // Sentry (release mode)
-  const dsn = String.fromEnvironment('SENTRY_DSN');
-  if (dsn.isNotEmpty) {
-    await SentryFlutter.init(
-      (options) {
+  // Hook the global Flutter error handler (catches widget tree errors)
+  FlutterError.onError = (details) {
+    FlutterError.presentError(details);
+    Sentry.captureException(
+      details.exception,
+      stackTrace: details.stack,
+    );
+  };
+
+  // Defer Sentry init until after first frame to avoid startup jank.
+  // runZonedGuarded catches all unhandled async errors.
+  WidgetsBinding.instance.addPostFrameCallback((_) async {
+    const dsn = String.fromEnvironment('SENTRY_DSN');
+    if (dsn.isNotEmpty) {
+      await SentryFlutter.init((options) {
         options.dsn = dsn;
         options.tracesSampleRate = 0.2;
-      },
-    );
-  }
+        options.attachScreenshot = true;
+        options.environment =
+            const String.fromEnvironment('ENV', defaultValue: 'production');
+      });
+    }
+  });
 }
 
 Future<String> _getHivePath() async {

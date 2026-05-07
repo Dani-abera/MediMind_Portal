@@ -52,27 +52,105 @@ class GlobalShortcutsWidget extends StatelessWidget {
   void _showShortcutsDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('Keyboard Shortcuts'),
-        content: SizedBox(
-          width: 400,
+      builder: (_) => const _ShortcutsHelpDialog(),
+    );
+  }
+}
+
+class _ShortcutsHelpDialog extends StatelessWidget {
+  const _ShortcutsHelpDialog();
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 600, maxHeight: 680),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
           child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: const [
-              _ShortcutRow('Ctrl+K', 'Open command palette'),
-              _ShortcutRow('Ctrl+B', 'Toggle sidebar'),
-              _ShortcutRow('Ctrl+Shift+L', 'Toggle theme'),
-              _ShortcutRow('Ctrl+,', 'Open settings'),
-              _ShortcutRow('Ctrl+/', 'Show this dialog'),
-              _ShortcutRow('Esc', 'Close dialog / drawer'),
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.keyboard, size: 20),
+                  const SizedBox(width: 8),
+                  Text('Keyboard Shortcuts',
+                      style: Theme.of(context).textTheme.titleLarge),
+                  const Spacer(),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              const Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _ShortcutSection('Global', [
+                        ('Ctrl+K', 'Open command palette'),
+                        ('Ctrl+/', 'Show keyboard shortcuts'),
+                        ('Ctrl+Shift+L', 'Toggle light/dark theme'),
+                        ('Esc', 'Close dialog or drawer'),
+                      ]),
+                      _ShortcutSection('Navigation', [
+                        ('Ctrl+B', 'Toggle sidebar'),
+                        ('Ctrl+,', 'Open settings'),
+                        ('Ctrl+1–9', 'Jump to sidebar tab'),
+                        ('Alt+Left', 'Navigate back'),
+                        ('Alt+Right', 'Navigate forward'),
+                      ]),
+                      _ShortcutSection('Tables', [
+                        ('Ctrl+A', 'Select all rows'),
+                        ('Shift+Click', 'Range select rows'),
+                        ('Delete', 'Remove selected rows'),
+                        ('Ctrl+F', 'Focus search/filter'),
+                        ('Enter', 'Open selected row detail'),
+                      ]),
+                      _ShortcutSection('Forms', [
+                        ('Ctrl+Enter', 'Submit form'),
+                        ('Ctrl+Z', 'Undo last change'),
+                        ('Tab', 'Move to next field'),
+                        ('Shift+Tab', 'Move to previous field'),
+                      ]),
+                      _ShortcutSection('Queue (Admin)', [
+                        ('Space', 'Call next patient'),
+                        ('Ctrl+N', 'New walk-in'),
+                      ]),
+                    ],
+                  ),
+                ),
+              ),
             ],
           ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Close'),
-          ),
+      ),
+    );
+  }
+}
+
+class _ShortcutSection extends StatelessWidget {
+  final String title;
+  final List<(String, String)> items;
+
+  const _ShortcutSection(this.title, this.items);
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title,
+              style: Theme.of(context)
+                  .textTheme
+                  .labelLarge
+                  ?.copyWith(color: Theme.of(context).colorScheme.primary)),
+          const SizedBox(height: 8),
+          ...items.map((item) => _ShortcutRow(item.$1, item.$2)),
         ],
       ),
     );
