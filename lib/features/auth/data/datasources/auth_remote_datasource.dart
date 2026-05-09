@@ -181,7 +181,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Future<void> logout(String refreshToken) async {
     try {
-      await _dio.post('/auth/logout', data: {'refreshToken': refreshToken});
+      await _dio.post('/auth/logout');
     } catch (_) {
       // Best-effort — don't block local logout on network failure
     }

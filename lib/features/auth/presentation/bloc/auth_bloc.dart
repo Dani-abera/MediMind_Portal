@@ -40,6 +40,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     AuthLogoutRequested event,
     Emitter<AuthState> emit,
   ) async {
+    emit(const AuthLoading());
     await _logout();
     emit(const AuthUnauthenticated());
   }

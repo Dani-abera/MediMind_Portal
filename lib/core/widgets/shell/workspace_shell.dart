@@ -16,6 +16,7 @@ import '../../theme/app_colors.dart';
 import '../../theme/theme_cubit.dart';
 import '../../../features/auth/presentation/bloc/auth_bloc.dart';
 import '../../../features/auth/presentation/bloc/auth_event.dart';
+import '../../../features/auth/presentation/bloc/auth_state.dart';
 import '../../../shared/blocs/notification_bloc.dart';
 
 export 'bloc/shell_event.dart' show AppConnectionStatus;
@@ -63,7 +64,6 @@ class _WorkspaceShellState extends State<WorkspaceShell> {
         if (!mounted) return;
         sl<InactivityService>().dispose();
         context.read<AuthBloc>().add(const AuthLogoutRequested());
-        context.go(RouteNames.login);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Logged out due to inactivity')),
         );
@@ -89,51 +89,68 @@ class _WorkspaceShellState extends State<WorkspaceShell> {
         BlocProvider.value(value: _shellBloc),
         BlocProvider.value(value: _notifBloc),
       ],
-      child: BlocBuilder<ShellBloc, ShellState>(
-        builder: (ctx, shell) => InactivityDetector(
-          child: Scaffold(
-            body: KeyboardListener(
-              focusNode: _keyboardFocus,
-              autofocus: true,
-              onKeyEvent: (e) => _onKey(e, ctx),
-              child: Row(
-                children: [
-                  Sidebar(
-                    items: cfg.items,
-                    collapsed: shell.sidebarCollapsed,
-                    onToggleCollapse: () => _shellBloc.add(const SidebarToggled()),
-                    workspaceName: cfg.name,
-                    accentColor: cfg.accent,
-                    backgroundTint: cfg.backgroundTint,
-                  ),
-                  Expanded(
-                    child: Column(
+      child: BlocConsumer<AuthBloc, AuthState>(
+        listener: (ctx, state) {
+          if (state is AuthUnauthenticated) {
+            ctx.go(RouteNames.login);
+          }
+        },
+        builder: (ctx, authState) => Stack(
+          children: [
+            BlocBuilder<ShellBloc, ShellState>(
+              builder: (ctx, shell) => InactivityDetector(
+                child: Scaffold(
+                  body: KeyboardListener(
+                    focusNode: _keyboardFocus,
+                    autofocus: true,
+                    onKeyEvent: (e) => _onKey(e, ctx),
+                    child: Row(
                       children: [
-                        BlocBuilder<NotificationBloc, NotificationState>(
-                          builder: (_, ns) => TopBar(
-                            breadcrumbs: shell.breadcrumbs,
-                            connectionStatus: shell.connectionStatus,
-                            unreadNotificationCount: ns.unreadCount,
-                            notifications: ns.recent,
-                            notificationsRoute: _notifRoute,
-                            profileRoute: _profileRoute,
-                            settingsRoute: _settingsRoute,
-                            onToggleTheme: () => ctx.read<ThemeCubit>().toggle(),
-                            onLogout: () {
-                              ctx.read<AuthBloc>().add(const AuthLogoutRequested());
-                              ctx.go(RouteNames.login);
-                            },
-                            trailing: cfg.trailingExtra,
+                        Sidebar(
+                          items: cfg.items,
+                          collapsed: shell.sidebarCollapsed,
+                          onToggleCollapse: () => _shellBloc.add(const SidebarToggled()),
+                          workspaceName: cfg.name,
+                          accentColor: cfg.accent,
+                          backgroundTint: cfg.backgroundTint,
+                        ),
+                        Expanded(
+                          child: Column(
+                            children: [
+                              BlocBuilder<NotificationBloc, NotificationState>(
+                                builder: (_, ns) => TopBar(
+                                  breadcrumbs: shell.breadcrumbs,
+                                  connectionStatus: shell.connectionStatus,
+                                  unreadNotificationCount: ns.unreadCount,
+                                  notifications: ns.recent,
+                                  notificationsRoute: _notifRoute,
+                                  profileRoute: _profileRoute,
+                                  settingsRoute: _settingsRoute,
+                                  onToggleTheme: () => ctx.read<ThemeCubit>().toggle(),
+                                  onLogout: () {
+                                    ctx.read<AuthBloc>().add(const AuthLogoutRequested());
+                                  },
+                                  trailing: cfg.trailingExtra,
+                                ),
+                              ),
+                              Expanded(child: widget.navigationShell),
+                            ],
                           ),
                         ),
-                        Expanded(child: widget.navigationShell),
                       ],
                     ),
                   ),
-                ],
+                ),
               ),
             ),
-          ),
+            if (authState is AuthLoading)
+              Container(
+                color: Colors.black.withAlpha(100),
+                child: const Center(
+                  child: CircularProgressIndicator(),
+                ),
+              ),
+          ],
         ),
       ),
     );
