@@ -131,14 +131,14 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   }) async {
     try {
       final res = await _dio.post<Map<String, dynamic>>(
-        '/auth/super-admin/login',
+        '/auth/superadmin/login',
         data: {'email': email, 'password': password},
       );
       final data = res.data!;
       return (
         user: _parseUser(data),
         tokens: AuthTokensModel.fromJson(data),
-        requires2fa: true, // SuperAdmin always requires 2FA
+        requires2fa: data['requires2fa'] as bool? ?? false,
       );
     } on DioException catch (e) {
       throw _toException(e);

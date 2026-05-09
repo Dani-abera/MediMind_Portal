@@ -18,7 +18,7 @@ class AuditLogRemoteDataSource {
     int pageSize = 50,
   }) async {
     final resp = await _client.dio.get(
-      '/api/v1/healthcare-centers/$centerId/audit-log',
+      '/healthcare-centers/$centerId/audit-log',
       queryParameters: {
         if (from != null) 'startDate': from.toIso8601String(),
         if (to != null) 'endDate': to.toIso8601String(),
@@ -34,7 +34,9 @@ class AuditLogRemoteDataSource {
     final data = resp.data['data'] as List? ?? [];
     final total = resp.data['total'] as int? ?? data.length;
     return (
-      entries: data.map((e) => AuditEntryModel.fromJson(e as Map<String, dynamic>)).toList(),
+      entries: data
+          .map((e) => AuditEntryModel.fromJson(e as Map<String, dynamic>))
+          .toList(),
       total: total,
     );
   }

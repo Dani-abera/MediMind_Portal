@@ -29,7 +29,13 @@ class SuperAdminLoginBloc
         await _login(email: event.email, password: event.password);
     result.fold(
       (failure) => emit(SuperAdminLoginError(failure.message)),
-      (data) => emit(SuperAdminLoginRequires2fa(event.email)),
+      (data) {
+        if (data.requires2fa) {
+          emit(SuperAdminLoginRequires2fa(event.email));
+        } else {
+          emit(SuperAdminLoginSuccess(user: data.user, tokens: data.tokens));
+        }
+      },
     );
   }
 

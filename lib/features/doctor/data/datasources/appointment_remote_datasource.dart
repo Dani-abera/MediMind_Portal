@@ -15,7 +15,7 @@ class AppointmentRemoteDataSource {
     int pageSize = 20,
   }) async {
     final resp = await _client.dio.get(
-      '/api/v1/doctor/appointments',
+      '/doctor/appointments',
       queryParameters: {
         if (status != null) 'status': status,
         if (from != null) 'from': from.toIso8601String(),
@@ -31,7 +31,7 @@ class AppointmentRemoteDataSource {
   }
 
   Future<AppointmentModel> getAppointmentById(String id) async {
-    final resp = await _client.dio.get('/api/v1/doctor/appointments/$id');
+    final resp = await _client.dio.get('/doctor/appointments/$id');
     return AppointmentModel.fromJson(resp.data['data'] as Map<String, dynamic>);
   }
 
@@ -40,16 +40,18 @@ class AppointmentRemoteDataSource {
     required String content,
   }) async {
     final resp = await _client.dio.post(
-      '/api/v1/doctor/appointments/$appointmentId/notes',
+      '/doctor/appointments/$appointmentId/notes',
       data: {'content': content},
     );
     return AppointmentNoteModel.fromJson(
-        resp.data['data'] as Map<String, dynamic>);
+      resp.data['data'] as Map<String, dynamic>,
+    );
   }
 
   Future<List<AppointmentNoteModel>> getNotes(String appointmentId) async {
-    final resp = await _client.dio
-        .get('/api/v1/doctor/appointments/$appointmentId/notes');
+    final resp = await _client.dio.get(
+      '/doctor/appointments/$appointmentId/notes',
+    );
     final data = resp.data['data'] as List<dynamic>;
     return data
         .map((e) => AppointmentNoteModel.fromJson(e as Map<String, dynamic>))
@@ -57,10 +59,10 @@ class AppointmentRemoteDataSource {
   }
 
   Future<void> cancelAppointment(String id) async {
-    await _client.dio.post('/api/v1/doctor/appointments/$id/cancel');
+    await _client.dio.post('/doctor/appointments/$id/cancel');
   }
 
   Future<void> markComplete(String id) async {
-    await _client.dio.post('/api/v1/doctor/appointments/$id/complete');
+    await _client.dio.post('/doctor/appointments/$id/complete');
   }
 }

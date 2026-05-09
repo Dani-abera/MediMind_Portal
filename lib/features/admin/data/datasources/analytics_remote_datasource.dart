@@ -11,8 +11,12 @@ class AnalyticsRemoteDataSource {
 
   AnalyticsRemoteDataSource(this._client);
 
-  String _cacheKey(String centerId, DateTime from, DateTime to, [String extra = '']) =>
-      '${centerId}_${from.toIso8601String()}_${to.toIso8601String()}_$extra';
+  String _cacheKey(
+    String centerId,
+    DateTime from,
+    DateTime to, [
+    String extra = '',
+  ]) => '${centerId}_${from.toIso8601String()}_${to.toIso8601String()}_$extra';
 
   T? _fromCache<T>(String key) {
     final entry = _cache[key];
@@ -35,14 +39,16 @@ class AnalyticsRemoteDataSource {
     if (cached != null) return cached;
 
     final resp = await _client.dio.get(
-      '/api/v1/healthcare-centers/$centerId/analytics',
+      '/healthcare-centers/$centerId/analytics',
       queryParameters: {
         'startDate': from.toIso8601String(),
         'endDate': to.toIso8601String(),
         if (comparePrevious) 'compare': 'true',
       },
     );
-    final model = AnalyticsSummaryModel.fromJson(resp.data['data'] as Map<String, dynamic>);
+    final model = AnalyticsSummaryModel.fromJson(
+      resp.data['data'] as Map<String, dynamic>,
+    );
     _cache[key] = (data: model, fetchedAt: DateTime.now());
     return model;
   }
@@ -55,7 +61,7 @@ class AnalyticsRemoteDataSource {
     bool comparePrevious = false,
   }) async {
     final resp = await _client.dio.get(
-      '/api/v1/healthcare-centers/$centerId/revenue',
+      '/healthcare-centers/$centerId/revenue',
       queryParameters: {
         'startDate': from.toIso8601String(),
         'endDate': to.toIso8601String(),
@@ -63,7 +69,9 @@ class AnalyticsRemoteDataSource {
         if (comparePrevious) 'compare': 'true',
       },
     );
-    return RevenueSummaryModel.fromJson(resp.data['data'] as Map<String, dynamic>);
+    return RevenueSummaryModel.fromJson(
+      resp.data['data'] as Map<String, dynamic>,
+    );
   }
 
   Future<DoctorAnalyticsDetail> getDoctorAnalytics(
@@ -73,7 +81,7 @@ class AnalyticsRemoteDataSource {
     required DateTime to,
   }) async {
     final resp = await _client.dio.get(
-      '/api/v1/healthcare-centers/$centerId/analytics',
+      '/healthcare-centers/$centerId/analytics',
       queryParameters: {
         'startDate': from.toIso8601String(),
         'endDate': to.toIso8601String(),
@@ -89,57 +97,93 @@ class AnalyticsRemoteDataSource {
       completionRate: (d['completionRate'] as num?)?.toDouble() ?? 0,
       avgRating: (d['avgRating'] as num?)?.toDouble() ?? 0,
       totalRevenueEtb: (d['totalRevenueEtb'] as num?)?.toDouble() ?? 0,
-      volumeTrend: ((d['volumeTrend']) as List?)
-              ?.map((e) => TimeSeriesPointModel.fromJson(e as Map<String, dynamic>))
+      volumeTrend:
+          ((d['volumeTrend']) as List?)
+              ?.map(
+                (e) => TimeSeriesPointModel.fromJson(e as Map<String, dynamic>),
+              )
               .toList() ??
           [],
-      dayOfWeekPattern: ((d['dayOfWeekPattern']) as List?)?.map((e) => (e as num).toDouble()).toList() ??
+      dayOfWeekPattern:
+          ((d['dayOfWeekPattern']) as List?)
+              ?.map((e) => (e as num).toDouble())
+              .toList() ??
           List.filled(7, 0),
-      hourOfDayPattern: ((d['hourOfDayPattern']) as List?)?.map((e) => (e as num).toDouble()).toList() ??
+      hourOfDayPattern:
+          ((d['hourOfDayPattern']) as List?)
+              ?.map((e) => (e as num).toDouble())
+              .toList() ??
           List.filled(24, 0),
-      topPatients: ((d['topPatients']) as List?)?.map((e) {
+      topPatients:
+          ((d['topPatients']) as List?)?.map((e) {
             final p = e as Map<String, dynamic>;
             return TopPatientRow(
               patientName: p['patientName'] as String? ?? '',
               visitCount: p['visitCount'] as int? ?? 0,
               totalSpentEtb: (p['totalSpentEtb'] as num?)?.toDouble() ?? 0,
-              lastVisit: DateTime.tryParse(p['lastVisit'] as String? ?? '') ?? DateTime.now(),
+              lastVisit:
+                  DateTime.tryParse(p['lastVisit'] as String? ?? '') ??
+                  DateTime.now(),
             );
           }).toList() ??
           [],
-      recentReviews: ((d['recentReviews']) as List?)?.map((e) {
+      recentReviews:
+          ((d['recentReviews']) as List?)?.map((e) {
             final r = e as Map<String, dynamic>;
             return DoctorReview(
               patientName: r['patientName'] as String? ?? '',
               rating: (r['rating'] as num?)?.toDouble() ?? 0,
               comment: r['comment'] as String?,
-              date: DateTime.tryParse(r['date'] as String? ?? '') ?? DateTime.now(),
+              date:
+                  DateTime.tryParse(r['date'] as String? ?? '') ??
+                  DateTime.now(),
             );
           }).toList() ??
           [],
     );
   }
 
-  Future<String> exportAnalyticsCsv(String centerId, {required DateTime from, required DateTime to}) async {
+  Future<String> exportAnalyticsCsv(
+    String centerId, {
+    required DateTime from,
+    required DateTime to,
+  }) async {
     final resp = await _client.dio.get(
-      '/api/v1/healthcare-centers/$centerId/analytics/export/csv',
-      queryParameters: {'startDate': from.toIso8601String(), 'endDate': to.toIso8601String()},
+      '/healthcare-centers/$centerId/analytics/export/csv',
+      queryParameters: {
+        'startDate': from.toIso8601String(),
+        'endDate': to.toIso8601String(),
+      },
     );
     return resp.data['url'] as String? ?? '';
   }
 
-  Future<String> exportAnalyticsPdf(String centerId, {required DateTime from, required DateTime to}) async {
+  Future<String> exportAnalyticsPdf(
+    String centerId, {
+    required DateTime from,
+    required DateTime to,
+  }) async {
     final resp = await _client.dio.get(
-      '/api/v1/healthcare-centers/$centerId/analytics/export/pdf',
-      queryParameters: {'startDate': from.toIso8601String(), 'endDate': to.toIso8601String()},
+      '/healthcare-centers/$centerId/analytics/export/pdf',
+      queryParameters: {
+        'startDate': from.toIso8601String(),
+        'endDate': to.toIso8601String(),
+      },
     );
     return resp.data['url'] as String? ?? '';
   }
 
-  Future<String> exportRevenueCsv(String centerId, {required DateTime from, required DateTime to}) async {
+  Future<String> exportRevenueCsv(
+    String centerId, {
+    required DateTime from,
+    required DateTime to,
+  }) async {
     final resp = await _client.dio.get(
-      '/api/v1/healthcare-centers/$centerId/revenue/export/csv',
-      queryParameters: {'startDate': from.toIso8601String(), 'endDate': to.toIso8601String()},
+      '/healthcare-centers/$centerId/revenue/export/csv',
+      queryParameters: {
+        'startDate': from.toIso8601String(),
+        'endDate': to.toIso8601String(),
+      },
     );
     return resp.data['url'] as String? ?? '';
   }

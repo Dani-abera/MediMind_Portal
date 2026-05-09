@@ -7,27 +7,36 @@ class AdminDoctorRemoteDataSource {
   AdminDoctorRemoteDataSource(this._client);
 
   Future<List<DoctorAtCenterModel>> getDoctors(String centerId) async {
-    final resp = await _client.dio.get('/api/v1/healthcare-centers/$centerId/doctors');
+    final resp = await _client.dio.get('/healthcare-centers/$centerId/doctors');
     final data = resp.data['data'] as List? ?? [];
-    return data.map((e) => DoctorAtCenterModel.fromJson(e as Map<String, dynamic>)).toList();
+    return data
+        .map((e) => DoctorAtCenterModel.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   Future<void> addDoctor(String centerId, String licenseNumber) async {
-    await _client.dio.post('/api/v1/healthcare-centers/$centerId/doctors',
-        data: {'licenseNumber': licenseNumber});
+    await _client.dio.post(
+      '/healthcare-centers/$centerId/doctors',
+      data: {'licenseNumber': licenseNumber},
+    );
   }
 
   Future<void> removeDoctor(String centerId, String doctorId) async {
-    await _client.dio.delete('/api/v1/healthcare-centers/$centerId/doctors/$doctorId');
+    await _client.dio.delete('/healthcare-centers/$centerId/doctors/$doctorId');
   }
 
   Future<void> configureSchedule(DoctorScheduleConfig config) async {
-    await _client.dio.post('/api/v1/doctor-schedules', data: config.toJson());
+    await _client.dio.post('/doctor-schedules', data: config.toJson());
   }
 
-  Future<DoctorScheduleConfigModel?> getDoctorSchedule(String doctorId, String centerId) async {
+  Future<DoctorScheduleConfigModel?> getDoctorSchedule(
+    String doctorId,
+    String centerId,
+  ) async {
     try {
-      final resp = await _client.dio.get('/api/v1/doctor-schedules/$doctorId/$centerId');
+      final resp = await _client.dio.get(
+        '/doctor-schedules/$doctorId/$centerId',
+      );
       final data = resp.data['data'];
       if (data == null) return null;
       return DoctorScheduleConfigModel.fromJson(data as Map<String, dynamic>);
@@ -37,6 +46,6 @@ class AdminDoctorRemoteDataSource {
   }
 
   Future<void> deleteSchedule(String scheduleId) async {
-    await _client.dio.delete('/api/v1/doctor-schedules/$scheduleId');
+    await _client.dio.delete('/doctor-schedules/$scheduleId');
   }
 }

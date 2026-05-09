@@ -7,12 +7,15 @@ class PlatformSettingsDatasource {
   PlatformSettingsDatasource(this._client);
 
   Future<PlatformSettings> getSettings() async {
-    final resp = await _client.dio.get('/api/v1/super-admin/settings');
+    final resp = await _client.dio.get('/super-admin/settings');
     return PlatformSettingsModel.fromJson(resp.data as Map<String, dynamic>);
   }
 
   Future<PlatformSettings> saveSettings(PlatformSettingsModel settings) async {
-    final resp = await _client.dio.put('/api/v1/super-admin/settings', data: settings.toJson());
+    final resp = await _client.dio.put(
+      '/super-admin/settings',
+      data: settings.toJson(),
+    );
     return PlatformSettingsModel.fromJson(resp.data as Map<String, dynamic>);
   }
 }

@@ -104,7 +104,7 @@ class SuperAdminUserModel extends SuperAdminUser {
 
   factory SuperAdminUserModel.fromJson(Map<String, dynamic> json) =>
       SuperAdminUserModel(
-        id: json['sub'] as String? ?? json['id'] as String? ?? '',
+        id: json['sub'] as String? ?? json['userId'] as String? ?? json['id'] as String? ?? '',
         fullName: json['full_name'] as String? ??
             json['fullName'] as String? ??
             'SuperAdmin',

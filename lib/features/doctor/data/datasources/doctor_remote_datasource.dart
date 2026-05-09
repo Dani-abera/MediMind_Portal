@@ -10,37 +10,35 @@ class DoctorRemoteDataSource {
   DoctorRemoteDataSource(this._client);
 
   Future<DoctorProfileModel> getProfile() async {
-    final resp = await _client.dio.get('/api/v1/doctor/profile');
+    final resp = await _client.dio.get('/doctor/profile');
     return DoctorProfileModel.fromJson(
-        resp.data['data'] as Map<String, dynamic>);
+      resp.data['data'] as Map<String, dynamic>,
+    );
   }
 
   Future<DoctorProfileModel> updateProfile(Map<String, dynamic> data) async {
-    final resp = await _client.dio.put(
-      '/api/v1/doctor/profile',
-      data: data,
-    );
+    final resp = await _client.dio.put('/doctor/profile', data: data);
     return DoctorProfileModel.fromJson(
-        resp.data['data'] as Map<String, dynamic>);
+      resp.data['data'] as Map<String, dynamic>,
+    );
   }
 
   Future<List<CenterAffiliationModel>> getCenters() async {
-    final resp = await _client.dio.get('/api/v1/doctor/centers');
+    final resp = await _client.dio.get('/doctor/centers');
     final data = resp.data['data'] as List<dynamic>;
     return data
-        .map((e) =>
-            CenterAffiliationModel.fromJson(e as Map<String, dynamic>))
+        .map((e) => CenterAffiliationModel.fromJson(e as Map<String, dynamic>))
         .toList();
   }
 
   Future<Map<String, dynamic>> getTodaySummary() async {
-    final resp = await _client.dio.get('/api/v1/doctor/today-summary');
+    final resp = await _client.dio.get('/doctor/today-summary');
     return resp.data['data'] as Map<String, dynamic>;
   }
 
   Future<List<QueueEntryModel>> getQueue(String centerId) async {
     final resp = await _client.dio.get(
-      '/api/v1/doctor/queue',
+      '/doctor/queue',
       queryParameters: {'centerId': centerId},
     );
     final data = resp.data['data'] as List<dynamic>;
@@ -50,7 +48,7 @@ class DoctorRemoteDataSource {
   }
 
   Future<List<DoctorScheduleModel>> getSchedules() async {
-    final resp = await _client.dio.get('/api/v1/doctor/schedules');
+    final resp = await _client.dio.get('/doctor/schedules');
     final data = resp.data['data'] as List<dynamic>;
     return data
         .map((e) => DoctorScheduleModel.fromJson(e as Map<String, dynamic>))

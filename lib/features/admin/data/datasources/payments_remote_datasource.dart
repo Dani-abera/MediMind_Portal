@@ -18,7 +18,7 @@ class PaymentsRemoteDataSource {
     int pageSize = 20,
   }) async {
     final resp = await _client.dio.get(
-      '/api/v1/payments',
+      '/payments',
       queryParameters: {
         'centerId': centerId,
         if (status != null) 'status': status.name,
@@ -32,16 +32,20 @@ class PaymentsRemoteDataSource {
       },
     );
     final data = resp.data['data'] as List? ?? [];
-    return data.map((e) => PaymentModel.fromJson(e as Map<String, dynamic>)).toList();
+    return data
+        .map((e) => PaymentModel.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   Future<String?> getReceiptUrl(String paymentId) async {
-    final resp = await _client.dio.get('/api/v1/payments/$paymentId/receipt');
+    final resp = await _client.dio.get('/payments/$paymentId/receipt');
     return resp.data['url'] as String?;
   }
 
   Future<void> markPaymentResolved(String paymentId) async {
-    await _client.dio.patch('/api/v1/payments/$paymentId/status',
-        data: {'status': 'resolved'});
+    await _client.dio.patch(
+      '/payments/$paymentId/status',
+      data: {'status': 'resolved'},
+    );
   }
 }

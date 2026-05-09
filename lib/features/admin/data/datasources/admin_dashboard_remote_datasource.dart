@@ -6,7 +6,11 @@ class AdminDashboardRemoteDataSource {
   AdminDashboardRemoteDataSource(this._client);
 
   Future<AdminDashboardDataModel> getDashboardData(String centerId) async {
-    final resp = await _client.dio.get('/api/v1/healthcare-centers/$centerId/dashboard/today');
-    return AdminDashboardDataModel.fromJson(resp.data['data'] as Map<String, dynamic>);
+    final resp = await _client.dio.get(
+      '/healthcare-centers/$centerId/dashboard/today',
+    );
+    return AdminDashboardDataModel.fromJson(
+      resp.data['data'] as Map<String, dynamic>,
+    );
   }
 }
