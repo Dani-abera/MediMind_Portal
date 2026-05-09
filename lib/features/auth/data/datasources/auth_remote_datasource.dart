@@ -36,6 +36,12 @@ abstract class AuthRemoteDataSource {
     required String currentPassword,
     required String newPassword,
   });
+  Future<void> adminRegister({
+    required String fullName,
+    required String email,
+    required String phoneNumber,
+    required String password,
+  });
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -220,6 +226,28 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     }
   }
 
+  @override
+  Future<void> adminRegister({
+    required String fullName,
+    required String email,
+    required String phoneNumber,
+    required String password,
+  }) async {
+    try {
+      await _dio.post(
+        '/auth/admin/register',
+        data: {
+          'fullName': fullName,
+          'email': email,
+          'phoneNumber': phoneNumber,
+          'password': password,
+        },
+      );
+    } on DioException catch (e) {
+      throw _toException(e);
+    }
+  }
+
   User _parseUser(Map<String, dynamic> data) {
     // Decode JWT claims if user object not in response root
     final userMap = data['user'] as Map<String, dynamic>? ?? data;
@@ -254,6 +282,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       404 => NotFoundException(msg),
       409 => ConflictException(msg),
       422 => ValidationException(msg),
+      500 => ServerException(msg),
       _ => e.error is AppException
           ? e.error as AppException
           : UnknownException(msg),
@@ -264,7 +293,8 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     try {
       final data = e.response?.data;
       if (data is Map) {
-        return data['message']?.toString() ??
+        return data['detail']?.toString() ??
+            data['message']?.toString() ??
             data['title']?.toString() ??
             e.message ??
             'An error occurred';

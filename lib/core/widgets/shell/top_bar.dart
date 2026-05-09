@@ -45,7 +45,9 @@ class TopBar extends StatelessWidget {
     final colors = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Container(
+    return Material(
+      type: MaterialType.transparency,
+      child: Container(
       height: AppSpacing.topBarHeight,
       decoration: BoxDecoration(
         color: colors.surface,
@@ -116,6 +118,7 @@ class TopBar extends StatelessWidget {
           ),
         ],
       ),
+    ),  // Material
     );
   }
 }

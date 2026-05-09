@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
 
 abstract class NetworkInfo {
@@ -11,7 +12,14 @@ class NetworkInfoImpl implements NetworkInfo {
   NetworkInfoImpl(this._checker);
 
   @override
-  Future<bool> get isConnected => _checker.hasInternetAccess;
+  Future<bool> get isConnected async {
+    // On desktop, the connectivity package frequently false-negatives.
+    // Return true and let Dio surface real network errors instead.
+    if (Platform.isMacOS || Platform.isWindows || Platform.isLinux) {
+      return true;
+    }
+    return _checker.hasInternetAccess;
+  }
 
   @override
   Stream<InternetStatus> get onStatusChange => _checker.onStatusChange;

@@ -76,7 +76,10 @@ class AdminUserModel extends AdminUser {
   });
 
   factory AdminUserModel.fromJson(Map<String, dynamic> json) => AdminUserModel(
-        id: json['sub'] as String? ?? json['id'] as String? ?? '',
+        id: json['sub'] as String? ??
+            json['userId'] as String? ??
+            json['id'] as String? ??
+            '',
         fullName: json['full_name'] as String? ??
             json['fullName'] as String? ??
             'Admin',

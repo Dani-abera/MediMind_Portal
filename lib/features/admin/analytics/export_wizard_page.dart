@@ -353,7 +353,7 @@ class _Step4 extends StatelessWidget {
     padding: const EdgeInsets.symmetric(vertical: 6),
     child: Row(children: [
       SizedBox(width: 100, child: Text(label, style: AppTypography.bodySmall.copyWith(color: AppColors.neutral500))),
-      Text(value, style: AppTypography.bodySmall.copyWith(fontWeight: FontWeight.w600)),
+      Expanded(child: Text(value, style: AppTypography.bodySmall.copyWith(fontWeight: FontWeight.w600))),
     ]),
   );
 }

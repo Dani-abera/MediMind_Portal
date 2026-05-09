@@ -32,6 +32,14 @@ abstract class AuthRepository {
   Future<Either<Failure, AuthTokens>> refreshToken(String refreshToken);
   Future<Either<Failure, void>> logout();
 
+  // Admin registration
+  Future<Either<Failure, void>> adminRegister({
+    required String fullName,
+    required String email,
+    required String phoneNumber,
+    required String password,
+  });
+
   // Password
   Future<Either<Failure, void>> requestPasswordReset(String email);
   Future<Either<Failure, void>> resetPassword({

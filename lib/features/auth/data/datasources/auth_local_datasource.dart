@@ -1,4 +1,6 @@
+import 'dart:io';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:path_provider/path_provider.dart';
 import '../../../../core/storage/secure_storage.dart';
 import '../models/auth_tokens_model.dart';
 import '../models/user_model.dart';
@@ -26,7 +28,14 @@ class AuthLocalDataSourceImpl implements AuthLocalDataSource {
   Box get _box => Hive.box(_boxName);
 
   static Future<void> openBox() async {
-    if (!Hive.isBoxOpen(_boxName)) {
+    if (Hive.isBoxOpen(_boxName)) return;
+    try {
+      await Hive.openBox(_boxName);
+    } on FileSystemException {
+      // Stale lock from a previous crash — delete it and retry once.
+      final dir = await getApplicationSupportDirectory();
+      final lock = File('${dir.path}/$_boxName.lock');
+      if (await lock.exists()) await lock.delete();
       await Hive.openBox(_boxName);
     }
   }

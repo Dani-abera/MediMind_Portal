@@ -1,23 +1,46 @@
+import 'dart:convert';
 import 'dart:developer' as dev;
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
 class LoggerInterceptor extends Interceptor {
-  static const int _maxBodySize = 50 * 1024; // 50KB
+  static const int _maxBodySize = 100 * 1024; // 100KB
+
+  void _log(String message) => dev.log(message, name: 'HTTP');
+
+  String _prettyJson(dynamic data) {
+    try {
+      final encoder = JsonEncoder.withIndent('  ');
+      if (data is String) {
+        return encoder.convert(jsonDecode(data));
+      }
+      return encoder.convert(data);
+    } catch (_) {
+      return data?.toString() ?? '';
+    }
+  }
+
+  String _formatBody(dynamic data) {
+    if (data == null) return '(empty)';
+    final raw = data is String ? data : jsonEncode(data);
+    if (raw.length > _maxBodySize) return '[truncated — ${raw.length} bytes]';
+    return _prettyJson(data);
+  }
 
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
     if (kDebugMode) {
       final sanitized = Map<String, dynamic>.from(options.headers)
         ..removeWhere((k, _) => k.toLowerCase() == 'authorization');
-      dev.log('→ ${options.method} ${options.path}', name: 'HTTP');
-      dev.log('  headers: $sanitized', name: 'HTTP');
-      final body = options.data?.toString() ?? '';
-      if (body.length <= _maxBodySize) {
-        dev.log('  body: $body', name: 'HTTP');
-      } else {
-        dev.log('  body: [truncated, ${body.length} bytes]', name: 'HTTP');
+
+      _log('┌── REQUEST ──────────────────────────────────');
+      _log('│ ${options.method}  ${options.uri}');
+      if (options.queryParameters.isNotEmpty) {
+        _log('│ Query: ${options.queryParameters}');
       }
+      _log('│ Headers: $sanitized');
+      _log('│ Body:\n${_formatBody(options.data)}');
+      _log('└─────────────────────────────────────────────');
     }
     handler.next(options);
   }
@@ -25,10 +48,10 @@ class LoggerInterceptor extends Interceptor {
   @override
   void onResponse(Response response, ResponseInterceptorHandler handler) {
     if (kDebugMode) {
-      dev.log(
-        '← ${response.statusCode} ${response.requestOptions.path}',
-        name: 'HTTP',
-      );
+      _log('┌── RESPONSE ─────────────────────────────────');
+      _log('│ ${response.statusCode} ${response.statusMessage}  ${response.requestOptions.uri}');
+      _log('│ Body:\n${_formatBody(response.data)}');
+      _log('└─────────────────────────────────────────────');
     }
     handler.next(response);
   }
@@ -36,10 +59,14 @@ class LoggerInterceptor extends Interceptor {
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
     if (kDebugMode) {
-      dev.log(
-        '✗ ${err.response?.statusCode} ${err.requestOptions.path}: ${err.message}',
-        name: 'HTTP',
-      );
+      _log('┌── ERROR ────────────────────────────────────');
+      _log('│ ${err.response?.statusCode ?? "??"}  ${err.requestOptions.uri}');
+      _log('│ Type: ${err.type}');
+      _log('│ Message: ${err.message}');
+      if (err.response?.data != null) {
+        _log('│ Response body:\n${_formatBody(err.response!.data)}');
+      }
+      _log('└─────────────────────────────────────────────');
     }
     handler.next(err);
   }

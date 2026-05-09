@@ -39,6 +39,7 @@ class WorkspaceShell extends StatefulWidget {
 class _WorkspaceShellState extends State<WorkspaceShell> {
   late final ShellBloc _shellBloc;
   late final NotificationBloc _notifBloc;
+  final FocusNode _keyboardFocus = FocusNode();
 
   @override
   void initState() {
@@ -47,6 +48,12 @@ class _WorkspaceShellState extends State<WorkspaceShell> {
     _notifBloc = sl<NotificationBloc>()
       ..add(const NotificationStarted());
     _setupInactivityLogout();
+  }
+
+  @override
+  void dispose() {
+    _keyboardFocus.dispose();
+    super.dispose();
   }
 
   void _setupInactivityLogout() {
@@ -84,54 +91,47 @@ class _WorkspaceShellState extends State<WorkspaceShell> {
       ],
       child: BlocBuilder<ShellBloc, ShellState>(
         builder: (ctx, shell) => InactivityDetector(
-          child: KeyboardListener(
-            focusNode: FocusNode(),
-            autofocus: true,
-            onKeyEvent: (e) => _onKey(e, ctx),
-            child: Row(
-              children: [
-                Sidebar(
-                  items: cfg.items,
-                  collapsed: shell.sidebarCollapsed,
-                  onToggleCollapse: () => _shellBloc.add(const SidebarToggled()),
-                  workspaceName: cfg.name,
-                  accentColor: cfg.accent,
-                  backgroundTint: cfg.backgroundTint,
-                ),
-                Expanded(
-                  child: Column(
-                    children: [
-                      BlocBuilder<NotificationBloc, NotificationState>(
-                        builder: (_, ns) => TopBar(
-                          breadcrumbs: shell.breadcrumbs,
-                          connectionStatus: shell.connectionStatus,
-                          unreadNotificationCount: ns.unreadCount,
-                          notifications: ns.recent,
-                          notificationsRoute: _notifRoute,
-                          profileRoute: _profileRoute,
-                          settingsRoute: _settingsRoute,
-                          onToggleTheme: () => ctx.read<ThemeCubit>().toggle(),
-                          onLogout: () {
-                            ctx.read<AuthBloc>().add(const AuthLogoutRequested());
-                            ctx.go(RouteNames.login);
-                          },
-                          trailing: cfg.trailingExtra,
-                        ),
-                      ),
-                      Expanded(
-                        child: AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 150),
-                          switchInCurve: Curves.easeOut,
-                          child: KeyedSubtree(
-                            key: ValueKey(shell.currentRoute),
-                            child: widget.navigationShell,
+          child: Scaffold(
+            body: KeyboardListener(
+              focusNode: _keyboardFocus,
+              autofocus: true,
+              onKeyEvent: (e) => _onKey(e, ctx),
+              child: Row(
+                children: [
+                  Sidebar(
+                    items: cfg.items,
+                    collapsed: shell.sidebarCollapsed,
+                    onToggleCollapse: () => _shellBloc.add(const SidebarToggled()),
+                    workspaceName: cfg.name,
+                    accentColor: cfg.accent,
+                    backgroundTint: cfg.backgroundTint,
+                  ),
+                  Expanded(
+                    child: Column(
+                      children: [
+                        BlocBuilder<NotificationBloc, NotificationState>(
+                          builder: (_, ns) => TopBar(
+                            breadcrumbs: shell.breadcrumbs,
+                            connectionStatus: shell.connectionStatus,
+                            unreadNotificationCount: ns.unreadCount,
+                            notifications: ns.recent,
+                            notificationsRoute: _notifRoute,
+                            profileRoute: _profileRoute,
+                            settingsRoute: _settingsRoute,
+                            onToggleTheme: () => ctx.read<ThemeCubit>().toggle(),
+                            onLogout: () {
+                              ctx.read<AuthBloc>().add(const AuthLogoutRequested());
+                              ctx.go(RouteNames.login);
+                            },
+                            trailing: cfg.trailingExtra,
                           ),
                         ),
-                      ),
-                    ],
+                        Expanded(child: widget.navigationShell),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

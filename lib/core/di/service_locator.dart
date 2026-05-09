@@ -28,8 +28,10 @@ Future<void> initCoreDependencies() async {
   sl.registerSingleton<SharedPreferences>(prefs);
   sl.registerSingleton<PreferencesStorage>(PreferencesStorage(prefs));
 
-  // Secure storage
-  sl.registerSingleton<SecureStorage>(SecureStorage());
+  // Secure storage (Hive on macOS, flutter_secure_storage elsewhere)
+  final secureStorage = SecureStorage();
+  await secureStorage.init();
+  sl.registerSingleton<SecureStorage>(secureStorage);
 
   // User context
   sl.registerSingleton<UserContext>(UserContext());

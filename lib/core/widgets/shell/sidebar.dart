@@ -99,38 +99,40 @@ class _SidebarState extends State<Sidebar> {
   }
 
   Widget _buildLogo(ColorScheme colors, bool isCollapsed) {
+    final logoIcon = Container(
+      width: 32,
+      height: 32,
+      decoration: BoxDecoration(
+        color: widget.accentColor,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: const Icon(FontAwesomeIcons.heartPulse,
+          color: Colors.white, size: 16),
+    );
+
     return SizedBox(
       height: AppSpacing.topBarHeight,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Row(
-          children: [
-            Container(
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(
-                color: widget.accentColor,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Icon(FontAwesomeIcons.heartPulse,
-                  color: Colors.white, size: 16),
-            ),
-            if (!isCollapsed) ...[
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  widget.workspaceName,
-                  style: AppTypography.bodyMedium.copyWith(
-                    color: colors.onSurface,
-                    fontWeight: FontWeight.w700,
+      child: isCollapsed
+          ? Center(child: logoIcon)
+          : Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                children: [
+                  logoIcon,
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      widget.workspaceName,
+                      style: AppTypography.bodyMedium.copyWith(
+                        color: colors.onSurface,
+                        fontWeight: FontWeight.w700,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
-                  overflow: TextOverflow.ellipsis,
-                ),
+                ],
               ),
-            ],
-          ],
-        ),
-      ),
+            ),
     );
   }
 

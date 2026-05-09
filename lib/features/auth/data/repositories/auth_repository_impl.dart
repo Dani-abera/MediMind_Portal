@@ -125,6 +125,20 @@ class AuthRepositoryImpl implements AuthRepository {
       });
 
   @override
+  Future<Either<Failure, void>> adminRegister({
+    required String fullName,
+    required String email,
+    required String phoneNumber,
+    required String password,
+  }) =>
+      _guard(() => _remote.adminRegister(
+            fullName: fullName,
+            email: email,
+            phoneNumber: phoneNumber,
+            password: password,
+          ));
+
+  @override
   Future<Either<Failure, void>> requestPasswordReset(String email) =>
       _guard(() => _remote.requestPasswordReset(email));
 
@@ -147,9 +161,40 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<Either<Failure, User>> getCurrentUser() async {
     try {
-      final cached = await _local.getCachedUser();
-      if (cached != null) return Right(cached);
-      return const Left(CacheFailure('No cached user'));
+      final user = await _local.getCachedUser();
+      if (user == null) return const Left(CacheFailure('No cached user'));
+
+      final tokens = await _local.getCachedTokens();
+      if (tokens == null) return const Left(CacheFailure('No cached tokens'));
+
+      _ctx.userId = user.id;
+      _ctx.userType = switch (user.role) {
+        UserRole.doctor => UserType.doctor,
+        UserRole.admin => UserType.admin,
+        UserRole.superAdmin => UserType.superAdmin,
+      };
+      if (user is AdminUser) _ctx.centerId = user.centerId;
+
+      if (tokens.expiresAt.isBefore(DateTime.now())) {
+        try {
+          final newTokens = await _remote.refreshToken(tokens.refreshToken);
+          await _local.cacheTokens(newTokens);
+          _ctx.accessToken = newTokens.accessToken;
+          _ctx.refreshToken = newTokens.refreshToken;
+        } on AppException {
+          await _local.clearAuth();
+          _ctx.clear();
+          return const Left(UnauthorizedFailure('Session expired'));
+        } catch (_) {
+          _ctx.accessToken = tokens.accessToken;
+          _ctx.refreshToken = tokens.refreshToken;
+        }
+      } else {
+        _ctx.accessToken = tokens.accessToken;
+        _ctx.refreshToken = tokens.refreshToken;
+      }
+
+      return Right(user);
     } catch (e) {
       return Left(CacheFailure(e.toString()));
     }

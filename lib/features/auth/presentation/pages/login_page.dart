@@ -22,6 +22,7 @@ import '../bloc/super_admin_login/super_admin_login_bloc.dart';
 import '../bloc/super_admin_login/super_admin_login_event.dart';
 import '../bloc/super_admin_login/super_admin_login_state.dart';
 import '../cubit/account_lockout_cubit.dart';
+import '../cubit/admin_register_cubit.dart';
 import '../../domain/entities/user.dart';
 
 enum _LoginTab { doctor, admin, superAdmin }
@@ -36,6 +37,7 @@ class LoginPage extends StatelessWidget {
         BlocProvider(create: (_) => sl<DoctorLoginBloc>()),
         BlocProvider(create: (_) => sl<AdminLoginBloc>()),
         BlocProvider(create: (_) => sl<SuperAdminLoginBloc>()),
+        BlocProvider(create: (_) => sl<AdminRegisterCubit>()),
         BlocProvider.value(value: sl<AccountLockoutCubit>()),
       ],
       child: const _LoginView(),
@@ -612,10 +614,23 @@ class _AdminLoginFormState extends State<_AdminLoginForm> {
   bool _obscure = true;
   String? _pendingEmail;
 
+  // Registration mode
+  bool _showRegister = false;
+  final _regFormKey = GlobalKey<FormState>();
+  final _fullNameCtrl = TextEditingController();
+  final _regEmailCtrl = TextEditingController();
+  final _phoneCtrl = TextEditingController();
+  final _regPassCtrl = TextEditingController();
+  bool _regObscure = true;
+
   @override
   void dispose() {
     _emailCtrl.dispose();
     _passCtrl.dispose();
+    _fullNameCtrl.dispose();
+    _regEmailCtrl.dispose();
+    _phoneCtrl.dispose();
+    _regPassCtrl.dispose();
     super.dispose();
   }
 
@@ -646,6 +661,16 @@ class _AdminLoginFormState extends State<_AdminLoginForm> {
     );
   }
 
+  void _submitRegister() {
+    if (!_regFormKey.currentState!.validate()) return;
+    context.read<AdminRegisterCubit>().register(
+          fullName: _fullNameCtrl.text.trim(),
+          email: _regEmailCtrl.text.trim(),
+          phoneNumber: _phoneCtrl.text.trim(),
+          password: _regPassCtrl.text,
+        );
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<AdminLoginBloc, AdminLoginState>(
@@ -666,6 +691,7 @@ class _AdminLoginFormState extends State<_AdminLoginForm> {
         }
       },
       builder: (context, state) {
+        if (_showRegister) return _buildRegisterStep(context);
         if (state is AdminLoginRequires2fa ||
             (state is AdminLoginLoading && _pendingEmail != null)) {
           return _buildOtpStep(context, state);
@@ -751,8 +777,171 @@ class _AdminLoginFormState extends State<_AdminLoginForm> {
               child: isLoading ? _LoadingSpinner() : const Text('Sign In'),
             ),
           ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                "Don't have an account? ",
+                style: AppTypography.caption
+                    .copyWith(color: AppColors.neutral500),
+              ),
+              TextButton(
+                onPressed: () => setState(() => _showRegister = true),
+                style: TextButton.styleFrom(
+                  padding: EdgeInsets.zero,
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                child: Text(
+                  'Create Account',
+                  style: AppTypography.caption.copyWith(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ],
       ),
+    );
+  }
+
+  Widget _buildRegisterStep(BuildContext context) {
+    return BlocConsumer<AdminRegisterCubit, AdminRegisterState>(
+      listener: (context, state) {
+        if (state is AdminRegisterSuccess) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Account created! You can now sign in.'),
+              backgroundColor: AppColors.success,
+            ),
+          );
+          context.read<AdminRegisterCubit>().reset();
+          setState(() {
+            _showRegister = false;
+            _fullNameCtrl.clear();
+            _regEmailCtrl.clear();
+            _phoneCtrl.clear();
+            _regPassCtrl.clear();
+          });
+        }
+      },
+      builder: (context, state) {
+        final isLoading = state is AdminRegisterLoading;
+        return Form(
+          key: _regFormKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back, size: 18),
+                    onPressed: () {
+                      context.read<AdminRegisterCubit>().reset();
+                      setState(() => _showRegister = false);
+                    },
+                    tooltip: 'Back to Sign In',
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Create Admin Account',
+                    style: AppTypography.bodySmall
+                        .copyWith(color: AppColors.neutral600),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _fullNameCtrl,
+                autofocus: true,
+                textInputAction: TextInputAction.next,
+                enabled: !isLoading,
+                decoration: const InputDecoration(
+                  labelText: 'Full Name',
+                  prefixIcon: Icon(Icons.person_outlined, size: 18),
+                ),
+                validator: (v) =>
+                    (v == null || v.trim().isEmpty) ? 'Full name is required' : null,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _regEmailCtrl,
+                keyboardType: TextInputType.emailAddress,
+                textInputAction: TextInputAction.next,
+                enabled: !isLoading,
+                decoration: const InputDecoration(
+                  labelText: 'Email',
+                  hintText: 'admin@clinic.et',
+                  prefixIcon: Icon(Icons.email_outlined, size: 18),
+                ),
+                validator: (v) {
+                  if (v == null || v.trim().isEmpty) return 'Email is required';
+                  if (!RegExp(r'^[^@]+@[^@]+\.[^@]+$').hasMatch(v.trim())) {
+                    return 'Enter a valid email';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _phoneCtrl,
+                keyboardType: TextInputType.phone,
+                textInputAction: TextInputAction.next,
+                enabled: !isLoading,
+                decoration: const InputDecoration(
+                  labelText: 'Phone Number',
+                  prefixIcon: Icon(Icons.phone_outlined, size: 18),
+                ),
+                validator: (v) =>
+                    (v == null || v.trim().isEmpty) ? 'Phone number is required' : null,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _regPassCtrl,
+                obscureText: _regObscure,
+                textInputAction: TextInputAction.done,
+                enabled: !isLoading,
+                decoration: InputDecoration(
+                  labelText: 'Password',
+                  prefixIcon: const Icon(Icons.lock_outlined, size: 18),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _regObscure
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
+                      size: 18,
+                    ),
+                    onPressed: () => setState(() => _regObscure = !_regObscure),
+                  ),
+                ),
+                validator: (v) =>
+                    (v == null || v.isEmpty) ? 'Password is required' : null,
+                onFieldSubmitted: (_) => _submitRegister(),
+              ),
+              if (state is AdminRegisterError) ...[
+                const SizedBox(height: 8),
+                _ErrorText(state.message),
+              ],
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                height: 40,
+                child: ElevatedButton(
+                  onPressed: isLoading ? null : _submitRegister,
+                  child: isLoading
+                      ? _LoadingSpinner()
+                      : const Text('Create Account'),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 

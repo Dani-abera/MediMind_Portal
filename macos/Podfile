@@ -39,4 +39,8 @@ post_install do |installer|
   installer.pods_project.targets.each do |target|
     flutter_additional_macos_build_settings(target)
   end
+  # Strip resource forks/Finder metadata from all pod frameworks to prevent codesign failure
+  Dir.glob(File.join(installer.sandbox.root, '**', '*.{framework,xcframework}')) do |f|
+    system("xattr -cr '#{f}' 2>/dev/null || true")
+  end
 end

@@ -1,10 +1,12 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'user_context.dart';
 import '../storage/secure_storage.dart';
 
 class AuthInterceptor extends Interceptor {
   final SecureStorage _storage;
   final UserContext _ctx;
+  VoidCallback? onRefreshFailed;
 
   AuthInterceptor(this._storage, this._ctx);
 
@@ -40,6 +42,7 @@ class AuthInterceptor extends Interceptor {
         }
       } else {
         _ctx.clear();
+        onRefreshFailed?.call();
       }
     }
     handler.next(err);
@@ -51,7 +54,7 @@ class AuthInterceptor extends Interceptor {
       if (refresh == null) return false;
       final dio = Dio();
       final res = await dio.post(
-        '${const String.fromEnvironment('API_BASE_URL', defaultValue: 'https://api.medimind.et/api/v1')}/auth/refresh',
+        '${const String.fromEnvironment('API_BASE_URL', defaultValue: 'https://api.medimind.et/api/v1')}/auth/refresh-token',
         data: {'refreshToken': refresh},
       );
       final newAccess = res.data['accessToken'] as String?;
