@@ -20,6 +20,8 @@ import '../../features/doctor/presentation/pages/create_prescription_page.dart';
 import '../../features/doctor/presentation/pages/prescription_templates_page.dart';
 import '../../features/doctor/presentation/pages/schedule_page.dart';
 import '../../features/doctor/presentation/pages/doctor_profile_page.dart';
+import '../../features/admin/presentation/pages/registration/admin_registration_status_page.dart';
+import '../../features/admin/presentation/pages/registration/register_center_page.dart';
 import '../../features/admin/admin_workspace.dart';
 import '../../features/admin/presentation/pages/admin_dashboard_page.dart';
 import '../../features/admin/presentation/pages/admins/admins_list_page.dart';
@@ -74,6 +76,32 @@ class AppRouter {
         path: '/doctor/video-call/:id',
         builder: (_, state) =>
             VideoCallPage(consultationId: state.pathParameters['id']!),
+      ),
+
+      GoRoute(
+        path: RouteNames.adminRegisterCenter,
+        builder: (_, __) => const RegisterCenterPage(),
+      ),
+      GoRoute(
+        path: RouteNames.adminPendingApproval,
+        builder: (_, __) => const AdminRegistrationStatusPage(
+          title: 'Pending Approval',
+          message: 'Your center registration is currently under review by Super Admin.',
+        ),
+      ),
+      GoRoute(
+        path: RouteNames.adminCenterRejected,
+        builder: (_, __) => const AdminRegistrationStatusPage(
+          title: 'Registration Rejected',
+          message: 'Your center registration has been rejected. Please contact support.',
+        ),
+      ),
+      GoRoute(
+        path: RouteNames.adminCenterSuspended,
+        builder: (_, __) => const AdminRegistrationStatusPage(
+          title: 'Account Suspended',
+          message: 'Your healthcare center account has been suspended.',
+        ),
       ),
 
       StatefulShellRoute.indexedStack(
@@ -414,13 +442,32 @@ class AppRouter {
     switch (_ctx.userType) {
       case UserType.doctor:
         if (!path.startsWith('/doctor')) return RouteNames.doctorDashboard;
+        return null;
       case UserType.admin:
-        if (!path.startsWith('/admin')) return RouteNames.adminDashboard;
+        final status = _ctx.centerStatus;
+        if (_ctx.centerId == null) {
+          if (path != RouteNames.adminRegisterCenter) return RouteNames.adminRegisterCenter;
+        } else if (status == 'PendingApproval') {
+          if (path != RouteNames.adminPendingApproval) return RouteNames.adminPendingApproval;
+        } else if (status == 'Rejected') {
+          if (path != RouteNames.adminCenterRejected) return RouteNames.adminCenterRejected;
+        } else if (status == 'Suspended') {
+          if (path != RouteNames.adminCenterSuspended) return RouteNames.adminCenterSuspended;
+        } else {
+          if (!path.startsWith('/admin') ||
+              path == RouteNames.adminRegisterCenter ||
+              path == RouteNames.adminPendingApproval ||
+              path == RouteNames.adminCenterRejected ||
+              path == RouteNames.adminCenterSuspended) {
+            return RouteNames.adminDashboard;
+          }
+        }
+        return null;
       case UserType.superAdmin:
         if (!path.startsWith('/super-admin')) return RouteNames.superAdminDashboard;
+        return null;
       case UserType.unknown:
         return RouteNames.login;
     }
-    return null;
   }
 }

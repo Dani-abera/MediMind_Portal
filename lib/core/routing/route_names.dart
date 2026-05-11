@@ -28,6 +28,10 @@ abstract class RouteNames {
   // ── Admin ────────────────────────────────────────────────────────────────
   static const String adminRoot = '/admin';
   static const String adminDashboard = '/admin/dashboard';
+  static const String adminRegisterCenter = '/admin/register-center';
+  static const String adminPendingApproval = '/admin/pending-approval';
+  static const String adminCenterRejected = '/admin/center-rejected';
+  static const String adminCenterSuspended = '/admin/center-suspended';
   static const String adminQueue = '/admin/queue';
   static const String adminAppointments = '/admin/appointments';
   static const String adminAppointmentsPending = '/admin/appointments/pending';

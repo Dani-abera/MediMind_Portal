@@ -69,6 +69,7 @@ class PlatformAuditBloc extends Bloc<PlatformAuditEvent, PlatformAuditState> {
   }
 
   Future<void> _onRefreshed(PlatformAuditRefreshed event, Emitter<PlatformAuditState> emit) async {
+    emit(const PlatformAuditLoading());
     await _fetch(emit);
   }
 

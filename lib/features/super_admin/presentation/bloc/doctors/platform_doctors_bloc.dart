@@ -61,6 +61,7 @@ class PlatformDoctorsBloc extends Bloc<PlatformDoctorsEvent, PlatformDoctorsStat
   }
 
   Future<void> _onRefreshed(PlatformDoctorsRefreshed event, Emitter<PlatformDoctorsState> emit) async {
+    emit(const PlatformDoctorsLoading());
     await _fetch(emit);
   }
 

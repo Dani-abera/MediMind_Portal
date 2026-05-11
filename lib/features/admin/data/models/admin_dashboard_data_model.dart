@@ -47,17 +47,20 @@ class AdminDashboardDataModel extends AdminDashboardData {
     final revenue = j['revenue'] as Map<String, dynamic>? ?? {};
     final doctors = j['doctors'] as Map<String, dynamic>? ?? {};
 
+    int parseInt(dynamic v) => int.tryParse(v?.toString() ?? '') ?? 0;
+    double parseDouble(dynamic v) => double.tryParse(v?.toString() ?? '') ?? 0.0;
+
     return AdminDashboardDataModel(
-      todayAppointmentsTotal: appts['total'] as int? ?? j['todayAppointmentsTotal'] as int? ?? 0,
-      confirmedCount: appts['confirmed'] as int? ?? j['confirmedCount'] as int? ?? 0,
-      pendingCount: appts['pending'] as int? ?? j['pendingCount'] as int? ?? 0,
-      cancelledCount: appts['cancelled'] as int? ?? j['cancelledCount'] as int? ?? 0,
-      queueLength: queue['length'] as int? ?? j['queueLength'] as int? ?? 0,
-      avgWaitMinutes: (queue['avgWait'] ?? j['avgWaitMinutes'] as num?)?.toDouble() ?? 0,
-      todayRevenueEtb: (revenue['today'] ?? j['todayRevenueEtb'] as num?)?.toDouble() ?? 0,
-      revenueChangePercent: (revenue['changePercent'] ?? j['revenueChangePercent'] as num?)?.toDouble() ?? 0,
-      activeDoctors: doctors['active'] as int? ?? j['activeDoctors'] as int? ?? 0,
-      totalDoctors: doctors['total'] as int? ?? j['totalDoctors'] as int? ?? 0,
+      todayAppointmentsTotal: parseInt(appts['total'] ?? j['todayAppointmentsTotal']),
+      confirmedCount: parseInt(appts['confirmed'] ?? j['confirmedCount']),
+      pendingCount: parseInt(appts['pending'] ?? j['pendingCount']),
+      cancelledCount: parseInt(appts['cancelled'] ?? j['cancelledCount']),
+      queueLength: parseInt(queue['currentlyWaiting'] ?? queue['length'] ?? j['queueLength']),
+      avgWaitMinutes: parseDouble(queue['averageWaitMinutes'] ?? queue['avgWait'] ?? j['avgWaitMinutes']),
+      todayRevenueEtb: parseDouble(revenue['totalCollected'] ?? revenue['today'] ?? j['todayRevenueEtb']),
+      revenueChangePercent: parseDouble(revenue['changePercent'] ?? j['revenueChangePercent']),
+      activeDoctors: parseInt(doctors['working'] ?? doctors['active'] ?? j['activeDoctors']),
+      totalDoctors: parseInt(doctors['totalRegistered'] ?? doctors['total'] ?? j['totalDoctors']),
       hourlyVolume: ((j['hourlyVolume'] ?? j['hourly_volume']) as List?)
               ?.map((e) => HourlyVolumeModel.fromJson(e as Map<String, dynamic>))
               .toList() ?? [],

@@ -68,6 +68,7 @@ class RevenueBloc extends Bloc<RevenueEvent, RevenueState> {
   }
 
   Future<void> _onRefreshed(RevenueRefreshed event, Emitter<RevenueState> emit) async {
+    emit(const RevenueLoading());
     await _fetch(emit);
   }
 

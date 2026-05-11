@@ -10,7 +10,7 @@ class AdminDashboardRemoteDataSource {
       '/healthcare-centers/$centerId/dashboard/today',
     );
     return AdminDashboardDataModel.fromJson(
-      resp.data['data'] as Map<String, dynamic>,
+      resp.data as Map<String, dynamic>,
     );
   }
 }

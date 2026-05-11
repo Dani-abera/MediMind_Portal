@@ -40,6 +40,7 @@ class QueueBloc extends Bloc<QueueEvent, QueueState> {
     QueueRefreshed event,
     Emitter<QueueState> emit,
   ) async {
+    emit(const QueueLoading());
     final centerId = _currentCenterId;
     if (centerId == null) return;
     final result = await _getQueue(centerId);

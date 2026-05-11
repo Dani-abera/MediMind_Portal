@@ -33,6 +33,7 @@ class ScheduleBloc extends Bloc<ScheduleEvent, ScheduleState> {
     ScheduleRefreshed event,
     Emitter<ScheduleState> emit,
   ) async {
+    emit(const ScheduleLoading());
     final result = await _getSchedules();
     result.fold(
       (f) => emit(ScheduleError(f.message)),

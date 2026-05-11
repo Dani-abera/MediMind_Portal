@@ -74,6 +74,7 @@ class PlatformUsersBloc extends Bloc<PlatformUsersEvent, PlatformUsersState> {
   }
 
   Future<void> _onRefreshed(PlatformUsersRefreshed event, Emitter<PlatformUsersState> emit) async {
+    emit(const PlatformUsersLoading());
     await _fetch(emit);
   }
 

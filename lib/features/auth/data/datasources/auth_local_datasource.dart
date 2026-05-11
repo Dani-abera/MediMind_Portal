@@ -70,7 +70,9 @@ class AuthLocalDataSourceImpl implements AuthLocalDataSource {
     await _secureStorage.writeUserId(user.id);
     await _secureStorage.writeUserType(_roleToString(user.role));
     if (user is AdminUser) {
-      await _secureStorage.writeCenterId(user.centerId);
+      if (user.centerId != null) {
+        await _secureStorage.writeCenterId(user.centerId!);
+      }
     }
   }
 
@@ -108,6 +110,7 @@ class AuthLocalDataSourceImpl implements AuthLocalDataSource {
     if (user is AdminUser) {
       base['centerId'] = user.centerId;
       base['centerName'] = user.centerName;
+      base['centerStatus'] = user.centerStatus;
     }
     return base;
   }

@@ -101,6 +101,8 @@ import 'presentation/bloc/doctors_roster/doctors_roster_bloc.dart';
 import 'presentation/bloc/patient_directory/patient_directory_bloc.dart';
 import 'presentation/bloc/patient_detail/patient_center_detail_bloc.dart';
 import 'presentation/bloc/admins/admin_staff_bloc.dart';
+import 'presentation/bloc/registration/center_registration_bloc.dart';
+import '../centers/domain/usecases/register_center_usecase.dart';
 
 Future<void> initAdminFeature() async {
   // ── Shell & Notifications ──────────────────────────────────────────────
@@ -304,6 +306,9 @@ Future<void> initAdminFeature() async {
       addAdmin: sl<AddAdminUseCase>(),
       deactivate: sl<DeactivateAdminUseCase>(),
     ),
+  );
+  sl.registerFactory(
+    () => CenterRegistrationBloc(registerCenter: sl<RegisterCenterUseCase>()),
   );
 
   sl.registerLazySingleton(() => CenterSettingsRemoteDataSource(sl<DioClient>()));

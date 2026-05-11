@@ -92,6 +92,7 @@ class PaymentsLedgerBloc extends Bloc<PaymentsLedgerEvent, PaymentsLedgerState> 
   }
 
   Future<void> _onRefreshed(PaymentsLedgerRefreshed event, Emitter<PaymentsLedgerState> emit) async {
+    emit(const PaymentsLedgerLoading());
     await _fetch(emit);
   }
 }

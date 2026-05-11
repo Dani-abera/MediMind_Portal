@@ -71,6 +71,7 @@ class CentersBloc extends Bloc<CentersEvent, CentersState> {
   }
 
   Future<void> _onRefreshed(CentersRefreshed event, Emitter<CentersState> emit) async {
+    emit(const CentersLoading());
     await _fetch(emit);
   }
 

@@ -59,6 +59,7 @@ class PlatformSubscriptionsBloc extends Bloc<PlatformSubscriptionsEvent, Platfor
   }
 
   Future<void> _onRefreshed(PlatformSubscriptionsRefreshed event, Emitter<PlatformSubscriptionsState> emit) async {
+    emit(const PlatformSubscriptionsLoading());
     await _fetch(emit);
   }
 

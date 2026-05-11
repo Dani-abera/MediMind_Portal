@@ -60,6 +60,7 @@ class DoctorsRosterBloc extends Bloc<DoctorsRosterEvent, DoctorsRosterState> {
   }
 
   Future<void> _onRefreshed(DoctorsRosterRefreshed _, Emitter<DoctorsRosterState> emit) async {
+    emit(const DoctorsRosterLoading());
     await _fetch(emit);
   }
 

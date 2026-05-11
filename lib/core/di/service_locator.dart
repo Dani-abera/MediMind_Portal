@@ -19,6 +19,7 @@ import '../../features/auth/auth_injection.dart';
 import '../../features/doctor/doctor_injection.dart';
 import '../../features/admin/admin_injection.dart';
 import '../../features/super_admin/super_admin_injection.dart';
+import '../../features/centers/centers_injection.dart';
 
 final sl = GetIt.instance;
 
@@ -82,4 +83,5 @@ Future<void> initCoreDependencies() async {
   await initDoctorFeature();
   await initAdminFeature();
   await initSuperAdminFeature();
+  await initCentersFeature();
 }

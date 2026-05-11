@@ -87,6 +87,9 @@ class AuthRepositoryImpl implements AuthRepository {
       _guardResult(() async {
         final result =
             await _remote.superAdminLogin(email: email, password: password);
+        if (!result.requires2fa) {
+          await _persist(result.user, result.tokens);
+        }
         return (
           user: result.user,
           tokens: result.tokens as AuthTokens,
@@ -173,7 +176,10 @@ class AuthRepositoryImpl implements AuthRepository {
         UserRole.admin => UserType.admin,
         UserRole.superAdmin => UserType.superAdmin,
       };
-      if (user is AdminUser) _ctx.centerId = user.centerId;
+      if (user is AdminUser) {
+        _ctx.centerId = user.centerId;
+        _ctx.centerStatus = user.centerStatus;
+      }
 
       if (tokens.expiresAt.isBefore(DateTime.now())) {
         try {
@@ -215,6 +221,7 @@ class AuthRepositoryImpl implements AuthRepository {
     };
     if (user is AdminUser) {
       _ctx.centerId = user.centerId;
+      _ctx.centerStatus = user.centerStatus;
     }
   }
 

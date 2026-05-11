@@ -84,6 +84,7 @@ class PatientDetailBloc extends Bloc<PatientDetailEvent, PatientDetailState> {
     PatientDetailRefreshed event,
     Emitter<PatientDetailState> emit,
   ) async {
+    emit(const PatientDetailLoading());
     final id = _currentPatientId;
     if (id == null) return;
     await _loadPatient(id, emit);

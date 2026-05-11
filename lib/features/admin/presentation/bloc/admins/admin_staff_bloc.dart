@@ -46,6 +46,7 @@ class AdminStaffBloc extends Bloc<AdminStaffEvent, AdminStaffState> {
   }
 
   Future<void> _onRefreshed(AdminStaffRefreshed _, Emitter<AdminStaffState> emit) async {
+    emit(const AdminStaffLoading());
     await _fetch(emit);
   }
 

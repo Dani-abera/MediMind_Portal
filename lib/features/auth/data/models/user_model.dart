@@ -27,13 +27,17 @@ abstract class UserModel extends User {
   }
 
   static UserRole _parseRole(String raw) {
-    switch (raw.toLowerCase()) {
+    final normalized = raw.toLowerCase().replaceAll(' ', '').replaceAll('_', '');
+    switch (normalized) {
       case 'doctor':
         return UserRole.doctor;
       case 'admin':
       case 'healthcenteradmin':
+      case 'centeradmin':
         return UserRole.admin;
       case 'superadmin':
+      case 'systemadmin':
+      case 'platformadmin':
         return UserRole.superAdmin;
       default:
         return UserRole.doctor;
@@ -70,8 +74,9 @@ class AdminUserModel extends AdminUser {
     required super.id,
     required super.fullName,
     required super.email,
-    required super.centerId,
-    required super.centerName,
+    super.centerId,
+    super.centerName,
+    super.centerStatus,
     super.avatarUrl,
   });
 
@@ -84,12 +89,9 @@ class AdminUserModel extends AdminUser {
             json['fullName'] as String? ??
             'Admin',
         email: json['email'] as String? ?? '',
-        centerId: json['center_id'] as String? ??
-            json['centerId'] as String? ??
-            '',
-        centerName: json['centerName'] as String? ??
-            json['center_name'] as String? ??
-            '',
+        centerId: json['center_id'] as String? ?? json['centerId'] as String?,
+        centerName: json['centerName'] as String? ?? json['center_name'] as String?,
+        centerStatus: json['centerStatus'] as String? ?? json['center_status'] as String?,
         avatarUrl: json['avatarUrl'] as String?,
       );
 }

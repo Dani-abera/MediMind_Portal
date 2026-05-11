@@ -27,6 +27,7 @@ class PlatformDashboardBloc extends Bloc<PlatformDashboardEvent, PlatformDashboa
   }
 
   Future<void> _onRefreshed(PlatformDashboardRefreshed event, Emitter<PlatformDashboardState> emit) async {
+    emit(const PlatformDashboardLoading());
     final result = await _getDashboard();
     result.fold(
       (f) => emit(PlatformDashboardError(f.message)),

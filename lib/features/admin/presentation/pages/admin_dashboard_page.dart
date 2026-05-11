@@ -39,7 +39,6 @@ class _AdminDashboardView extends StatelessWidget {
           subtitle: 'Health Center Overview',
           actions: [
             BlocBuilder<AdminDashboardBloc, AdminDashboardState>(
-              buildWhen: (p, c) => p is AdminDashboardLoaded != c is AdminDashboardLoaded,
               builder: (ctx, state) {
                 if (state is AdminDashboardLoaded) {
                   return Text(

@@ -106,6 +106,7 @@ class AdminQueueBloc extends Bloc<AdminQueueEvent, AdminQueueState> {
   }
 
   Future<void> _onRefreshed(AdminQueueRefreshed event, Emitter<AdminQueueState> emit) async {
+    emit(const AdminQueueLoading());
     await _fetch(emit);
   }
 

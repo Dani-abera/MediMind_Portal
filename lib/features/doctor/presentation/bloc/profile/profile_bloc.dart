@@ -33,6 +33,7 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
     ProfileRefreshed event,
     Emitter<ProfileState> emit,
   ) async {
+    emit(const ProfileLoading());
     final result = await _getProfile();
     result.fold(
       (f) => emit(ProfileError(f.message)),
