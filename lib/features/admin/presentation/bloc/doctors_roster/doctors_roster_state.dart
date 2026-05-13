@@ -28,3 +28,14 @@ class DoctorScheduleLoaded extends DoctorsRosterState {
   const DoctorScheduleLoaded(this.config);
   @override List<Object?> get props => [config];
 }
+class DoctorInvitationSent extends DoctorsRosterState {
+  final String message;
+  const DoctorInvitationSent(this.message);
+  @override List<Object?> get props => [message];
+}
+class ScheduleExceptionsLoaded extends DoctorsRosterState {
+  final String doctorId;
+  final List<ScheduleException> exceptions;
+  const ScheduleExceptionsLoaded(this.doctorId, this.exceptions);
+  @override List<Object?> get props => [doctorId, exceptions];
+}

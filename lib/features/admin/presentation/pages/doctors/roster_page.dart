@@ -12,9 +12,10 @@ import '../../../../../core/widgets/data_table/app_data_table.dart';
 import '../../../../../core/widgets/dialogs/confirm_dialog.dart';
 import '../../../../../core/widgets/shell/page_header.dart';
 import '../../../../../core/widgets/status_badges/status_badge.dart';
+import 'package:flutter/services.dart';
 import '../../../domain/entities/doctor_at_center.dart';
 import '../../bloc/doctors_roster/doctors_roster_bloc.dart';
-import '../../widgets/add_doctor_dialog.dart';
+import '../../widgets/invite_doctor_dialog.dart';
 import '../../widgets/configure_schedule_modal.dart';
 
 class DoctorsRosterPage extends StatelessWidget {
@@ -45,6 +46,10 @@ class _DoctorsRosterView extends StatelessWidget {
           ScaffoldMessenger.of(ctx).showSnackBar(
             SnackBar(content: Text(state.message), backgroundColor: AppColors.success),
           );
+        } else if (state is DoctorInvitationSent) {
+          ScaffoldMessenger.of(ctx).showSnackBar(
+            SnackBar(content: Text(state.message), backgroundColor: AppColors.success),
+          );
         } else if (state is DoctorScheduleLoaded) {
           final bloc = ctx.read<DoctorsRosterBloc>();
           ConfigureScheduleModal.show(ctx, config: state.config, onSave: (config) {
@@ -59,9 +64,9 @@ class _DoctorsRosterView extends StatelessWidget {
             subtitle: 'Manage doctors affiliated with this center',
             actions: [
               AppButton.primary(
-                label: 'Add Doctor',
-                icon: FontAwesomeIcons.userPlus,
-                onPressed: () => AddDoctorDialog.show(context),
+                label: 'Invite Doctor',
+                icon: FontAwesomeIcons.envelopeOpenText,
+                onPressed: () => InviteDoctorDialog.show(context),
               ),
               const SizedBox(width: AppSpacing.sm),
               IconButton(
@@ -192,11 +197,16 @@ class _DoctorRowActions extends StatelessWidget {
     return PopupMenuButton<String>(
       icon: const Icon(Icons.more_vert, size: 16, color: AppColors.neutral400),
       itemBuilder: (_) => [
+        const PopupMenuItem(value: 'fee', child: Text('Edit Consultation Fee')),
         const PopupMenuItem(value: 'schedule', child: Text('Configure Schedule')),
         const PopupMenuItem(value: 'remove', child: Text('Remove from Center')),
       ],
       onSelected: (v) async {
         switch (v) {
+          case 'fee':
+            if (context.mounted) {
+              await _EditFeeDialog.show(context, doctor: doctor, bloc: bloc);
+            }
           case 'schedule':
             bloc.add(DoctorScheduleRequested(doctor.doctorId));
           case 'remove':
@@ -213,5 +223,88 @@ class _DoctorRowActions extends StatelessWidget {
         }
       },
     );
+  }
+}
+
+class _EditFeeDialog extends StatefulWidget {
+  final DoctorAtCenter doctor;
+  final DoctorsRosterBloc bloc;
+  const _EditFeeDialog({required this.doctor, required this.bloc});
+
+  static Future<void> show(BuildContext context, {required DoctorAtCenter doctor, required DoctorsRosterBloc bloc}) =>
+      showDialog(
+        context: context,
+        builder: (_) => _EditFeeDialog(doctor: doctor, bloc: bloc),
+      );
+
+  @override
+  State<_EditFeeDialog> createState() => _EditFeeDialogState();
+}
+
+class _EditFeeDialogState extends State<_EditFeeDialog> {
+  final _formKey = GlobalKey<FormState>();
+  late final TextEditingController _feeCtrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _feeCtrl = TextEditingController(
+      text: widget.doctor.consultationFeeEtb > 0
+          ? widget.doctor.consultationFeeEtb.toStringAsFixed(0)
+          : '',
+    );
+  }
+
+  @override
+  void dispose() {
+    _feeCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text('Edit Fee — ${widget.doctor.fullName}'),
+      content: SizedBox(
+        width: 320,
+        child: Form(
+          key: _formKey,
+          child: TextFormField(
+            controller: _feeCtrl,
+            autofocus: true,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[\d.]'))],
+            decoration: const InputDecoration(
+              labelText: 'Consultation Fee (ETB)',
+              prefixIcon: Icon(Icons.payments_outlined),
+            ),
+            validator: (v) {
+              final n = double.tryParse(v ?? '');
+              if (n == null || n <= 0) return 'Price must be greater than 0 ETB';
+              return null;
+            },
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          onPressed: _submit,
+          child: const Text('Save'),
+        ),
+      ],
+    );
+  }
+
+  void _submit() {
+    if (!_formKey.currentState!.validate()) return;
+    widget.bloc.add(DoctorFeeUpdateRequested(
+      widget.doctor.doctorId,
+      double.parse(_feeCtrl.text.trim()),
+    ));
+    Navigator.of(context).pop();
   }
 }

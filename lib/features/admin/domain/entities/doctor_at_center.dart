@@ -10,6 +10,27 @@ enum DoctorStatus {
       };
 }
 
+// ── Day helpers ───────────────────────────────────────────────────────────────
+
+const _kDayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+String _dayIntToName(int day) => _kDayNames[(day - 1).clamp(0, 6)];
+
+int _dayNameToInt(String name) {
+  final idx = _kDayNames.indexWhere((d) => d.toLowerCase() == name.toLowerCase());
+  return idx == -1 ? 1 : idx + 1;
+}
+
+List<int> parseWorkingDays(dynamic raw) {
+  if (raw == null) return [];
+  final list = raw as List;
+  if (list.isEmpty) return [];
+  if (list.first is int) return list.cast<int>();
+  return list.cast<String>().map(_dayNameToInt).toList();
+}
+
+// ── Schedule entities ─────────────────────────────────────────────────────────
+
 class ScheduleBreakConfig extends Equatable {
   final String startTime;
   final String endTime;
@@ -64,20 +85,52 @@ class DoctorScheduleConfig extends Equatable {
         breaks: breaks ?? this.breaks,
       );
 
+  // Backend expects:
+  //   workingDays: ["Monday", "Tuesday", ...]
+  //   slotDuration: int
+  //   breakStart/breakEnd: single optional pair (only first break sent)
   Map<String, dynamic> toJson() => {
-        if (id != null) 'id': id,
         'doctorId': doctorId,
         'centerId': centerId,
-        'workingDays': workingDays,
+        'workingDays': workingDays.map(_dayIntToName).toList(),
         'startTime': startTime,
         'endTime': endTime,
-        'slotDurationMinutes': slotDurationMinutes,
-        'breaks': breaks.map((b) => b.toJson()).toList(),
+        'slotDuration': slotDurationMinutes,
+        if (breaks.isNotEmpty) 'breakStart': breaks.first.startTime,
+        if (breaks.isNotEmpty) 'breakEnd': breaks.first.endTime,
       };
 
   @override
   List<Object?> get props => [id, doctorId, centerId, workingDays, startTime, endTime, slotDurationMinutes, breaks];
 }
+
+// ── Schedule Exception (out-of-office date) ───────────────────────────────────
+
+class ScheduleException extends Equatable {
+  final String? id;
+  final String doctorId;
+  final String centerId;
+  final DateTime date;
+  final String reason;
+
+  const ScheduleException({
+    this.id,
+    required this.doctorId,
+    required this.centerId,
+    required this.date,
+    required this.reason,
+  });
+
+  Map<String, dynamic> toJson() => {
+        'date': '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}',
+        'reason': reason,
+      };
+
+  @override
+  List<Object?> get props => [id, doctorId, centerId, date, reason];
+}
+
+// ── Doctor at center ──────────────────────────────────────────────────────────
 
 class DoctorAtCenter extends Equatable {
   final String doctorId;
@@ -109,4 +162,39 @@ class DoctorAtCenter extends Equatable {
         doctorId, fullName, specialization, licenseNumber, licenseVerified,
         consultationFeeEtb, joinedAt, status, todayAppointments, avatarUrl,
       ];
+}
+
+// ── Invite doctor DTO ─────────────────────────────────────────────────────────
+
+class InviteDoctorDto extends Equatable {
+  final String fullName;
+  final String email;
+  final String phoneNumber;
+  final String specialization;
+  final String licenseNumber;
+  final int yearsOfExperience;
+  final double consultationFee;
+
+  const InviteDoctorDto({
+    required this.fullName,
+    required this.email,
+    required this.phoneNumber,
+    required this.specialization,
+    required this.licenseNumber,
+    required this.yearsOfExperience,
+    required this.consultationFee,
+  });
+
+  Map<String, dynamic> toJson() => {
+        'fullName': fullName,
+        'email': email,
+        'phoneNumber': phoneNumber,
+        'specialization': specialization,
+        'licenseNumber': licenseNumber,
+        'yearsOfExperience': yearsOfExperience,
+        'consultationFee': consultationFee,
+      };
+
+  @override
+  List<Object?> get props => [fullName, email, phoneNumber, specialization, licenseNumber, yearsOfExperience, consultationFee];
 }

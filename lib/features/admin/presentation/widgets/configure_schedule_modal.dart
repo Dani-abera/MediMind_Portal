@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/buttons/app_button.dart';
 import '../../domain/entities/doctor_at_center.dart';
+import '../bloc/doctors_roster/doctors_roster_bloc.dart';
 
 class ConfigureScheduleModal extends StatefulWidget {
   final DoctorScheduleConfig? config;
@@ -18,9 +21,13 @@ class ConfigureScheduleModal extends StatefulWidget {
     DoctorScheduleConfig? config,
     required void Function(DoctorScheduleConfig) onSave,
   }) {
+    final bloc = context.read<DoctorsRosterBloc>();
     return showDialog(
       context: context,
-      builder: (_) => ConfigureScheduleModal._(config: config, onSave: onSave),
+      builder: (_) => BlocProvider.value(
+        value: bloc,
+        child: ConfigureScheduleModal._(config: config, onSave: onSave),
+      ),
     );
   }
 
@@ -36,6 +43,9 @@ class _ConfigureScheduleModalState extends State<ConfigureScheduleModal> {
   late TextEditingController _slotDurationCtrl;
   late List<_BreakEntry> _breaks;
 
+  List<ScheduleException> _exceptions = [];
+  bool _exceptionsLoading = false;
+
   static const _dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
   @override
@@ -50,6 +60,15 @@ class _ConfigureScheduleModalState extends State<ConfigureScheduleModal> {
       startCtrl: TextEditingController(text: b.startTime),
       endCtrl: TextEditingController(text: b.endTime),
     )).toList() ?? [];
+
+    if (c != null && c.doctorId.isNotEmpty) {
+      _exceptionsLoading = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          context.read<DoctorsRosterBloc>().add(ScheduleExceptionsRequested(c.doctorId));
+        }
+      });
+    }
   }
 
   @override
@@ -66,78 +85,122 @@ class _ConfigureScheduleModalState extends State<ConfigureScheduleModal> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Configure Schedule'),
-      content: SizedBox(
-        width: 520,
-        child: Form(
-          key: _formKey,
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _sectionLabel('Working Days'),
-                const SizedBox(height: AppSpacing.sm),
-                _workingDaysSelector(),
-                const SizedBox(height: AppSpacing.base),
-                _sectionLabel('Working Hours'),
-                const SizedBox(height: AppSpacing.sm),
-                Row(
-                  children: [
-                    Expanded(child: _timeField('Start Time', _startTimeCtrl)),
-                    const SizedBox(width: AppSpacing.base),
-                    Expanded(child: _timeField('End Time', _endTimeCtrl)),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.base),
-                _sectionLabel('Slot Duration (minutes)'),
-                const SizedBox(height: AppSpacing.sm),
-                SizedBox(
-                  width: 120,
-                  child: TextFormField(
-                    controller: _slotDurationCtrl,
-                    keyboardType: TextInputType.number,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    decoration: const InputDecoration(hintText: '30'),
-                    validator: (v) {
-                      final n = int.tryParse(v ?? '');
-                      if (n == null || n < 5 || n > 120) return '5–120';
-                      return null;
-                    },
+    return BlocListener<DoctorsRosterBloc, DoctorsRosterState>(
+      listener: (ctx, state) {
+        if (state is ScheduleExceptionsLoaded) {
+          setState(() {
+            _exceptions = state.exceptions;
+            _exceptionsLoading = false;
+          });
+        } else if (state is DoctorsRosterError) {
+          setState(() => _exceptionsLoading = false);
+        }
+      },
+      child: AlertDialog(
+        title: const Text('Configure Schedule'),
+        content: SizedBox(
+          width: 520,
+          child: Form(
+            key: _formKey,
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _sectionLabel('Working Days'),
+                  const SizedBox(height: AppSpacing.sm),
+                  _workingDaysSelector(),
+                  const SizedBox(height: AppSpacing.base),
+                  _sectionLabel('Working Hours'),
+                  const SizedBox(height: AppSpacing.sm),
+                  Row(
+                    children: [
+                      Expanded(child: _timeField('Start Time', _startTimeCtrl)),
+                      const SizedBox(width: AppSpacing.base),
+                      Expanded(child: _timeField('End Time', _endTimeCtrl)),
+                    ],
                   ),
-                ),
-                const SizedBox(height: AppSpacing.base),
-                Row(
-                  children: [
-                    _sectionLabel('Breaks'),
-                    const Spacer(),
-                    TextButton.icon(
-                      icon: const Icon(Icons.add, size: 14),
-                      label: const Text('Add Break'),
-                      onPressed: () => setState(() => _breaks.add(_BreakEntry(
-                        startCtrl: TextEditingController(text: '12:00'),
-                        endCtrl: TextEditingController(text: '13:00'),
-                      ))),
+                  const SizedBox(height: AppSpacing.base),
+                  _sectionLabel('Slot Duration (minutes)'),
+                  const SizedBox(height: AppSpacing.sm),
+                  SizedBox(
+                    width: 120,
+                    child: TextFormField(
+                      controller: _slotDurationCtrl,
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                      decoration: const InputDecoration(hintText: '30'),
+                      validator: (v) {
+                        final n = int.tryParse(v ?? '');
+                        if (n == null || n < 5 || n > 120) return '5–120';
+                        return null;
+                      },
                     ),
+                  ),
+                  const SizedBox(height: AppSpacing.base),
+                  Row(
+                    children: [
+                      _sectionLabel('Breaks'),
+                      const Spacer(),
+                      TextButton.icon(
+                        icon: const Icon(Icons.add, size: 14),
+                        label: const Text('Add Break'),
+                        onPressed: () => setState(() => _breaks.add(_BreakEntry(
+                          startCtrl: TextEditingController(text: '12:00'),
+                          endCtrl: TextEditingController(text: '13:00'),
+                        ))),
+                      ),
+                    ],
+                  ),
+                  ..._breaks.asMap().entries.map((entry) => _breakRow(entry.key, entry.value)),
+                  if (widget.config != null && widget.config!.doctorId.isNotEmpty) ...[
+                    const SizedBox(height: AppSpacing.base),
+                    const Divider(),
+                    const SizedBox(height: AppSpacing.sm),
+                    Row(
+                      children: [
+                        _sectionLabel('Out-of-Office Dates'),
+                        const Spacer(),
+                        TextButton.icon(
+                          icon: const Icon(Icons.event_busy, size: 14),
+                          label: const Text('Add Date'),
+                          onPressed: _addExceptionDate,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    if (_exceptionsLoading)
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 8),
+                        child: Center(child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))),
+                      )
+                    else if (_exceptions.isEmpty)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 6),
+                        child: Text(
+                          'No out-of-office dates set.',
+                          style: AppTypography.caption.copyWith(color: AppColors.neutral400),
+                        ),
+                      )
+                    else
+                      ..._exceptions.map((e) => _exceptionRow(e)),
                   ],
-                ),
-                ..._breaks.asMap().entries.map((entry) => _breakRow(entry.key, entry.value)),
-              ],
+                ],
+              ),
             ),
           ),
         ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          AppButton.primary(
+            label: widget.config != null ? 'Update Schedule' : 'Save Schedule',
+            onPressed: _save,
+          ),
+        ],
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
-        ),
-        AppButton.primary(
-          label: widget.config != null ? 'Update Schedule' : 'Save Schedule',
-          onPressed: _save,
-        ),
-      ],
     );
   }
 
@@ -213,6 +276,62 @@ class _ConfigureScheduleModalState extends State<ConfigureScheduleModal> {
             visualDensity: VisualDensity.compact,
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _exceptionRow(ScheduleException e) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Row(
+        children: [
+          const Icon(Icons.event_busy, size: 14, color: AppColors.warning),
+          const SizedBox(width: 6),
+          Text(
+            DateFormat('MMM d, yyyy').format(e.date),
+            style: AppTypography.bodySmall,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              e.reason,
+              style: AppTypography.caption.copyWith(color: AppColors.neutral500),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.close, size: 14, color: AppColors.danger),
+            onPressed: () {
+              context.read<DoctorsRosterBloc>().add(
+                ScheduleExceptionRemoved(widget.config!.doctorId, e.date),
+              );
+            },
+            visualDensity: VisualDensity.compact,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _addExceptionDate() async {
+    final date = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now().add(const Duration(days: 1)),
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+    );
+    if (date == null || !mounted) return;
+    final doctorId = widget.config!.doctorId;
+    final centerId = widget.config!.centerId;
+    context.read<DoctorsRosterBloc>().add(
+      ScheduleExceptionAdded(
+        doctorId,
+        ScheduleException(
+          doctorId: doctorId,
+          centerId: centerId,
+          date: date,
+          reason: 'Out of office',
+        ),
       ),
     );
   }

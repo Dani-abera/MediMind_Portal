@@ -10,6 +10,11 @@ class DoctorsRosterStarted extends DoctorsRosterEvent {
   @override List<Object?> get props => [centerId];
 }
 class DoctorsRosterRefreshed extends DoctorsRosterEvent { const DoctorsRosterRefreshed(); }
+class DoctorInvited extends DoctorsRosterEvent {
+  final InviteDoctorDto dto;
+  const DoctorInvited(this.dto);
+  @override List<Object?> get props => [dto];
+}
 class DoctorAddedToCenter extends DoctorsRosterEvent {
   final String licenseNumber;
   const DoctorAddedToCenter(this.licenseNumber);
@@ -34,4 +39,28 @@ class DoctorScheduleRequested extends DoctorsRosterEvent {
   final String doctorId;
   const DoctorScheduleRequested(this.doctorId);
   @override List<Object?> get props => [doctorId];
+}
+class ScheduleExceptionsRequested extends DoctorsRosterEvent {
+  final String doctorId;
+  const ScheduleExceptionsRequested(this.doctorId);
+  @override List<Object?> get props => [doctorId];
+}
+class ScheduleExceptionAdded extends DoctorsRosterEvent {
+  final String doctorId;
+  final ScheduleException exception;
+  const ScheduleExceptionAdded(this.doctorId, this.exception);
+  @override List<Object?> get props => [doctorId, exception];
+}
+class ScheduleExceptionRemoved extends DoctorsRosterEvent {
+  final String doctorId;
+  final DateTime date;
+  const ScheduleExceptionRemoved(this.doctorId, this.date);
+  @override List<Object?> get props => [doctorId, date];
+}
+
+class DoctorFeeUpdateRequested extends DoctorsRosterEvent {
+  final String doctorId;
+  final double newFee;
+  const DoctorFeeUpdateRequested(this.doctorId, this.newFee);
+  @override List<Object?> get props => [doctorId, newFee];
 }

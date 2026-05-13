@@ -24,14 +24,29 @@ import '../../widgets/registration/registration_stepper.dart';
 import '../../widgets/registration/subscription_plan_card.dart';
 import '../../widgets/registration/working_hours_form.dart';
 
-class RegisterCenterPage extends StatefulWidget {
+class RegisterCenterPage extends StatelessWidget {
   const RegisterCenterPage({super.key});
 
   @override
-  State<RegisterCenterPage> createState() => _RegisterCenterPageState();
+  Widget build(BuildContext context) {
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(create: (_) => sl<CenterRegistrationBloc>()),
+        BlocProvider(create: (_) => sl<SubscriptionPlansCubit>()..loadPlans()),
+      ],
+      child: const _RegisterCenterPageBody(),
+    );
+  }
 }
 
-class _RegisterCenterPageState extends State<RegisterCenterPage> {
+class _RegisterCenterPageBody extends StatefulWidget {
+  const _RegisterCenterPageBody();
+
+  @override
+  State<_RegisterCenterPageBody> createState() => _RegisterCenterPageBodyState();
+}
+
+class _RegisterCenterPageBodyState extends State<_RegisterCenterPageBody> {
   final _pageCtrl = PageController();
   int _step = 0;
 
@@ -171,12 +186,7 @@ class _RegisterCenterPageState extends State<RegisterCenterPage> {
 
   @override
   Widget build(BuildContext context) {
-    return MultiBlocProvider(
-      providers: [
-        BlocProvider(create: (_) => sl<CenterRegistrationBloc>()),
-        BlocProvider(create: (_) => sl<SubscriptionPlansCubit>()..loadPlans()),
-      ],
-      child: BlocConsumer<AuthBloc, AuthState>(
+    return BlocConsumer<AuthBloc, AuthState>(
         listener: (ctx, state) {
           if (state is AuthUnauthenticated) ctx.go(RouteNames.login);
         },
@@ -285,8 +295,7 @@ class _RegisterCenterPageState extends State<RegisterCenterPage> {
             ),
           );
         },
-      ),
-    );
+      );
   }
 
   Widget _buildTopBar(BuildContext context) {

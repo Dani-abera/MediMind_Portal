@@ -6,9 +6,11 @@ import '../storage/secure_storage.dart';
 class AuthInterceptor extends Interceptor {
   final SecureStorage _storage;
   final UserContext _ctx;
+  final String _baseUrl;
   VoidCallback? onRefreshFailed;
 
-  AuthInterceptor(this._storage, this._ctx);
+  AuthInterceptor(this._storage, this._ctx, {required String baseUrl})
+      : _baseUrl = baseUrl;
 
   @override
   void onRequest(

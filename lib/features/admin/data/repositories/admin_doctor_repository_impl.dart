@@ -39,6 +39,8 @@ class AdminDoctorRepositoryImpl implements AdminDoctorRepository {
 
   @override Future<Either<Failure, List<DoctorAtCenter>>> getDoctors(String centerId) =>
     _guardResult(() => _remote.getDoctors(centerId));
+  @override Future<Either<Failure, void>> inviteDoctor(String centerId, InviteDoctorDto dto) =>
+    _guard(() => _remote.inviteDoctor(centerId, dto));
   @override Future<Either<Failure, void>> addDoctor(String centerId, String licenseNumber) =>
     _guard(() => _remote.addDoctor(centerId, licenseNumber));
   @override Future<Either<Failure, void>> removeDoctor(String centerId, String doctorId) =>
@@ -49,4 +51,12 @@ class AdminDoctorRepositoryImpl implements AdminDoctorRepository {
     _guardResult(() => _remote.getDoctorSchedule(doctorId, centerId));
   @override Future<Either<Failure, void>> deleteSchedule(String scheduleId) =>
     _guard(() => _remote.deleteSchedule(scheduleId));
+  @override Future<Either<Failure, List<ScheduleException>>> getScheduleExceptions(String doctorId, String centerId) =>
+    _guardResult(() => _remote.getScheduleExceptions(doctorId, centerId));
+  @override Future<Either<Failure, void>> addScheduleException(String doctorId, String centerId, ScheduleException exception) =>
+    _guard(() => _remote.addScheduleException(doctorId, centerId, exception));
+  @override Future<Either<Failure, void>> deleteScheduleException(String doctorId, String centerId, DateTime date) =>
+    _guard(() => _remote.deleteScheduleException(doctorId, centerId, date));
+  @override Future<Either<Failure, void>> updateConsultationFee(String centerId, String doctorId, double fee) =>
+    _guard(() => _remote.updateConsultationFee(centerId, doctorId, fee));
 }

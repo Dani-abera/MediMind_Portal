@@ -18,19 +18,19 @@ class CenterConfigModel extends CenterConfig {
   });
 
   factory CenterConfigModel.fromJson(Map<String, dynamic> j) => CenterConfigModel(
-        id: j['id'] as String? ?? '',
-        centerId: j['centerId'] as String? ?? '',
-        name: j['name'] as String? ?? '',
-        phone: j['phone'] as String? ?? '',
+        id: (j['id'] ?? j['centerId']) as String? ?? '',
+        centerId: (j['centerId'] ?? j['id']) as String? ?? '',
+        name: (j['name'] ?? j['centerName']) as String? ?? '',
+        phone: (j['phone'] ?? j['phoneNumber']) as String? ?? '',
         email: j['email'] as String? ?? '',
         city: j['city'] as String? ?? '',
         region: j['region'] as String? ?? '',
-        fullAddress: j['fullAddress'] as String? ?? '',
+        fullAddress: (j['fullAddress'] ?? j['address']) as String? ?? '',
         licenseNumber: j['licenseNumber'] as String? ?? '',
         latitude: (j['latitude'] as num?)?.toDouble() ?? 0,
         longitude: (j['longitude'] as num?)?.toDouble() ?? 0,
         specializations: (j['specializations'] as List? ?? []).cast<String>(),
-        services: (j['services'] as List? ?? []).cast<String>(),
+        services: ((j['services'] ?? j['servicesOffered']) as List? ?? []).cast<String>(),
       );
 
   Map<String, dynamic> toJson() => {

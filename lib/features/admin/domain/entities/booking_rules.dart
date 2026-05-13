@@ -8,6 +8,7 @@ class BookingRules extends Equatable {
   final bool autoApproveKnownPatients;
   final bool reminder24h;
   final bool reminder2h;
+  final String? warning;
 
   const BookingRules({
     this.slotDurationMinutes = 30,
@@ -17,6 +18,7 @@ class BookingRules extends Equatable {
     this.autoApproveKnownPatients = false,
     this.reminder24h = true,
     this.reminder2h = false,
+    this.warning,
   });
 
   BookingRules copyWith({
@@ -27,6 +29,7 @@ class BookingRules extends Equatable {
     bool? autoApproveKnownPatients,
     bool? reminder24h,
     bool? reminder2h,
+    String? warning,
   }) =>
       BookingRules(
         slotDurationMinutes: slotDurationMinutes ?? this.slotDurationMinutes,
@@ -36,6 +39,7 @@ class BookingRules extends Equatable {
         autoApproveKnownPatients: autoApproveKnownPatients ?? this.autoApproveKnownPatients,
         reminder24h: reminder24h ?? this.reminder24h,
         reminder2h: reminder2h ?? this.reminder2h,
+        warning: warning ?? this.warning,
       );
 
   @override

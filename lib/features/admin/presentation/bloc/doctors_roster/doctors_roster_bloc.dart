@@ -8,6 +8,11 @@ import '../../../domain/usecases/remove_doctor_from_center_usecase.dart';
 import '../../../domain/usecases/configure_doctor_schedule_usecase.dart';
 import '../../../domain/usecases/get_doctor_schedule_usecase.dart';
 import '../../../domain/usecases/delete_doctor_schedule_usecase.dart';
+import '../../../domain/usecases/invite_doctor_usecase.dart';
+import '../../../domain/usecases/get_schedule_exceptions_usecase.dart';
+import '../../../domain/usecases/add_schedule_exception_usecase.dart';
+import '../../../domain/usecases/delete_schedule_exception_usecase.dart';
+import '../../../domain/usecases/update_consultation_fee_usecase.dart';
 
 part 'doctors_roster_event.dart';
 part 'doctors_roster_state.dart';
@@ -19,6 +24,11 @@ class DoctorsRosterBloc extends Bloc<DoctorsRosterEvent, DoctorsRosterState> {
   final ConfigureDoctorScheduleUseCase _configureSchedule;
   final GetDoctorScheduleUseCase _getSchedule;
   final DeleteDoctorScheduleUseCase _deleteSchedule;
+  final InviteDoctorUseCase _inviteDoctor;
+  final GetScheduleExceptionsUseCase _getExceptions;
+  final AddScheduleExceptionUseCase _addException;
+  final DeleteScheduleExceptionUseCase _deleteException;
+  final UpdateConsultationFeeUseCase _updateFee;
 
   String _centerId = '';
 
@@ -29,12 +39,22 @@ class DoctorsRosterBloc extends Bloc<DoctorsRosterEvent, DoctorsRosterState> {
     required ConfigureDoctorScheduleUseCase configureSchedule,
     required GetDoctorScheduleUseCase getSchedule,
     required DeleteDoctorScheduleUseCase deleteSchedule,
+    required InviteDoctorUseCase inviteDoctor,
+    required GetScheduleExceptionsUseCase getExceptions,
+    required AddScheduleExceptionUseCase addException,
+    required DeleteScheduleExceptionUseCase deleteException,
+    required UpdateConsultationFeeUseCase updateFee,
   })  : _getDoctors = getDoctors,
         _addDoctor = addDoctor,
         _removeDoctor = removeDoctor,
         _configureSchedule = configureSchedule,
         _getSchedule = getSchedule,
         _deleteSchedule = deleteSchedule,
+        _inviteDoctor = inviteDoctor,
+        _getExceptions = getExceptions,
+        _addException = addException,
+        _deleteException = deleteException,
+        _updateFee = updateFee,
         super(const DoctorsRosterInitial()) {
     on<DoctorsRosterStarted>(_onStarted, transformer: droppable());
     on<DoctorsRosterRefreshed>(_onRefreshed, transformer: droppable());
@@ -43,6 +63,11 @@ class DoctorsRosterBloc extends Bloc<DoctorsRosterEvent, DoctorsRosterState> {
     on<DoctorScheduleConfigured>(_onScheduleConfigured, transformer: droppable());
     on<DoctorScheduleDeleted>(_onScheduleDeleted, transformer: droppable());
     on<DoctorScheduleRequested>(_onScheduleRequested, transformer: droppable());
+    on<DoctorInvited>(_onDoctorInvited, transformer: droppable());
+    on<ScheduleExceptionsRequested>(_onExceptionsRequested, transformer: droppable());
+    on<ScheduleExceptionAdded>(_onExceptionAdded, transformer: droppable());
+    on<ScheduleExceptionRemoved>(_onExceptionRemoved, transformer: droppable());
+    on<DoctorFeeUpdateRequested>(_onFeeUpdate, transformer: droppable());
   }
 
   Future<void> _fetch(Emitter<DoctorsRosterState> emit) async {
@@ -112,6 +137,63 @@ class DoctorsRosterBloc extends Bloc<DoctorsRosterEvent, DoctorsRosterState> {
     result.fold(
       (f) => emit(DoctorsRosterError(f.message)),
       (config) => emit(DoctorScheduleLoaded(config)),
+    );
+  }
+
+  Future<void> _onDoctorInvited(DoctorInvited event, Emitter<DoctorsRosterState> emit) async {
+    emit(const DoctorsRosterActionInProgress());
+    final result = await _inviteDoctor(_centerId, event.dto);
+    result.fold(
+      (f) => emit(DoctorsRosterError(f.message)),
+      (_) => emit(const DoctorInvitationSent('Invitation sent to doctor\'s email')),
+    );
+  }
+
+  Future<void> _onExceptionsRequested(ScheduleExceptionsRequested event, Emitter<DoctorsRosterState> emit) async {
+    final result = await _getExceptions(event.doctorId, _centerId);
+    result.fold(
+      (f) => emit(DoctorsRosterError(f.message)),
+      (exceptions) => emit(ScheduleExceptionsLoaded(event.doctorId, exceptions)),
+    );
+  }
+
+  Future<void> _onExceptionAdded(ScheduleExceptionAdded event, Emitter<DoctorsRosterState> emit) async {
+    final result = await _addException(event.doctorId, _centerId, event.exception);
+    await result.fold(
+      (f) async => emit(DoctorsRosterError(f.message)),
+      (_) async {
+        final listResult = await _getExceptions(event.doctorId, _centerId);
+        listResult.fold(
+          (f) => emit(DoctorsRosterError(f.message)),
+          (exceptions) => emit(ScheduleExceptionsLoaded(event.doctorId, exceptions)),
+        );
+      },
+    );
+  }
+
+  Future<void> _onFeeUpdate(DoctorFeeUpdateRequested event, Emitter<DoctorsRosterState> emit) async {
+    emit(const DoctorsRosterActionInProgress());
+    final result = await _updateFee(_centerId, event.doctorId, event.newFee);
+    await result.fold(
+      (f) async => emit(DoctorsRosterError(f.message)),
+      (_) async {
+        emit(const DoctorsRosterActionSuccess('Consultation fee updated'));
+        await _fetch(emit);
+      },
+    );
+  }
+
+  Future<void> _onExceptionRemoved(ScheduleExceptionRemoved event, Emitter<DoctorsRosterState> emit) async {
+    final result = await _deleteException(event.doctorId, _centerId, event.date);
+    await result.fold(
+      (f) async => emit(DoctorsRosterError(f.message)),
+      (_) async {
+        final listResult = await _getExceptions(event.doctorId, _centerId);
+        listResult.fold(
+          (f) => emit(DoctorsRosterError(f.message)),
+          (exceptions) => emit(ScheduleExceptionsLoaded(event.doctorId, exceptions)),
+        );
+      },
     );
   }
 }

@@ -20,7 +20,7 @@ class CenterSettingsRemoteDataSource {
     CenterConfigModel config,
   ) async {
     final resp = await _client.dio.put(
-      '/healthcare-centers/$centerId/config',
+      '/healthcare-centers/$centerId/general',
       data: config.toJson(),
     );
     return CenterConfigModel.fromJson(resp.data as Map<String, dynamic>);

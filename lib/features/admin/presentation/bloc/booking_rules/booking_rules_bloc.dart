@@ -51,11 +51,7 @@ class BookingRulesBloc extends Bloc<BookingRulesEvent, BookingRulesState> {
       (f) => emit(BookingRulesError(f.message)),
       (rules) {
         _rules = rules;
-        String? warning;
-        if (_rules.advanceBookingDays > 60) {
-          warning = 'Advance booking window is set to more than 60 days.';
-        }
-        emit(BookingRulesSaved(warningMessage: warning));
+        emit(BookingRulesSaved(warningMessage: _rules.warning));
         emit(BookingRulesLoaded(_rules));
       },
     );

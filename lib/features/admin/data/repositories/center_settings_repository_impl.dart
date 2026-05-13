@@ -22,6 +22,8 @@ class CenterSettingsRepositoryImpl implements CenterSettingsRepository {
     if (!await _network.isConnected) return const Left(NetworkFailure());
     try {
       return Right(await fn());
+    } on NotFoundException catch (_) {
+      return const Left(NotFoundFailure('Healthcare center not found'));
     } on ForbiddenException catch (e) {
       return Left(ForbiddenFailure(e.message));
     } on ServerException catch (e) {

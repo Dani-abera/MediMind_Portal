@@ -80,6 +80,11 @@ import 'domain/usecases/remove_doctor_from_center_usecase.dart';
 import 'domain/usecases/configure_doctor_schedule_usecase.dart';
 import 'domain/usecases/get_doctor_schedule_usecase.dart';
 import 'domain/usecases/delete_doctor_schedule_usecase.dart';
+import 'domain/usecases/invite_doctor_usecase.dart';
+import 'domain/usecases/get_schedule_exceptions_usecase.dart';
+import 'domain/usecases/add_schedule_exception_usecase.dart';
+import 'domain/usecases/delete_schedule_exception_usecase.dart';
+import 'domain/usecases/update_consultation_fee_usecase.dart';
 import 'domain/usecases/get_patients_at_center_usecase.dart';
 import 'domain/usecases/get_patient_center_detail_usecase.dart';
 import 'domain/usecases/get_admins_usecase.dart';
@@ -204,6 +209,11 @@ Future<void> initAdminFeature() async {
   sl.registerLazySingleton(() => ConfigureDoctorScheduleUseCase(sl<AdminDoctorRepository>()));
   sl.registerLazySingleton(() => GetDoctorScheduleUseCase(sl<AdminDoctorRepository>()));
   sl.registerLazySingleton(() => DeleteDoctorScheduleUseCase(sl<AdminDoctorRepository>()));
+  sl.registerLazySingleton(() => InviteDoctorUseCase(sl<AdminDoctorRepository>()));
+  sl.registerLazySingleton(() => GetScheduleExceptionsUseCase(sl<AdminDoctorRepository>()));
+  sl.registerLazySingleton(() => AddScheduleExceptionUseCase(sl<AdminDoctorRepository>()));
+  sl.registerLazySingleton(() => DeleteScheduleExceptionUseCase(sl<AdminDoctorRepository>()));
+  sl.registerLazySingleton(() => UpdateConsultationFeeUseCase(sl<AdminDoctorRepository>()));
 
   // ── Use cases — Patients ───────────────────────────────────────────────
   sl.registerLazySingleton(() => GetPatientsAtCenterUseCase(sl<AdminPatientRepository>()));
@@ -292,6 +302,11 @@ Future<void> initAdminFeature() async {
       configureSchedule: sl<ConfigureDoctorScheduleUseCase>(),
       getSchedule: sl<GetDoctorScheduleUseCase>(),
       deleteSchedule: sl<DeleteDoctorScheduleUseCase>(),
+      inviteDoctor: sl<InviteDoctorUseCase>(),
+      getExceptions: sl<GetScheduleExceptionsUseCase>(),
+      addException: sl<AddScheduleExceptionUseCase>(),
+      deleteException: sl<DeleteScheduleExceptionUseCase>(),
+      updateFee: sl<UpdateConsultationFeeUseCase>(),
     ),
   );
   sl.registerFactory(

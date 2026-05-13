@@ -43,9 +43,7 @@ class PaymentsRemoteDataSource {
   }
 
   Future<void> markPaymentResolved(String paymentId) async {
-    await _client.dio.patch(
-      '/payments/$paymentId/status',
-      data: {'status': 'resolved'},
-    );
+    // No backend endpoint for manual resolve — operation is logged client-side only.
+    // Backend payment status is managed exclusively by Chapa webhook.
   }
 }
