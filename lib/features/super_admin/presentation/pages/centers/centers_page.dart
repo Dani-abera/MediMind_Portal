@@ -193,7 +193,14 @@ class _CenterActions extends StatelessWidget {
             }
           case 'reject':
             if (context.mounted) {
-              context.read<CentersBloc>().add(CenterRejectRequested(center.id, 'Rejected by admin'));
+              final reasonCtrl = TextEditingController();
+              final reason = await showDialog<String>(
+                context: context,
+                builder: (_) => _RejectReasonDialog(reasonCtrl: reasonCtrl),
+              );
+              if (reason != null && reason.isNotEmpty && context.mounted) {
+                context.read<CentersBloc>().add(CenterRejectRequested(center.id, reason));
+              }
             }
           case 'suspend':
             final confirmed = await ConfirmDialog.show(
@@ -235,6 +242,61 @@ class _StatusBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(label, style: TextStyle(fontSize: 11, color: color, fontWeight: FontWeight.w600)),
+    );
+  }
+}
+
+class _RejectReasonDialog extends StatefulWidget {
+  final TextEditingController reasonCtrl;
+  const _RejectReasonDialog({required this.reasonCtrl});
+
+  @override
+  State<_RejectReasonDialog> createState() => _RejectReasonDialogState();
+}
+
+class _RejectReasonDialogState extends State<_RejectReasonDialog> {
+  bool _isEmpty = true;
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Reject Registration'),
+      content: SizedBox(
+        width: 360,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Provide a reason — the center admin will see this.',
+              style: AppTypography.body.copyWith(color: AppColors.neutral600),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: widget.reasonCtrl,
+              autofocus: true,
+              maxLines: 3,
+              onChanged: (v) => setState(() => _isEmpty = v.trim().isEmpty),
+              decoration: const InputDecoration(
+                labelText: 'Rejection Reason *',
+                hintText: 'e.g. Invalid license, missing documents...',
+              ),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context, null),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          onPressed: _isEmpty
+              ? null
+              : () => Navigator.pop(context, widget.reasonCtrl.text.trim()),
+          style: FilledButton.styleFrom(backgroundColor: AppColors.danger),
+          child: const Text('Reject'),
+        ),
+      ],
     );
   }
 }
