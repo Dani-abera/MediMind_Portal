@@ -4,6 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'package:medimind_portal/core/error/failures.dart';
+import 'package:medimind_portal/core/network/realtime_service.dart';
+import 'package:medimind_portal/core/network/realtime_event.dart';
 import 'package:medimind_portal/features/admin/domain/entities/queue_item.dart';
 import 'package:medimind_portal/features/admin/domain/usecases/get_admin_queue_usecase.dart';
 import 'package:medimind_portal/features/admin/domain/usecases/call_next_usecase.dart';
@@ -21,6 +23,14 @@ class MockMarkCompleteUseCase extends Mock implements MarkCompleteUseCase {}
 class MockMarkNoShowUseCase extends Mock implements MarkNoShowUseCase {}
 class MockSkipQueueUseCase extends Mock implements SkipQueueUseCase {}
 class MockInsertEmergencyUseCase extends Mock implements InsertEmergencyUseCase {}
+class MockRealtimeService extends Mock implements RealtimeService {
+  @override
+  Stream<RealtimeEvent> get events => const Stream.empty();
+  @override
+  bool get isConnected => false;
+  @override
+  Future<void> joinCenterGroup(String centerId) async {}
+}
 
 QueueItem _makeItem({
   required String id,
@@ -47,6 +57,7 @@ AdminQueueBloc _makeBloc({
   required MarkNoShowUseCase markNoShow,
   required SkipQueueUseCase skip,
   required InsertEmergencyUseCase insertEmergency,
+  RealtimeService? realtime,
 }) =>
     AdminQueueBloc(
       getQueue: getQueue,
@@ -56,6 +67,7 @@ AdminQueueBloc _makeBloc({
       markNoShow: markNoShow,
       skip: skip,
       insertEmergency: insertEmergency,
+      realtime: realtime ?? MockRealtimeService(),
     );
 
 void main() {

@@ -42,10 +42,10 @@ class AdminAppointmentRepositoryImpl implements AdminAppointmentRepository {
   @override
   Future<Either<Failure, List<AdminAppointment>>> getAppointments({
     String? status, String? doctorId, DateTime? from, DateTime? to,
-    bool pendingOnly = false, int page = 1, int pageSize = 20}) =>
+    bool pendingOnly = false, String? search, int page = 1, int pageSize = 20}) =>
     _guardResult(() => _remote.getAppointments(
       status: status, doctorId: doctorId, from: from, to: to,
-      pendingOnly: pendingOnly, page: page, pageSize: pageSize));
+      pendingOnly: pendingOnly, search: search, page: page, pageSize: pageSize));
 
   @override
   Future<Either<Failure, AdminAppointment>> getAppointmentDetail(String id) =>

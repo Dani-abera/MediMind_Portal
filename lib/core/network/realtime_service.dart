@@ -21,7 +21,7 @@ class RealtimeService {
   Future<void> connect() async {
     if (_disposed) return;
     final base = dotenv.env['SIGNALR_BASE_URL'] ?? 'https://api.medimind.et';
-    final url = '$base/hubs/portal';
+    final url = '$base/hubs/queue';
 
     _hub = HubConnectionBuilder()
         .withUrl(url,
@@ -58,7 +58,7 @@ class RealtimeService {
   }
 
   void _registerHandlers() {
-    _hub?.on('QueueUpdated', (args) {
+    _hub?.on('QueueRefreshed', (args) {
       _emit(RealtimeEventType.queueUpdate, args);
     });
     _hub?.on('AppointmentUpdated', (args) {
@@ -83,11 +83,6 @@ class RealtimeService {
   Future<void> joinCenterGroup(String centerId) async {
     if (!isConnected) return;
     await _hub?.invoke('JoinCenterGroup', args: [centerId]);
-  }
-
-  Future<void> joinQueueGroup(String centerId) async {
-    if (!isConnected) return;
-    await _hub?.invoke('JoinQueueGroup', args: [centerId]);
   }
 
   Future<void> joinVideoRoom(String consultationId) async {

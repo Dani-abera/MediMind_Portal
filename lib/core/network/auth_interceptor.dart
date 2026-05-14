@@ -56,7 +56,7 @@ class AuthInterceptor extends Interceptor {
       if (refresh == null) return false;
       final dio = Dio();
       final res = await dio.post(
-        '${const String.fromEnvironment('API_BASE_URL', defaultValue: 'https://api.medimind.et/api/v1')}/auth/refresh-token',
+        '$_baseUrl/auth/refresh-token',
         data: {'refreshToken': refresh},
       );
       final newAccess = res.data['accessToken'] as String?;

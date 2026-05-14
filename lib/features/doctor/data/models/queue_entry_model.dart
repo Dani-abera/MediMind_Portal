@@ -14,20 +14,26 @@ class QueueEntryModel extends QueueEntry {
     super.startedAt,
   });
 
-  factory QueueEntryModel.fromJson(Map<String, dynamic> json) => QueueEntryModel(
-        id: json['id'] as String,
-        queueNumber: json['queueNumber'] as int,
-        patientId: json['patientId'] as String,
-        patientName: json['patientName'] as String,
-        patientAge: json['patientAge'] as int?,
-        appointmentId: json['appointmentId'] as String,
-        appointmentTime: DateTime.parse(json['appointmentTime'] as String),
-        reason: json['reason'] as String,
-        status: QueueStatus.fromString(json['status'] as String?),
-        startedAt: json['startedAt'] != null
-            ? DateTime.parse(json['startedAt'] as String)
-            : null,
-      );
+  factory QueueEntryModel.fromJson(Map<String, dynamic> json) {
+    final rawQn = json['queueNumber']?.toString() ?? '';
+    final queueNumber =
+        int.tryParse(rawQn.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;
+    final timeStr = json['appointmentTime'] as String? ?? '00:00:00';
+    final appointmentTime =
+        DateTime.tryParse('2000-01-01T$timeStr') ?? DateTime.now();
+    return QueueEntryModel(
+      id: rawQn.isNotEmpty ? rawQn : 'Q${queueNumber.toString().padLeft(3, '0')}',
+      queueNumber: queueNumber,
+      patientId: json['patientId'] as String? ?? '',
+      patientName: json['patientName'] as String? ?? '',
+      patientAge: json['patientAge'] as int?,
+      appointmentId: json['appointmentId'] as String? ?? '',
+      appointmentTime: appointmentTime,
+      reason: '',
+      status: QueueStatus.fromString(json['status'] as String?),
+      startedAt: null,
+    );
+  }
 
   Map<String, dynamic> toJson() => {
         'id': id,

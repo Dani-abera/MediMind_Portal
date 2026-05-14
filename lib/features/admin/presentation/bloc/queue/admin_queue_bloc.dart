@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:bloc_concurrency/bloc_concurrency.dart';
@@ -9,6 +10,8 @@ import '../../../domain/usecases/mark_complete_usecase.dart';
 import '../../../domain/usecases/mark_no_show_usecase.dart';
 import '../../../domain/usecases/skip_queue_usecase.dart';
 import '../../../domain/usecases/insert_emergency_usecase.dart';
+import '../../../../../core/network/realtime_service.dart';
+import '../../../../../core/network/realtime_event.dart';
 
 part 'admin_queue_event.dart';
 part 'admin_queue_state.dart';
@@ -21,6 +24,8 @@ class AdminQueueBloc extends Bloc<AdminQueueEvent, AdminQueueState> {
   final MarkNoShowUseCase _markNoShow;
   final SkipQueueUseCase _skip;
   final InsertEmergencyUseCase _insertEmergency;
+  final RealtimeService _realtime;
+  StreamSubscription<RealtimeEvent>? _realtimeSub;
 
   String _centerId = '';
 
@@ -32,6 +37,7 @@ class AdminQueueBloc extends Bloc<AdminQueueEvent, AdminQueueState> {
     required MarkNoShowUseCase markNoShow,
     required SkipQueueUseCase skip,
     required InsertEmergencyUseCase insertEmergency,
+    required RealtimeService realtime,
   })  : _getQueue = getQueue,
         _callNext = callNext,
         _markArrived = markArrived,
@@ -39,6 +45,7 @@ class AdminQueueBloc extends Bloc<AdminQueueEvent, AdminQueueState> {
         _markNoShow = markNoShow,
         _skip = skip,
         _insertEmergency = insertEmergency,
+        _realtime = realtime,
         super(const AdminQueueInitial()) {
     on<AdminQueueOpened>(_onOpened, transformer: droppable());
     on<AdminQueueRefreshed>(_onRefreshed, transformer: droppable());
@@ -102,6 +109,11 @@ class AdminQueueBloc extends Bloc<AdminQueueEvent, AdminQueueState> {
   Future<void> _onOpened(AdminQueueOpened event, Emitter<AdminQueueState> emit) async {
     _centerId = event.centerId;
     emit(const AdminQueueLoading());
+    await _realtime.joinCenterGroup(_centerId);
+    _realtimeSub?.cancel();
+    _realtimeSub = _realtime.events
+        .where((e) => e.type == RealtimeEventType.queueUpdate)
+        .listen((e) => add(AdminQueueSignalRUpdate(e.data ?? {})));
     await _fetch(emit);
   }
 
@@ -169,5 +181,11 @@ class AdminQueueBloc extends Bloc<AdminQueueEvent, AdminQueueState> {
 
   void _onSignalRUpdate(AdminQueueSignalRUpdate event, Emitter<AdminQueueState> emit) {
     if (state is AdminQueueLoaded) add(const AdminQueueRefreshed());
+  }
+
+  @override
+  Future<void> close() {
+    _realtimeSub?.cancel();
+    return super.close();
   }
 }

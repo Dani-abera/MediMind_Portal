@@ -2,6 +2,7 @@ import '../../core/di/service_locator.dart';
 import '../../core/network/dio_client.dart';
 import '../../core/network/network_info.dart';
 import '../../core/network/realtime_service.dart';
+import '../../core/network/user_context.dart';
 import '../../core/storage/preferences_storage.dart';
 import '../../core/widgets/shell/bloc/shell_bloc.dart';
 import '../../shared/blocs/notification_bloc.dart';
@@ -187,7 +188,10 @@ Future<void> initDoctorFeature() async {
     ),
   );
   sl.registerFactory(
-    () => VideoCallBloc(repo: sl<ConsultationRepository>()),
+    () => VideoCallBloc(
+      repo: sl<ConsultationRepository>(),
+      userContext: sl<UserContext>(),
+    ),
   );
   sl.registerFactory(
     () => ScheduleBloc(getSchedules: sl<GetDoctorSchedulesUseCase>()),

@@ -270,6 +270,7 @@ Future<void> initAdminFeature() async {
       markNoShow: sl<MarkNoShowUseCase>(),
       skip: sl<SkipQueueUseCase>(),
       insertEmergency: sl<InsertEmergencyUseCase>(),
+      realtime: sl<RealtimeService>(),
     ),
   );
   sl.registerFactory(

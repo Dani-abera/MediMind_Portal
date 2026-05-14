@@ -37,10 +37,7 @@ class DoctorRemoteDataSource {
   }
 
   Future<List<QueueEntryModel>> getQueue(String centerId) async {
-    final resp = await _client.dio.get(
-      '/doctor/queue',
-      queryParameters: {'centerId': centerId},
-    );
+    final resp = await _client.dio.get('/doctor/me/queue/$centerId');
     final data = resp.data['data'] as List<dynamic>;
     return data
         .map((e) => QueueEntryModel.fromJson(e as Map<String, dynamic>))

@@ -34,6 +34,7 @@ class AllAppointmentsBloc extends Bloc<AllAppointmentsEvent, AllAppointmentsStat
       doctorId: _filters.doctorId,
       from: _filters.from,
       to: _filters.to,
+      search: _filters.search,
       page: _page,
       pageSize: _pageSize,
     );
@@ -43,7 +44,9 @@ class AllAppointmentsBloc extends Bloc<AllAppointmentsEvent, AllAppointmentsStat
         appointments: items,
         page: _page,
         pageSize: _pageSize,
-        total: items.length,
+        total: items.length < _pageSize
+            ? (_page - 1) * _pageSize + items.length
+            : (_page + 1) * _pageSize,
         filters: _filters,
       )),
     );

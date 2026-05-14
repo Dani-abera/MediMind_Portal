@@ -5,7 +5,7 @@ import '../entities/admin_appointment.dart';
 abstract class AdminAppointmentRepository {
   Future<Either<Failure, List<AdminAppointment>>> getAppointments({
     String? status, String? doctorId, DateTime? from, DateTime? to,
-    bool pendingOnly = false, int page = 1, int pageSize = 20});
+    bool pendingOnly = false, String? search, int page = 1, int pageSize = 20});
   Future<Either<Failure, AdminAppointment>> getAppointmentDetail(String id);
   Future<Either<Failure, void>> approveAppointment(String id);
   Future<Either<Failure, void>> rejectAppointment(String id, {String? reason});

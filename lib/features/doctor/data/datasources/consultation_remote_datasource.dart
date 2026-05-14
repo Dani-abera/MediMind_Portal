@@ -8,7 +8,7 @@ class ConsultationRemoteDataSource {
 
   Future<VideoConsultationModel> initiate(String appointmentId) async {
     final resp = await _client.dio.post(
-      '/doctor/consultations',
+      '/api/v1/video-consultations/initiate',
       data: {'appointmentId': appointmentId},
     );
     return VideoConsultationModel.fromJson(
@@ -18,7 +18,7 @@ class ConsultationRemoteDataSource {
 
   Future<VideoConsultationModel> join(String consultationId) async {
     final resp = await _client.dio.post(
-      '/doctor/consultations/$consultationId/join',
+      '/api/v1/video-consultations/$consultationId/join',
     );
     return VideoConsultationModel.fromJson(
       resp.data['data'] as Map<String, dynamic>,
@@ -26,18 +26,19 @@ class ConsultationRemoteDataSource {
   }
 
   Future<void> end(String consultationId) async {
-    await _client.dio.post('/doctor/consultations/$consultationId/end');
+    await _client.dio.post('/api/v1/video-consultations/$consultationId/end');
   }
 
   Future<VideoConsultationModel> getById(String id) async {
-    final resp = await _client.dio.get('/doctor/consultations/$id');
+    final resp = await _client.dio.get('/api/v1/video-consultations/$id');
     return VideoConsultationModel.fromJson(
       resp.data['data'] as Map<String, dynamic>,
     );
   }
 
   Future<List<VideoConsultationModel>> getActive() async {
-    final resp = await _client.dio.get('/doctor/consultations/active');
+    final resp =
+        await _client.dio.get('/api/v1/video-consultations?status=InProgress');
     final data = resp.data['data'] as List<dynamic>;
     return data
         .map((e) => VideoConsultationModel.fromJson(e as Map<String, dynamic>))
@@ -45,7 +46,8 @@ class ConsultationRemoteDataSource {
   }
 
   Future<List<VideoConsultationModel>> getToday() async {
-    final resp = await _client.dio.get('/doctor/consultations/today');
+    final resp = await _client.dio
+        .get('/api/v1/video-consultations?today=true');
     final data = resp.data['data'] as List<dynamic>;
     return data
         .map((e) => VideoConsultationModel.fromJson(e as Map<String, dynamic>))
@@ -57,8 +59,12 @@ class ConsultationRemoteDataSource {
     int pageSize = 20,
   }) async {
     final resp = await _client.dio.get(
-      '/doctor/consultations',
-      queryParameters: {'past': true, 'page': page, 'pageSize': pageSize},
+      '/api/v1/video-consultations',
+      queryParameters: {
+        'status': 'Completed',
+        'page': page,
+        'pageSize': pageSize,
+      },
     );
     final data = resp.data['data'] as List<dynamic>;
     return data
@@ -68,7 +74,7 @@ class ConsultationRemoteDataSource {
 
   Future<List<Map<String, dynamic>>> getChat(String consultationId) async {
     final resp = await _client.dio.get(
-      '/doctor/consultations/$consultationId/chat',
+      '/api/v1/video-consultations/$consultationId/chat',
     );
     final data = resp.data['data'] as List<dynamic>;
     return data.map((e) => e as Map<String, dynamic>).toList();

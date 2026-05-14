@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -11,6 +12,7 @@ import '../../../../core/widgets/feedback/app_loading.dart';
 import '../../domain/entities/appointment.dart';
 import '../../domain/entities/appointment_note.dart';
 import '../bloc/appointment_detail/appointment_detail_bloc.dart';
+import '../bloc/consultation/consultation_bloc.dart';
 
 class AppointmentDetailDrawer extends StatelessWidget {
   final String appointmentId;
@@ -21,9 +23,14 @@ class AppointmentDetailDrawer extends StatelessWidget {
       context,
       title: 'Appointment Details',
       width: 520,
-      body: BlocProvider(
-        create: (_) => sl<AppointmentDetailBloc>()
-          ..add(AppointmentDetailStarted(appointmentId)),
+      body: MultiBlocProvider(
+        providers: [
+          BlocProvider(
+            create: (_) => sl<AppointmentDetailBloc>()
+              ..add(AppointmentDetailStarted(appointmentId)),
+          ),
+          BlocProvider(create: (_) => sl<ConsultationBloc>()),
+        ],
         child: AppointmentDetailDrawer(appointmentId: appointmentId),
       ),
     );
@@ -296,6 +303,26 @@ class _AppointmentDetailContentState
     );
   }
 
+  void _initiateAndNavigate(BuildContext ctx, String appointmentId) {
+    ctx.read<ConsultationBloc>().add(ConsultationInitiated(appointmentId));
+    ctx.read<ConsultationBloc>().stream.firstWhere(
+      (s) => s is ConsultationInitiateSuccess || s is ConsultationError,
+    ).then((s) {
+      if (!mounted) return;
+      if (s is ConsultationInitiateSuccess) {
+        Navigator.of(context).pop();
+        context.go('/doctor/video-call/${s.consultation.id}');
+      } else if (s is ConsultationError) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(s.message),
+            backgroundColor: AppColors.danger,
+          ),
+        );
+      }
+    });
+  }
+
   Widget _buildActions(BuildContext ctx, Appointment appt) {
     final canComplete = appt.status == AppointmentStatus.confirmed ||
         appt.status == AppointmentStatus.inProgress;
@@ -322,7 +349,20 @@ class _AppointmentDetailContentState
                 ctx.read<AppointmentDetailBloc>().add(const AppointmentCancelled()),
           ),
         if (appt.type == AppointmentType.video &&
-            appt.videoRoomId != null) ...[
+            (appt.status == AppointmentStatus.confirmed ||
+                appt.status == AppointmentStatus.inProgress) &&
+            appt.videoConsultationId == null) ...[
+          const SizedBox(width: 8),
+          FilledButton.icon(
+            style: FilledButton.styleFrom(
+                backgroundColor: AppColors.info),
+            icon: const FaIcon(FontAwesomeIcons.video, size: 14),
+            label: const Text('Start Video Call'),
+            onPressed: () => _initiateAndNavigate(ctx, appt.id),
+          ),
+        ],
+        if (appt.type == AppointmentType.video &&
+            appt.videoConsultationId != null) ...[
           const Spacer(),
           FilledButton.icon(
             style: FilledButton.styleFrom(
@@ -330,8 +370,8 @@ class _AppointmentDetailContentState
             icon: const FaIcon(FontAwesomeIcons.video, size: 14),
             label: const Text('Join Video Call'),
             onPressed: () {
-              // Navigate to video call — handled by parent
               Navigator.of(context).pop();
+              context.go('/doctor/video-call/${appt.videoConsultationId}');
             },
           ),
         ],

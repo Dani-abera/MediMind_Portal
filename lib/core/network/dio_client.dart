@@ -30,7 +30,7 @@ class DioClient {
 
     _dio.interceptors.addAll([
       LoggerInterceptor(),
-      AuthInterceptor(storage, userContext),
+      AuthInterceptor(storage, userContext, baseUrl: baseUrl),
       ErrorInterceptor(),
     ]);
   }

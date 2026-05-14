@@ -8,10 +8,11 @@ enum QueueStatus {
   skipped;
 
   static QueueStatus fromString(String? s) => switch (s?.toLowerCase()) {
-        'inprogress' || 'in_progress' => inProgress,
+        'inprogress' || 'in_progress' || 'inconsultation' || 'in_consultation' => inProgress,
+        'called' => inProgress,
         'done' || 'completed' => done,
-        'noshow' || 'no_show' => noShow,
-        'skipped' => skipped,
+        'noshow' || 'no_show' || 'missed' => noShow,
+        'skipped' || 'cancelled' => skipped,
         _ => waiting,
       };
 

@@ -45,7 +45,7 @@ class Appointment extends Equatable {
   final String reason;
   final List<String> symptoms;
   final String? notes;
-  final String? videoRoomId;
+  final String? videoConsultationId;
 
   const Appointment({
     required this.id,
@@ -62,13 +62,13 @@ class Appointment extends Equatable {
     required this.reason,
     this.symptoms = const [],
     this.notes,
-    this.videoRoomId,
+    this.videoConsultationId,
   });
 
   @override
   List<Object?> get props => [
         id, patientId, patientName, patientAge, patientPhone,
         doctorId, centerId, centerName, dateTime, type, status,
-        reason, symptoms, notes, videoRoomId,
+        reason, symptoms, notes, videoConsultationId,
       ];
 }

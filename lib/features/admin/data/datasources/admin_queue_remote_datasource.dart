@@ -4,19 +4,30 @@ import '../models/queue_item_model.dart';
 
 class AdminQueueRemoteDataSource {
   final DioClient _client;
+  String _lastCenterId = '';
+
   AdminQueueRemoteDataSource(this._client);
 
   Future<List<QueueItemModel>> getQueue(String centerId) async {
+    _lastCenterId = centerId;
     final resp = await _client.dio.get('/queue/center/$centerId');
-    final data = resp.data['data'] as List? ?? [];
-    return data
+    final body = resp.data as Map<String, dynamic>;
+    final waiting = (body['waitingPatients'] as List? ?? [])
         .map((e) => QueueItemModel.fromJson(e as Map<String, dynamic>))
         .toList();
+    final current = body['currentConsultation'];
+    if (current != null) {
+      waiting.insert(0, QueueItemModel.fromJson(current as Map<String, dynamic>));
+    }
+    return waiting;
   }
 
   Future<QueueItemModel> callNext() async {
-    final resp = await _client.dio.post('/queue/call-next');
-    return QueueItemModel.fromJson(resp.data['data'] as Map<String, dynamic>);
+    final resp = await _client.dio.post(
+      '/queue/call-next',
+      data: {'centerId': _lastCenterId},
+    );
+    return QueueItemModel.fromJson(resp.data as Map<String, dynamic>);
   }
 
   Future<void> markArrived(String queueId) async {
@@ -38,9 +49,9 @@ class AdminQueueRemoteDataSource {
   Future<QueueItemModel> insertEmergency(String appointmentId) async {
     final resp = await _client.dio.post(
       '/queue/emergency',
-      data: {'appointmentId': appointmentId},
+      data: {'appointmentId': appointmentId, 'centerId': _lastCenterId},
     );
-    return QueueItemModel.fromJson(resp.data['data'] as Map<String, dynamic>);
+    return QueueItemModel.fromJson(resp.data as Map<String, dynamic>);
   }
 
   Future<QueueStats> getQueueStats(String centerId) async {

@@ -24,3 +24,25 @@ class VideoCallToggleMic extends VideoCallEvent {
 class VideoCallToggleCamera extends VideoCallEvent {
   const VideoCallToggleCamera();
 }
+
+class VideoCallChatToggled extends VideoCallEvent {
+  const VideoCallChatToggled();
+}
+
+class VideoCallMessageSent extends VideoCallEvent {
+  final String content;
+  const VideoCallMessageSent(this.content);
+  @override
+  List<Object?> get props => [content];
+}
+
+class VideoCallPeerLeft extends VideoCallEvent {
+  const VideoCallPeerLeft();
+}
+
+class VideoCallChatMessageReceived extends VideoCallEvent {
+  final ChatMessage message;
+  const VideoCallChatMessageReceived(this.message);
+  @override
+  List<Object?> get props => [message];
+}

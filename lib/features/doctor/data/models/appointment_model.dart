@@ -16,7 +16,7 @@ class AppointmentModel extends Appointment {
     required super.reason,
     super.symptoms,
     super.notes,
-    super.videoRoomId,
+    super.videoConsultationId,
   });
 
   factory AppointmentModel.fromJson(Map<String, dynamic> json) => AppointmentModel(
@@ -28,23 +28,24 @@ class AppointmentModel extends Appointment {
         doctorId: json['doctorId'] as String,
         centerId: json['centerId'] as String,
         centerName: json['centerName'] as String,
-        dateTime: DateTime.parse(json['dateTime'] as String),
-        type: AppointmentType.values.byName(
-          (json['type'] as String? ?? 'inPerson')
-              .replaceAll('_', '')
-              .toLowerCase() ==
-                  'inperson'
-              ? 'inPerson'
-              : (json['type'] as String? ?? 'inPerson'),
-        ),
+        dateTime: DateTime.parse(
+            json['dateTime'] as String? ??
+            json['appointmentTime'] as String? ??
+            ''),
+        type: _parseType(json['type'] as String?),
         status: AppointmentStatus.fromString(json['status'] as String?),
-        reason: json['reason'] as String,
-        symptoms: (json['symptoms'] as List<dynamic>? ?? [])
-            .map((e) => e as String)
-            .toList(),
+        reason: json['reason'] as String? ?? json['reasonForVisit'] as String? ?? '',
+        symptoms: json['symptoms'] is List
+            ? (json['symptoms'] as List<dynamic>).map((e) => e.toString()).toList()
+            : json['symptoms'] != null ? [json['symptoms'] as String] : [],
         notes: json['notes'] as String?,
-        videoRoomId: json['videoRoomId'] as String?,
+        videoConsultationId: json['videoConsultationId'] as String?,
       );
+
+  static AppointmentType _parseType(String? s) => switch (s?.toLowerCase()) {
+    'video' => AppointmentType.video,
+    _ => AppointmentType.inPerson,
+  };
 
   Map<String, dynamic> toJson() => {
         'id': id,
@@ -61,6 +62,6 @@ class AppointmentModel extends Appointment {
         'reason': reason,
         'symptoms': symptoms,
         if (notes != null) 'notes': notes,
-        if (videoRoomId != null) 'videoRoomId': videoRoomId,
+        if (videoConsultationId != null) 'videoConsultationId': videoConsultationId,
       };
 }

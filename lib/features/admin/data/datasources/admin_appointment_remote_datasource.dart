@@ -11,6 +11,7 @@ class AdminAppointmentRemoteDataSource {
     DateTime? from,
     DateTime? to,
     bool pendingOnly = false,
+    String? search,
     int page = 1,
     int pageSize = 20,
   }) async {
@@ -20,13 +21,14 @@ class AdminAppointmentRemoteDataSource {
         if (status != null) 'status': status,
         if (pendingOnly) 'status': 'pending',
         if (doctorId != null) 'doctorId': doctorId,
-        if (from != null) 'from': from.toIso8601String(),
-        if (to != null) 'to': to.toIso8601String(),
+        if (from != null) 'startDate': from.toIso8601String().substring(0, 10),
+        if (to != null) 'endDate': to.toIso8601String().substring(0, 10),
+        if (search != null && search.isNotEmpty) 'search': search,
         'page': page,
         'pageSize': pageSize,
       },
     );
-    final data = resp.data['data'] as List? ?? [];
+    final data = (resp.data['items'] ?? resp.data['data']) as List? ?? [];
     return data
         .map((e) => AdminAppointmentModel.fromJson(e as Map<String, dynamic>))
         .toList();
@@ -35,7 +37,7 @@ class AdminAppointmentRemoteDataSource {
   Future<AdminAppointmentModel> getAppointmentDetail(String id) async {
     final resp = await _client.dio.get('/appointments/$id');
     return AdminAppointmentModel.fromJson(
-      resp.data['data'] as Map<String, dynamic>,
+      resp.data as Map<String, dynamic>,
     );
   }
 
@@ -53,7 +55,7 @@ class AdminAppointmentRemoteDataSource {
   Future<void> cancelAppointment(String id, {String? reason}) async {
     await _client.dio.post(
       '/appointments/$id/cancel',
-      data: {if (reason != null) 'reason': reason},
+      data: {'cancellationReason': reason ?? 'Cancelled by admin'},
     );
   }
 

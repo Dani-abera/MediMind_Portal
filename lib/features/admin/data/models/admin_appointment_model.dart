@@ -69,7 +69,7 @@ class AdminAppointmentModel extends AdminAppointment {
       notes: j['notes'] as String?,
       adminNotes: j['adminNotes'] as String? ?? j['admin_notes'] as String?,
       paymentStatus: PaymentStatus.fromString(j['paymentStatus'] as String? ?? j['payment_status'] as String?),
-      paymentAmount: (j['paymentAmount'] ?? j['payment_amount'] as num?)?.toDouble(),
+      paymentAmount: (j['paymentAmount'] ?? j['totalAmount'] ?? j['payment_amount'] as num?)?.toDouble(),
       paymentTransactionId: j['paymentTransactionId'] as String? ?? j['payment_transaction_id'] as String?,
       bookedBy: BookingSource.fromString(j['bookedBy'] as String? ?? j['booked_by'] as String?),
       bookedSource: j['bookedSource'] as String? ?? j['booked_source'] as String?,

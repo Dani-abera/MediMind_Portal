@@ -15,24 +15,24 @@ class AppointmentRemoteDataSource {
     int pageSize = 20,
   }) async {
     final resp = await _client.dio.get(
-      '/doctor/appointments',
+      '/appointments',
       queryParameters: {
         if (status != null) 'status': status,
-        if (from != null) 'from': from.toIso8601String(),
-        if (to != null) 'to': to.toIso8601String(),
+        if (from != null) 'startDate': from.toIso8601String().substring(0, 10),
+        if (to != null) 'endDate': to.toIso8601String().substring(0, 10),
         'page': page,
         'pageSize': pageSize,
       },
     );
-    final data = resp.data['data'] as List<dynamic>;
+    final data = (resp.data['items'] ?? resp.data['data']) as List<dynamic>;
     return data
         .map((e) => AppointmentModel.fromJson(e as Map<String, dynamic>))
         .toList();
   }
 
   Future<AppointmentModel> getAppointmentById(String id) async {
-    final resp = await _client.dio.get('/doctor/appointments/$id');
-    return AppointmentModel.fromJson(resp.data['data'] as Map<String, dynamic>);
+    final resp = await _client.dio.get('/appointments/$id');
+    return AppointmentModel.fromJson(resp.data as Map<String, dynamic>);
   }
 
   Future<AppointmentNoteModel> addNote({
@@ -40,29 +40,34 @@ class AppointmentRemoteDataSource {
     required String content,
   }) async {
     final resp = await _client.dio.post(
-      '/doctor/appointments/$appointmentId/notes',
+      '/appointments/$appointmentId/notes',
       data: {'content': content},
     );
     return AppointmentNoteModel.fromJson(
-      resp.data['data'] as Map<String, dynamic>,
+      resp.data as Map<String, dynamic>,
     );
   }
 
   Future<List<AppointmentNoteModel>> getNotes(String appointmentId) async {
     final resp = await _client.dio.get(
-      '/doctor/appointments/$appointmentId/notes',
+      '/appointments/$appointmentId/notes',
     );
-    final data = resp.data['data'] as List<dynamic>;
-    return data
+    final items = resp.data is List
+        ? resp.data as List<dynamic>
+        : (resp.data['items'] ?? resp.data['data'] ?? []) as List<dynamic>;
+    return items
         .map((e) => AppointmentNoteModel.fromJson(e as Map<String, dynamic>))
         .toList();
   }
 
   Future<void> cancelAppointment(String id) async {
-    await _client.dio.post('/doctor/appointments/$id/cancel');
+    await _client.dio.post(
+      '/appointments/$id/cancel',
+      data: {'cancellationReason': 'Cancelled by doctor'},
+    );
   }
 
   Future<void> markComplete(String id) async {
-    await _client.dio.post('/doctor/appointments/$id/complete');
+    await _client.dio.post('/appointments/$id/complete');
   }
 }

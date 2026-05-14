@@ -7,6 +7,7 @@ class GetAllAppointmentsUseCase {
   GetAllAppointmentsUseCase(this._repo);
   Future<Either<Failure, List<AdminAppointment>>> call({
     String? status, String? doctorId, DateTime? from, DateTime? to,
-    int page = 1, int pageSize = 20}) =>
-      _repo.getAppointments(status: status, doctorId: doctorId, from: from, to: to, page: page, pageSize: pageSize);
+    String? search, int page = 1, int pageSize = 20}) =>
+      _repo.getAppointments(status: status, doctorId: doctorId, from: from, to: to,
+          search: search, page: page, pageSize: pageSize);
 }

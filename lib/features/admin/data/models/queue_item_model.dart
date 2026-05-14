@@ -21,25 +21,28 @@ class QueueItemModel extends QueueItem {
   });
 
   factory QueueItemModel.fromJson(Map<String, dynamic> j) {
-    String s(String a, [String? b]) =>
-        (j[a] ?? (b != null ? j[b] : null))?.toString() ?? '';
+    String s(String key, [String? fb]) =>
+        (j[key] ?? (fb != null ? j[fb] : null))?.toString() ?? '';
+    final rawQn = j['queueNumber']?.toString() ?? '';
+    final queueNumber =
+        int.tryParse(rawQn.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;
     return QueueItemModel(
-      id: s('id'),
-      queueNumber: j['queueNumber'] as int? ?? j['queue_number'] as int? ?? 0,
-      patientId: s('patientId', 'patient_id'),
-      patientName: s('patientName', 'patient_name'),
-      patientAge: j['patientAge'] as int? ?? j['patient_age'] as int?,
-      appointmentId: s('appointmentId', 'appointment_id'),
-      doctorId: s('doctorId', 'doctor_id'),
-      doctorName: s('doctorName', 'doctor_name'),
-      room: j['room'] as String?,
+      id: s('queueId'),
+      queueNumber: queueNumber,
+      patientId: s('patientId'),
+      patientName: s('patientName'),
+      patientAge: j['patientAge'] as int?,
+      appointmentId: s('appointmentId'),
+      doctorId: s('doctorId'),
+      doctorName: s('doctorName'),
+      room: j['roomNumber'] as String?,
       status: QueueStatus.fromString(j['status'] as String?),
-      estimatedWaitMinutes: j['estimatedWaitMinutes'] as int? ?? j['estimated_wait_minutes'] as int?,
-      elapsedMinutes: j['elapsedMinutes'] as int? ?? j['elapsed_minutes'] as int?,
-      checkedInAt: DateTime.tryParse(j['checkedInAt'] as String? ?? j['checked_in_at'] as String? ?? ''),
-      startedAt: DateTime.tryParse(j['startedAt'] as String? ?? j['started_at'] as String? ?? ''),
-      completedAt: DateTime.tryParse(j['completedAt'] as String? ?? j['completed_at'] as String? ?? ''),
-      reason: s('reason'),
+      estimatedWaitMinutes: j['estimatedWaitTimeMinutes'] as int?,
+      elapsedMinutes: j['elapsedMinutes'] as int?,
+      checkedInAt: DateTime.tryParse(j['calledTime'] as String? ?? ''),
+      startedAt: DateTime.tryParse(j['consultationStartTime'] as String? ?? ''),
+      completedAt: null,
+      reason: '',
     );
   }
 }
