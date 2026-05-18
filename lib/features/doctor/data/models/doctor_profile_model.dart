@@ -17,21 +17,21 @@ class DoctorProfileModel extends DoctorProfile {
   });
 
   factory DoctorProfileModel.fromJson(Map<String, dynamic> json) => DoctorProfileModel(
-        id: json['id'] as String,
+        id: (json['doctorId'] ?? json['id']).toString(),
         fullName: json['fullName'] as String,
-        email: json['email'] as String,
-        badgeNumber: json['badgeNumber'] as String,
+        email: json['email'] as String? ?? '',
+        badgeNumber: json['badgeNumber'] as String? ?? '',
         specialization: json['specialization'] as String?,
-        bio: json['bio'] as String?,
+        bio: json['biography'] as String?,
         qualifications: (json['qualifications'] as List<dynamic>? ?? [])
             .map((e) => e as String)
             .toList(),
-        languages: (json['languages'] as List<dynamic>? ?? [])
+        languages: (json['languagesSpoken'] as List<dynamic>? ?? [])
             .map((e) => e as String)
             .toList(),
-        avatarUrl: json['avatarUrl'] as String?,
+        avatarUrl: json['profileImageUrl'] as String?,
         licenseVerified: json['licenseVerified'] as bool? ?? false,
-        centers: (json['centers'] as List<dynamic>? ?? [])
+        centers: (json['affiliatedCenters'] as List<dynamic>? ?? [])
             .map((e) => CenterAffiliationModel.fromJson(e as Map<String, dynamic>))
             .toList(),
       );

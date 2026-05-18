@@ -22,8 +22,8 @@ class PlatformCenterModel extends PlatformCenter {
 
   factory PlatformCenterModel.fromJson(Map<String, dynamic> j) => PlatformCenterModel(
         id: j['id'] as String? ?? '',
-        name: j['name'] as String? ?? '',
-        type: j['type'] as String? ?? '',
+        name: j['centerName'] as String? ?? j['name'] as String? ?? '',
+        type: j['centerType'] as String? ?? j['type'] as String? ?? '',
         city: j['city'] as String? ?? '',
         region: j['region'] as String? ?? '',
         licenseNumber: j['licenseNumber'] as String? ?? '',
@@ -36,15 +36,16 @@ class PlatformCenterModel extends PlatformCenter {
         lastActivityAt: j['lastActivityAt'] != null
             ? DateTime.tryParse(j['lastActivityAt'] as String)
             : null,
-        adminEmail: j['adminEmail'] as String? ?? '',
+        adminEmail: j['adminEmail'] as String? ?? j['email'] as String? ?? '',
         adminName: j['adminName'] as String? ?? '',
-        status: _parseStatus(j['status'] as String?),
+        status: _parseStatus(j['status'] as String? ?? j['subscriptionStatus'] as String?),
       );
 
-  static CenterStatus _parseStatus(String? s) => switch (s) {
+  static CenterStatus _parseStatus(String? s) => switch (s?.toLowerCase()) {
         'active' => CenterStatus.active,
         'suspended' => CenterStatus.suspended,
         'rejected' => CenterStatus.rejected,
+        'pendingapproval' || 'pending' => CenterStatus.pending,
         _ => CenterStatus.pending,
       };
 

@@ -8,47 +8,45 @@ class ConsultationRemoteDataSource {
 
   Future<VideoConsultationModel> initiate(String appointmentId) async {
     final resp = await _client.dio.post(
-      '/api/v1/video-consultations/initiate',
+      '/video-consultations/initiate',
       data: {'appointmentId': appointmentId},
     );
-    return VideoConsultationModel.fromJson(
-      resp.data['data'] as Map<String, dynamic>,
-    );
+    return VideoConsultationModel.fromJson(resp.data as Map<String, dynamic>);
   }
 
   Future<VideoConsultationModel> join(String consultationId) async {
     final resp = await _client.dio.post(
-      '/api/v1/video-consultations/$consultationId/join',
+      '/video-consultations/$consultationId/join',
     );
-    return VideoConsultationModel.fromJson(
-      resp.data['data'] as Map<String, dynamic>,
-    );
+    return VideoConsultationModel.fromJson(resp.data as Map<String, dynamic>);
   }
 
   Future<void> end(String consultationId) async {
-    await _client.dio.post('/api/v1/video-consultations/$consultationId/end');
+    await _client.dio.post('/video-consultations/$consultationId/end');
   }
 
   Future<VideoConsultationModel> getById(String id) async {
-    final resp = await _client.dio.get('/api/v1/video-consultations/$id');
-    return VideoConsultationModel.fromJson(
-      resp.data['data'] as Map<String, dynamic>,
-    );
+    final resp = await _client.dio.get('/video-consultations/$id');
+    return VideoConsultationModel.fromJson(resp.data as Map<String, dynamic>);
   }
 
   Future<List<VideoConsultationModel>> getActive() async {
-    final resp =
-        await _client.dio.get('/api/v1/video-consultations?status=InProgress');
-    final data = resp.data['data'] as List<dynamic>;
+    final resp = await _client.dio.get(
+      '/video-consultations',
+      queryParameters: {'status': 'InProgress'},
+    );
+    final data = resp.data as List<dynamic>;
     return data
         .map((e) => VideoConsultationModel.fromJson(e as Map<String, dynamic>))
         .toList();
   }
 
   Future<List<VideoConsultationModel>> getToday() async {
-    final resp = await _client.dio
-        .get('/api/v1/video-consultations?today=true');
-    final data = resp.data['data'] as List<dynamic>;
+    final resp = await _client.dio.get(
+      '/video-consultations',
+      queryParameters: {'today': true},
+    );
+    final data = resp.data as List<dynamic>;
     return data
         .map((e) => VideoConsultationModel.fromJson(e as Map<String, dynamic>))
         .toList();
@@ -59,14 +57,14 @@ class ConsultationRemoteDataSource {
     int pageSize = 20,
   }) async {
     final resp = await _client.dio.get(
-      '/api/v1/video-consultations',
+      '/video-consultations',
       queryParameters: {
         'status': 'Completed',
         'page': page,
         'pageSize': pageSize,
       },
     );
-    final data = resp.data['data'] as List<dynamic>;
+    final data = resp.data as List<dynamic>;
     return data
         .map((e) => VideoConsultationModel.fromJson(e as Map<String, dynamic>))
         .toList();
@@ -74,9 +72,9 @@ class ConsultationRemoteDataSource {
 
   Future<List<Map<String, dynamic>>> getChat(String consultationId) async {
     final resp = await _client.dio.get(
-      '/api/v1/video-consultations/$consultationId/chat',
+      '/video-consultations/$consultationId/chat',
     );
-    final data = resp.data['data'] as List<dynamic>;
+    final data = resp.data as List<dynamic>;
     return data.map((e) => e as Map<String, dynamic>).toList();
   }
 }

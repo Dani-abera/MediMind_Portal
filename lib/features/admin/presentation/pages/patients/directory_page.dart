@@ -64,7 +64,7 @@ class _PatientDirectoryViewState extends State<_PatientDirectoryView> {
               IconButton(
                 icon: const Icon(Icons.refresh, size: 18),
                 onPressed: () => context.read<PatientDirectoryBloc>()
-                    .add(PatientDirStarted(UserContext().centerId ?? '')),
+                    .add(const PatientDirRefreshed()),
                 visualDensity: VisualDensity.compact,
               ),
             ],

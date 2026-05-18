@@ -228,8 +228,8 @@ class VideoCallBloc extends Bloc<VideoCallEvent, VideoCallState> {
     await _hub!.invoke('JoinConsultationRoom', args: [consultationId]);
   }
 
-  void _hubSend(String method, List<Object?> args) {
-    _hub?.invoke(method, args: args).catchError((_) {});
+  void _hubSend(String method, List<Object> args) {
+    _hub?.invoke(method, args: args).catchError((_) => null as Object?);
   }
 
   Future<void> _onEndRequested(

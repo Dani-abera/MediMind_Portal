@@ -20,10 +20,10 @@ class PlatformDoctorsDatasource {
       },
     );
     final data = resp.data as Map<String, dynamic>;
-    final items = (data['data'] as List? ?? [])
+    final items = (data['items'] as List? ?? [])
         .map((e) => PlatformDoctorModel.fromJson(e as Map<String, dynamic>))
         .toList();
-    return (doctors: items, total: data['total'] as int? ?? items.length);
+    return (doctors: items, total: data['totalCount'] as int? ?? items.length);
   }
 
   Future<PlatformDoctor> getDoctorDetail(String doctorId) async {

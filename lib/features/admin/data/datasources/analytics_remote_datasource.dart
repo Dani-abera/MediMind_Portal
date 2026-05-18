@@ -47,7 +47,7 @@ class AnalyticsRemoteDataSource {
       },
     );
     final model = AnalyticsSummaryModel.fromJson(
-      resp.data['data'] as Map<String, dynamic>,
+      resp.data as Map<String, dynamic>,
     );
     _cache[key] = (data: model, fetchedAt: DateTime.now());
     return model;
@@ -70,7 +70,7 @@ class AnalyticsRemoteDataSource {
       },
     );
     return RevenueSummaryModel.fromJson(
-      resp.data['data'] as Map<String, dynamic>,
+      resp.data as Map<String, dynamic>,
     );
   }
 

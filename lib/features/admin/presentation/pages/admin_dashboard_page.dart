@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/di/service_locator.dart';
+import '../../../../core/network/user_context.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -13,6 +14,8 @@ import '../../../../core/widgets/cards/kpi_card.dart';
 import '../../../../core/widgets/shell/page_header.dart';
 import '../../domain/entities/admin_dashboard_data.dart';
 import '../../domain/entities/queue_item.dart';
+import '../bloc/branding/branding_bloc.dart';
+import '../bloc/center_settings/center_settings_bloc.dart';
 import '../bloc/dashboard/admin_dashboard_bloc.dart';
 
 class AdminDashboardPage extends StatelessWidget {
@@ -20,9 +23,21 @@ class AdminDashboardPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => sl<AdminDashboardBloc>()..add(const AdminDashboardStarted()),
-      child: const _AdminDashboardView(),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (_) => sl<CenterSettingsBloc>()
+            ..add(CenterSettingsStarted(UserContext().centerId ?? '')),
+        ),
+        BlocProvider(
+          create: (_) => sl<BrandingBloc>()
+            ..add(BrandingStarted(UserContext().centerId ?? '')),
+        ),
+      ],
+      child: BlocProvider(
+        create: (_) => sl<AdminDashboardBloc>()..add(const AdminDashboardStarted()),
+        child: const _AdminDashboardView(),
+      ),
     );
   }
 }
@@ -89,6 +104,8 @@ class _DashboardBody extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          const _CenterInfoBanner(),
+          const SizedBox(height: AppSpacing.base),
           _KpiRow(data: data),
           const SizedBox(height: AppSpacing.xl),
           Row(
@@ -463,6 +480,93 @@ class _DoctorUtilization extends StatelessWidget {
                 },
               ),
       ),
+    );
+  }
+}
+
+class _CenterInfoBanner extends StatelessWidget {
+  const _CenterInfoBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<CenterSettingsBloc, CenterSettingsState>(
+      builder: (_, settingsState) {
+        return BlocBuilder<BrandingBloc, BrandingState>(
+          builder: (_, brandingState) {
+            final config = settingsState is CenterSettingsLoaded ? settingsState.config : null;
+            if (config == null) return const SizedBox.shrink();
+            final branding = brandingState is BrandingLoaded ? brandingState.branding : null;
+            final logoUrl = branding?.logoUrl;
+            final initials = config.name.isNotEmpty ? config.name[0].toUpperCase() : 'C';
+            final location = [config.city, config.region]
+                .where((s) => s.isNotEmpty)
+                .join(' · ');
+            return Container(
+              padding: const EdgeInsets.all(AppSpacing.base),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface,
+                borderRadius: AppRadius.radiusXl,
+                border: Border.all(color: AppColors.neutral200),
+              ),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 24,
+                    backgroundColor: AppColors.primaryLight,
+                    backgroundImage: logoUrl != null ? NetworkImage(logoUrl) : null,
+                    child: logoUrl == null
+                        ? Text(
+                            initials,
+                            style: AppTypography.bodySmall.copyWith(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          )
+                        : null,
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(config.name, style: AppTypography.h3),
+                        if (location.isNotEmpty)
+                          Text(
+                            location,
+                            style: AppTypography.caption.copyWith(color: AppColors.neutral500),
+                          ),
+                      ],
+                    ),
+                  ),
+                  if (config.specializations.isNotEmpty)
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 4,
+                      children: [
+                        ...config.specializations.take(3).map(
+                              (s) => Chip(
+                                label: Text(s, style: AppTypography.caption),
+                                padding: EdgeInsets.zero,
+                                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              ),
+                            ),
+                        if (config.specializations.length > 3)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 6),
+                            child: Text(
+                              '+${config.specializations.length - 3} more',
+                              style: AppTypography.caption.copyWith(color: AppColors.neutral400),
+                            ),
+                          ),
+                      ],
+                    ),
+                ],
+              ),
+            );
+          },
+        );
+      },
     );
   }
 }

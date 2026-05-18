@@ -54,8 +54,8 @@ class DoctorRepositoryImpl implements DoctorRepository {
       _guardResult(() => _remote.getCenters());
 
   @override
-  Future<Either<Failure, Map<String, dynamic>>> getTodaySummary() =>
-      _guardResult(() => _remote.getTodaySummary());
+  Future<Either<Failure, List<Map<String, dynamic>>>> getTodayAppointments() =>
+      _guardResult(() => _remote.getTodayAppointments());
 
   @override
   Future<Either<Failure, List<QueueEntry>>> getQueue(String centerId) =>

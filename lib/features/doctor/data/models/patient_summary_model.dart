@@ -17,11 +17,11 @@ class PatientSummaryModel extends PatientSummary {
   });
 
   factory PatientSummaryModel.fromJson(Map<String, dynamic> json) => PatientSummaryModel(
-        id: json['id'] as String,
+        id: (json['patientId'] ?? json['id']).toString(),
         fullName: json['fullName'] as String,
         age: json['age'] as int?,
         gender: Gender.fromString(json['gender'] as String?),
-        phone: json['phone'] as String,
+        phone: (json['phoneNumber'] ?? json['phone'] ?? '') as String,
         firstVisit: json['firstVisit'] != null
             ? DateTime.parse(json['firstVisit'] as String)
             : null,

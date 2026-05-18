@@ -85,6 +85,7 @@ import 'domain/usecases/get_schedule_exceptions_usecase.dart';
 import 'domain/usecases/add_schedule_exception_usecase.dart';
 import 'domain/usecases/delete_schedule_exception_usecase.dart';
 import 'domain/usecases/update_consultation_fee_usecase.dart';
+import 'domain/usecases/get_pending_invitations_usecase.dart';
 import 'domain/usecases/get_patients_at_center_usecase.dart';
 import 'domain/usecases/get_patient_center_detail_usecase.dart';
 import 'domain/usecases/get_admins_usecase.dart';
@@ -214,6 +215,7 @@ Future<void> initAdminFeature() async {
   sl.registerLazySingleton(() => AddScheduleExceptionUseCase(sl<AdminDoctorRepository>()));
   sl.registerLazySingleton(() => DeleteScheduleExceptionUseCase(sl<AdminDoctorRepository>()));
   sl.registerLazySingleton(() => UpdateConsultationFeeUseCase(sl<AdminDoctorRepository>()));
+  sl.registerLazySingleton(() => GetPendingInvitationsUseCase(sl<AdminDoctorRepository>()));
 
   // ── Use cases — Patients ───────────────────────────────────────────────
   sl.registerLazySingleton(() => GetPatientsAtCenterUseCase(sl<AdminPatientRepository>()));
@@ -308,6 +310,7 @@ Future<void> initAdminFeature() async {
       addException: sl<AddScheduleExceptionUseCase>(),
       deleteException: sl<DeleteScheduleExceptionUseCase>(),
       updateFee: sl<UpdateConsultationFeeUseCase>(),
+      getPendingInvitations: sl<GetPendingInvitationsUseCase>(),
     ),
   );
   sl.registerFactory(

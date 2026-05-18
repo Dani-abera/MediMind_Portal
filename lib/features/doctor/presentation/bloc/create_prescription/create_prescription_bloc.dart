@@ -42,7 +42,6 @@ class CreatePrescriptionBloc
     emit(const CreatePrescriptionInProgress());
     final result = await _prescriptionRepo.createFromTemplate(
       event.templateId,
-      event.patientId,
       event.appointmentId,
     );
     result.fold(

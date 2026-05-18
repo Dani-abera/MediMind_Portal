@@ -8,7 +8,10 @@ class AdminStaffRemoteDataSource {
 
   Future<List<AdminStaffModel>> getAdmins(String centerId) async {
     final resp = await _client.dio.get('/healthcare-centers/$centerId/admins');
-    final data = resp.data['data'] as List? ?? [];
+    final raw = resp.data;
+    final data = raw is List
+        ? raw
+        : ((raw as Map<String, dynamic>)['items'] ?? raw['data'] ?? <dynamic>[]) as List;
     return data
         .map((e) => AdminStaffModel.fromJson(e as Map<String, dynamic>))
         .toList();
@@ -23,7 +26,7 @@ class AdminStaffRemoteDataSource {
   }) async {
     await _client.dio.post(
       '/healthcare-centers/$centerId/admins',
-      data: {'name': name, 'email': email, 'phone': phone, 'role': role.name},
+      data: {'fullName': name, 'email': email, 'phoneNumber': phone, 'role': role.name},
     );
   }
 

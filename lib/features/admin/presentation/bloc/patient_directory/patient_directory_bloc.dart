@@ -20,6 +20,7 @@ class PatientDirectoryBloc extends Bloc<PatientDirEvent, PatientDirState> {
       : _getPatients = getPatients,
         super(const PatientDirInitial()) {
     on<PatientDirStarted>(_onStarted, transformer: droppable());
+    on<PatientDirRefreshed>(_onRefreshed, transformer: droppable());
     on<PatientDirSearched>(_onSearched, transformer: restartable());
     on<PatientDirFiltered>(_onFiltered, transformer: droppable());
     on<PatientDirPageChanged>(_onPageChanged, transformer: droppable());
@@ -41,6 +42,10 @@ class PatientDirectoryBloc extends Bloc<PatientDirEvent, PatientDirState> {
   Future<void> _onStarted(PatientDirStarted event, Emitter<PatientDirState> emit) async {
     _centerId = event.centerId;
     emit(const PatientDirLoading());
+    await _fetch(emit);
+  }
+
+  Future<void> _onRefreshed(PatientDirRefreshed _, Emitter<PatientDirState> emit) async {
     await _fetch(emit);
   }
 

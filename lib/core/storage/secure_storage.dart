@@ -40,13 +40,7 @@ class SecureStorage {
     return _fss!.read(key: key);
   }
 
-  Future<void> _delete(String key) {
-    return _usesHive
-        ? _box!.delete(key)
-        : _fss!.delete(key: key);
-  }
-
-  Future<void> writeAccessToken(String token) => _write(_accessToken, token);
+Future<void> writeAccessToken(String token) => _write(_accessToken, token);
   Future<String?> readAccessToken() => _read(_accessToken);
 
   Future<void> writeRefreshToken(String token) => _write(_refreshToken, token);

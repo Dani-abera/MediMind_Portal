@@ -10,7 +10,8 @@ abstract class RouteNames {
   static const String doctorDashboard = '/doctor/dashboard';
   static const String doctorQueue = '/doctor/queue';
   static const String doctorAppointments = '/doctor/appointments';
-  static const String doctorAppointmentsCalendar = '/doctor/appointments/calendar';
+  static const String doctorAppointmentsCalendar =
+      '/doctor/appointments/calendar';
   static const String doctorAppointmentsList = '/doctor/appointments/list';
   static const String doctorPatients = '/doctor/patients';
   static const String doctorPatientDetail = '/doctor/patients/:id';
@@ -18,7 +19,8 @@ abstract class RouteNames {
   static const String doctorConsultationDetail = '/doctor/consultation/:id';
   static const String doctorVideoCall = '/doctor/video-call/:id';
   static const String doctorPrescriptions = '/doctor/prescriptions';
-  static const String doctorPrescriptionsTemplates = '/doctor/prescriptions/templates';
+  static const String doctorPrescriptionsTemplates =
+      '/doctor/prescriptions/templates';
   static const String doctorPrescriptionsNew = '/doctor/prescriptions/new';
   static const String doctorSchedule = '/doctor/schedule';
   static const String doctorProfile = '/doctor/profile';
@@ -35,14 +37,14 @@ abstract class RouteNames {
   static const String adminQueue = '/admin/queue';
   static const String adminAppointments = '/admin/appointments';
   static const String adminAppointmentsPending = '/admin/appointments/pending';
-  static const String adminAppointmentsCalendar = '/admin/appointments/calendar';
+  static const String adminAppointmentsCalendar =
+      '/admin/appointments/calendar';
   static const String adminAppointmentsList = '/admin/appointments/list';
   static const String adminDoctors = '/admin/doctors';
   static const String adminDoctorDetail = '/admin/doctors/:id';
   static const String adminPatients = '/admin/patients';
   static const String adminPatientDetail = '/admin/patients/:id';
   static const String adminPayments = '/admin/payments';
-  static const String adminPrescriptions = '/admin/prescriptions';
   static const String adminAnalytics = '/admin/analytics';
   static const String adminAnalyticsDashboard = '/admin/analytics/dashboard';
   static const String adminAnalyticsRevenue = '/admin/analytics/revenue';
@@ -63,7 +65,8 @@ abstract class RouteNames {
   static const String superAdminDashboard = '/super-admin/dashboard';
   static const String superAdminCenters = '/super-admin/centers';
   static const String superAdminCentersPending = '/super-admin/centers/pending';
-  static const String superAdminCentersSuspended = '/super-admin/centers/suspended';
+  static const String superAdminCentersSuspended =
+      '/super-admin/centers/suspended';
   static const String superAdminCenterDetail = '/super-admin/centers/:id';
   static const String superAdminDoctors = '/super-admin/doctors';
   static const String superAdminDoctorsPending = '/super-admin/doctors/pending';
@@ -71,9 +74,12 @@ abstract class RouteNames {
   static const String superAdminUsers = '/super-admin/users';
   static const String superAdminSubscriptions = '/super-admin/subscriptions';
   static const String superAdminAnalytics = '/super-admin/analytics';
-  static const String superAdminAnalyticsDashboard = '/super-admin/analytics/dashboard';
-  static const String superAdminAnalyticsRevenue = '/super-admin/analytics/revenue';
-  static const String superAdminAnalyticsGrowth = '/super-admin/analytics/growth';
+  static const String superAdminAnalyticsDashboard =
+      '/super-admin/analytics/dashboard';
+  static const String superAdminAnalyticsRevenue =
+      '/super-admin/analytics/revenue';
+  static const String superAdminAnalyticsGrowth =
+      '/super-admin/analytics/growth';
   static const String superAdminAuditLog = '/super-admin/audit-log';
   static const String superAdminSettings = '/super-admin/settings';
   static const String superAdminProfile = '/super-admin/profile';

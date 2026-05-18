@@ -14,10 +14,18 @@ class CentersPage extends StatelessWidget {
   final int initialTab;
   const CentersPage({super.key, this.initialTab = 0});
 
+  static String? _filterForTab(int tab) => switch (tab) {
+        1 => 'pending',
+        2 => 'active',
+        3 => 'suspended',
+        _ => null,
+      };
+
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => sl<CentersBloc>()..add(const CentersStarted()),
+      create: (_) => sl<CentersBloc>()
+        ..add(CentersStarted(statusFilter: _filterForTab(initialTab))),
       child: _CentersView(initialTab: initialTab),
     );
   }

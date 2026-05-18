@@ -31,8 +31,8 @@ class AuditLogRemoteDataSource {
         'pageSize': pageSize,
       },
     );
-    final data = resp.data['data'] as List? ?? [];
-    final total = resp.data['total'] as int? ?? data.length;
+    final data = resp.data['items'] as List? ?? [];
+    final total = resp.data['totalCount'] as int? ?? data.length;
     return (
       entries: data
           .map((e) => AuditEntryModel.fromJson(e as Map<String, dynamic>))

@@ -13,6 +13,7 @@ import '../../../domain/usecases/get_schedule_exceptions_usecase.dart';
 import '../../../domain/usecases/add_schedule_exception_usecase.dart';
 import '../../../domain/usecases/delete_schedule_exception_usecase.dart';
 import '../../../domain/usecases/update_consultation_fee_usecase.dart';
+import '../../../domain/usecases/get_pending_invitations_usecase.dart';
 
 part 'doctors_roster_event.dart';
 part 'doctors_roster_state.dart';
@@ -29,6 +30,7 @@ class DoctorsRosterBloc extends Bloc<DoctorsRosterEvent, DoctorsRosterState> {
   final AddScheduleExceptionUseCase _addException;
   final DeleteScheduleExceptionUseCase _deleteException;
   final UpdateConsultationFeeUseCase _updateFee;
+  final GetPendingInvitationsUseCase _getPendingInvitations;
 
   String _centerId = '';
 
@@ -44,6 +46,7 @@ class DoctorsRosterBloc extends Bloc<DoctorsRosterEvent, DoctorsRosterState> {
     required AddScheduleExceptionUseCase addException,
     required DeleteScheduleExceptionUseCase deleteException,
     required UpdateConsultationFeeUseCase updateFee,
+    required GetPendingInvitationsUseCase getPendingInvitations,
   })  : _getDoctors = getDoctors,
         _addDoctor = addDoctor,
         _removeDoctor = removeDoctor,
@@ -55,6 +58,7 @@ class DoctorsRosterBloc extends Bloc<DoctorsRosterEvent, DoctorsRosterState> {
         _addException = addException,
         _deleteException = deleteException,
         _updateFee = updateFee,
+        _getPendingInvitations = getPendingInvitations,
         super(const DoctorsRosterInitial()) {
     on<DoctorsRosterStarted>(_onStarted, transformer: droppable());
     on<DoctorsRosterRefreshed>(_onRefreshed, transformer: droppable());
@@ -72,9 +76,13 @@ class DoctorsRosterBloc extends Bloc<DoctorsRosterEvent, DoctorsRosterState> {
 
   Future<void> _fetch(Emitter<DoctorsRosterState> emit) async {
     final result = await _getDoctors(_centerId);
-    result.fold(
-      (f) => emit(DoctorsRosterError(f.message)),
-      (doctors) => emit(DoctorsRosterLoaded(doctors)),
+    await result.fold(
+      (f) async => emit(DoctorsRosterError(f.message)),
+      (doctors) async {
+        final invResult = await _getPendingInvitations(_centerId);
+        final pending = invResult.fold((_) => <PendingDoctorInvitation>[], (list) => list);
+        emit(DoctorsRosterLoaded(doctors, pendingInvitations: pending));
+      },
     );
   }
 
@@ -85,7 +93,6 @@ class DoctorsRosterBloc extends Bloc<DoctorsRosterEvent, DoctorsRosterState> {
   }
 
   Future<void> _onRefreshed(DoctorsRosterRefreshed _, Emitter<DoctorsRosterState> emit) async {
-    emit(const DoctorsRosterLoading());
     await _fetch(emit);
   }
 
@@ -116,18 +123,24 @@ class DoctorsRosterBloc extends Bloc<DoctorsRosterEvent, DoctorsRosterState> {
   Future<void> _onScheduleConfigured(DoctorScheduleConfigured event, Emitter<DoctorsRosterState> emit) async {
     emit(const DoctorsRosterActionInProgress());
     final result = await _configureSchedule(event.config);
-    result.fold(
-      (f) => emit(DoctorsRosterError(f.message)),
-      (_) => emit(const DoctorsRosterActionSuccess('Schedule saved')),
+    await result.fold(
+      (f) async => emit(DoctorsRosterError(f.message)),
+      (_) async {
+        emit(const DoctorsRosterActionSuccess('Schedule saved'));
+        await _fetch(emit);
+      },
     );
   }
 
   Future<void> _onScheduleDeleted(DoctorScheduleDeleted event, Emitter<DoctorsRosterState> emit) async {
     emit(const DoctorsRosterActionInProgress());
     final result = await _deleteSchedule(event.scheduleId);
-    result.fold(
-      (f) => emit(DoctorsRosterError(f.message)),
-      (_) => emit(const DoctorsRosterActionSuccess('Schedule deleted')),
+    await result.fold(
+      (f) async => emit(DoctorsRosterError(f.message)),
+      (_) async {
+        emit(const DoctorsRosterActionSuccess('Schedule deleted'));
+        await _fetch(emit);
+      },
     );
   }
 
@@ -143,9 +156,12 @@ class DoctorsRosterBloc extends Bloc<DoctorsRosterEvent, DoctorsRosterState> {
   Future<void> _onDoctorInvited(DoctorInvited event, Emitter<DoctorsRosterState> emit) async {
     emit(const DoctorsRosterActionInProgress());
     final result = await _inviteDoctor(_centerId, event.dto);
-    result.fold(
-      (f) => emit(DoctorsRosterError(f.message)),
-      (_) => emit(const DoctorInvitationSent('Invitation sent to doctor\'s email')),
+    await result.fold(
+      (f) async => emit(DoctorsRosterError(f.message)),
+      (_) async {
+        emit(const DoctorInvitationSent('Invitation sent. Doctor will appear once they accept.'));
+        await _fetch(emit);
+      },
     );
   }
 

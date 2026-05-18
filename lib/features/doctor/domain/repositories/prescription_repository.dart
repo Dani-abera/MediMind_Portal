@@ -46,5 +46,5 @@ abstract class PrescriptionRepository {
   Future<Either<Failure, PrescriptionTemplate>> createTemplate(Map<String, dynamic> data);
   Future<Either<Failure, PrescriptionTemplate>> updateTemplate(String id, Map<String, dynamic> data);
   Future<Either<Failure, void>> deleteTemplate(String id);
-  Future<Either<Failure, Prescription>> createFromTemplate(String templateId, String patientId, String? appointmentId);
+  Future<Either<Failure, Prescription>> createFromTemplate(String templateId, String? appointmentId);
 }

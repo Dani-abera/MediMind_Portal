@@ -16,29 +16,27 @@ class PatientRemoteDataSource {
     int pageSize = 20,
   }) async {
     final resp = await _client.dio.get(
-      '/doctor/patients',
+      '/doctors/me/patients',
       queryParameters: {
         if (search != null) 'search': search,
-        if (hasChronicConditions != null)
-          'hasChronicConditions': hasChronicConditions,
         'page': page,
         'pageSize': pageSize,
       },
     );
-    final data = resp.data['data'] as List<dynamic>;
+    final data = resp.data['items'] as List<dynamic>;
     return data
         .map((e) => PatientSummaryModel.fromJson(e as Map<String, dynamic>))
         .toList();
   }
 
   Future<PatientModel> getPatientById(String id) async {
-    final resp = await _client.dio.get('/doctor/patients/$id');
-    return PatientModel.fromJson(resp.data['data'] as Map<String, dynamic>);
+    final resp = await _client.dio.get('/doctors/me/patients/$id');
+    return PatientModel.fromJson(resp.data as Map<String, dynamic>);
   }
 
   Future<List<HealthRecordModel>> getHealthRecords(String patientId) async {
     final resp = await _client.dio.get(
-      '/doctor/patients/$patientId/health-records',
+      '/patients/$patientId/health-records',
     );
     final data = resp.data['data'] as List<dynamic>;
     return data
@@ -48,18 +46,16 @@ class PatientRemoteDataSource {
 
   Future<List<PredictionModel>> getPredictions(String patientId) async {
     final resp = await _client.dio.get(
-      '/doctor/patients/$patientId/predictions',
+      '/patients/$patientId/predictions/latest',
     );
-    final data = resp.data['data'] as List<dynamic>;
-    return data
-        .map((e) => PredictionModel.fromJson(e as Map<String, dynamic>))
-        .toList();
+    if (resp.data == null) return [];
+    return [PredictionModel.fromJson(resp.data as Map<String, dynamic>)];
   }
 
   Future<Map<String, dynamic>> getMedicalHistory(String patientId) async {
     final resp = await _client.dio.get(
-      '/doctor/patients/$patientId/medical-history',
+      '/patients/$patientId/medical-history',
     );
-    return resp.data['data'] as Map<String, dynamic>;
+    return resp.data as Map<String, dynamic>;
   }
 }

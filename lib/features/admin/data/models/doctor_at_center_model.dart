@@ -78,6 +78,29 @@ class DoctorScheduleConfigModel extends DoctorScheduleConfig {
       );
 }
 
+class PendingDoctorInvitationModel extends PendingDoctorInvitation {
+  const PendingDoctorInvitationModel({
+    required super.invitationId,
+    required super.fullName,
+    required super.email,
+    required super.phoneNumber,
+    required super.specialization,
+    required super.licenseNumber,
+    required super.expiresAt,
+  });
+
+  factory PendingDoctorInvitationModel.fromJson(Map<String, dynamic> j) =>
+      PendingDoctorInvitationModel(
+        invitationId: j['invitationId'] as String? ?? j['id'] as String? ?? '',
+        fullName: j['fullName'] as String? ?? '',
+        email: j['email'] as String? ?? '',
+        phoneNumber: j['phoneNumber'] as String? ?? '',
+        specialization: j['specialization'] as String? ?? '',
+        licenseNumber: j['licenseNumber'] as String? ?? '',
+        expiresAt: DateTime.tryParse(j['expiresAt'] as String? ?? '') ?? DateTime.now(),
+      );
+}
+
 class DoctorAtCenterModel extends DoctorAtCenter {
   const DoctorAtCenterModel({
     required super.doctorId,
@@ -92,16 +115,26 @@ class DoctorAtCenterModel extends DoctorAtCenter {
     super.avatarUrl,
   });
 
-  factory DoctorAtCenterModel.fromJson(Map<String, dynamic> j) => DoctorAtCenterModel(
-        doctorId: j['doctorId'] as String? ?? j['doctor_id'] as String? ?? j['id'] as String? ?? '',
-        fullName: j['fullName'] as String? ?? j['full_name'] as String? ?? j['name'] as String? ?? '',
-        specialization: j['specialization'] as String?,
-        licenseNumber: j['licenseNumber'] as String? ?? j['license_number'] as String? ?? '',
-        licenseVerified: j['licenseVerified'] as bool? ?? j['license_verified'] as bool? ?? false,
-        consultationFeeEtb: (j['consultationFee'] ?? j['consultation_fee'] as num?)?.toDouble() ?? 0,
-        joinedAt: DateTime.tryParse(j['joinedAt'] as String? ?? j['joined_at'] as String? ?? '') ?? DateTime.now(),
-        status: DoctorStatus.fromString(j['status'] as String?),
-        todayAppointments: j['todayAppointments'] as int? ?? j['today_appointments'] as int? ?? 0,
-        avatarUrl: j['avatarUrl'] as String? ?? j['avatar_url'] as String?,
-      );
+  factory DoctorAtCenterModel.fromJson(Map<String, dynamic> j) {
+    // Resolve joined date — admin roster returns DateOnly as "yyyy-MM-dd" string
+    final rawJoined = j['joinedDate'] as String? ?? j['joinedAt'] as String? ?? j['joined_at'] as String? ?? '';
+    // Resolve isActive → DoctorStatus (admin roster field); fall back to 'status' string
+    final isActive = j['isActive'] as bool? ?? j['is_active'] as bool?;
+    final status = isActive != null
+        ? (isActive ? DoctorStatus.active : DoctorStatus.inactive)
+        : DoctorStatus.fromString(j['status'] as String?);
+
+    return DoctorAtCenterModel(
+      doctorId: j['doctorId'] as String? ?? j['doctor_id'] as String? ?? j['id'] as String? ?? '',
+      fullName: j['fullName'] as String? ?? j['full_name'] as String? ?? j['name'] as String? ?? '',
+      specialization: j['specialization'] as String?,
+      licenseNumber: j['licenseNumber'] as String? ?? j['license_number'] as String? ?? '',
+      licenseVerified: j['licenseVerified'] as bool? ?? j['license_verified'] as bool? ?? false,
+      consultationFeeEtb: (j['consultationFee'] as num? ?? j['consultation_fee'] as num?)?.toDouble() ?? 0,
+      joinedAt: DateTime.tryParse(rawJoined) ?? DateTime.now(),
+      status: status,
+      todayAppointments: j['todayAppointments'] as int? ?? j['today_appointments'] as int? ?? 0,
+      avatarUrl: j['avatarUrl'] as String? ?? j['avatar_url'] as String?,
+    );
+  }
 }

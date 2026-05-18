@@ -118,7 +118,6 @@ class AdminQueueBloc extends Bloc<AdminQueueEvent, AdminQueueState> {
   }
 
   Future<void> _onRefreshed(AdminQueueRefreshed event, Emitter<AdminQueueState> emit) async {
-    emit(const AdminQueueLoading());
     await _fetch(emit);
   }
 
@@ -126,7 +125,10 @@ class AdminQueueBloc extends Bloc<AdminQueueEvent, AdminQueueState> {
     emit(const AdminQueueActionInProgress(''));
     final result = await _callNext();
     await result.fold(
-      (f) async => emit(AdminQueueActionError(f.message)),
+      (f) async {
+        emit(AdminQueueActionError(f.message));
+        await _fetch(emit);
+      },
       (_) async => await _fetch(emit),
     );
   }
@@ -135,7 +137,10 @@ class AdminQueueBloc extends Bloc<AdminQueueEvent, AdminQueueState> {
     emit(AdminQueueActionInProgress(event.queueId));
     final result = await _markArrived(event.queueId);
     await result.fold(
-      (f) async => emit(AdminQueueActionError(f.message)),
+      (f) async {
+        emit(AdminQueueActionError(f.message));
+        await _fetch(emit);
+      },
       (_) async => await _fetch(emit),
     );
   }
@@ -144,7 +149,10 @@ class AdminQueueBloc extends Bloc<AdminQueueEvent, AdminQueueState> {
     emit(AdminQueueActionInProgress(event.queueId));
     final result = await _markComplete(event.queueId);
     await result.fold(
-      (f) async => emit(AdminQueueActionError(f.message)),
+      (f) async {
+        emit(AdminQueueActionError(f.message));
+        await _fetch(emit);
+      },
       (_) async => await _fetch(emit),
     );
   }
@@ -153,7 +161,10 @@ class AdminQueueBloc extends Bloc<AdminQueueEvent, AdminQueueState> {
     emit(AdminQueueActionInProgress(event.queueId));
     final result = await _markNoShow(event.queueId);
     await result.fold(
-      (f) async => emit(AdminQueueActionError(f.message)),
+      (f) async {
+        emit(AdminQueueActionError(f.message));
+        await _fetch(emit);
+      },
       (_) async => await _fetch(emit),
     );
   }
@@ -162,7 +173,10 @@ class AdminQueueBloc extends Bloc<AdminQueueEvent, AdminQueueState> {
     emit(AdminQueueActionInProgress(event.queueId));
     final result = await _skip(event.queueId);
     await result.fold(
-      (f) async => emit(AdminQueueActionError(f.message)),
+      (f) async {
+        emit(AdminQueueActionError(f.message));
+        await _fetch(emit);
+      },
       (_) async => await _fetch(emit),
     );
   }
@@ -171,7 +185,10 @@ class AdminQueueBloc extends Bloc<AdminQueueEvent, AdminQueueState> {
     emit(const AdminQueueActionInProgress(''));
     final result = await _insertEmergency(event.appointmentId);
     await result.fold(
-      (f) async => emit(AdminQueueActionError(f.message)),
+      (f) async {
+        emit(AdminQueueActionError(f.message));
+        await _fetch(emit);
+      },
       (item) async {
         await _fetch(emit);
         emit(AdminQueueActionSuccess('Emergency: ${item.patientName} inserted at position 1'));

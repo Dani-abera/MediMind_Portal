@@ -88,7 +88,6 @@ class AuditLogBloc extends Bloc<AuditLogEvent, AuditLogState> {
   }
 
   Future<void> _onRefreshed(AuditLogRefreshed event, Emitter<AuditLogState> emit) async {
-    emit(const AuditLogLoading());
     await _fetch(emit);
   }
 }

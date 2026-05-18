@@ -18,7 +18,7 @@ class PrescriptionRemoteDataSource {
     int pageSize = 20,
   }) async {
     final resp = await _client.dio.get(
-      '/doctor/prescriptions',
+      '/prescriptions',
       queryParameters: {
         if (status != null) 'status': status,
         if (patientId != null) 'patientId': patientId,
@@ -28,24 +28,24 @@ class PrescriptionRemoteDataSource {
         'pageSize': pageSize,
       },
     );
-    final data = resp.data['data'] as List<dynamic>;
+    final data = resp.data is List
+        ? resp.data as List<dynamic>
+        : (resp.data['items'] ?? resp.data['data'] ?? []) as List<dynamic>;
     return data
         .map((e) => PrescriptionModel.fromJson(e as Map<String, dynamic>))
         .toList();
   }
 
   Future<PrescriptionModel> getPrescriptionById(String id) async {
-    final resp = await _client.dio.get('/doctor/prescriptions/$id');
-    return PrescriptionModel.fromJson(
-      resp.data['data'] as Map<String, dynamic>,
-    );
+    final resp = await _client.dio.get('/prescriptions/$id');
+    return PrescriptionModel.fromJson(resp.data as Map<String, dynamic>);
   }
 
   Future<PrescriptionModel> createPrescription(
     CreatePrescriptionParams params,
   ) async {
     final resp = await _client.dio.post(
-      '/doctor/prescriptions',
+      '/prescriptions',
       data: {
         'patientId': params.patientId,
         if (params.appointmentId != null) 'appointmentId': params.appointmentId,
@@ -62,30 +62,30 @@ class PrescriptionRemoteDataSource {
           'expiresAt': params.expiresAt!.toIso8601String(),
       },
     );
-    return PrescriptionModel.fromJson(
-      resp.data['data'] as Map<String, dynamic>,
-    );
+    return PrescriptionModel.fromJson(resp.data as Map<String, dynamic>);
   }
 
   Future<String> getPrescriptionPdfUrl(String id) async {
-    final resp = await _client.dio.get('/doctor/prescriptions/$id/pdf');
+    final resp = await _client.dio.get('/prescriptions/$id/pdf');
     return resp.data['data']['url'] as String;
   }
 
   Future<void> markDispensed(String id) async {
-    await _client.dio.post('/doctor/prescriptions/$id/dispense');
+    await _client.dio.post('/prescriptions/$id/mark-dispensed');
   }
 
   Future<void> revoke(String id, String reason) async {
     await _client.dio.post(
-      '/doctor/prescriptions/$id/revoke',
+      '/prescriptions/$id/revoke',
       data: {'reason': reason},
     );
   }
 
   Future<List<PrescriptionTemplateModel>> getTemplates() async {
-    final resp = await _client.dio.get('/doctor/prescription-templates');
-    final data = resp.data['data'] as List<dynamic>;
+    final resp = await _client.dio.get('/prescription-templates');
+    final data = resp.data is List
+        ? resp.data as List<dynamic>
+        : (resp.data['items'] ?? resp.data['data'] ?? []) as List<dynamic>;
     return data
         .map(
           (e) => PrescriptionTemplateModel.fromJson(e as Map<String, dynamic>),
@@ -96,46 +96,33 @@ class PrescriptionRemoteDataSource {
   Future<PrescriptionTemplateModel> createTemplate(
     Map<String, dynamic> data,
   ) async {
-    final resp = await _client.dio.post(
-      '/doctor/prescription-templates',
-      data: data,
-    );
-    return PrescriptionTemplateModel.fromJson(
-      resp.data['data'] as Map<String, dynamic>,
-    );
+    final resp = await _client.dio.post('/prescription-templates', data: data);
+    return PrescriptionTemplateModel.fromJson(resp.data as Map<String, dynamic>);
   }
 
   Future<PrescriptionTemplateModel> updateTemplate(
     String id,
     Map<String, dynamic> data,
   ) async {
-    final resp = await _client.dio.put(
-      '/doctor/prescription-templates/$id',
-      data: data,
-    );
-    return PrescriptionTemplateModel.fromJson(
-      resp.data['data'] as Map<String, dynamic>,
-    );
+    final resp = await _client.dio.put('/prescription-templates/$id', data: data);
+    return PrescriptionTemplateModel.fromJson(resp.data as Map<String, dynamic>);
   }
 
   Future<void> deleteTemplate(String id) async {
-    await _client.dio.delete('/doctor/prescription-templates/$id');
+    await _client.dio.delete('/prescription-templates/$id');
   }
 
   Future<PrescriptionModel> createFromTemplate(
     String templateId,
-    String patientId,
     String? appointmentId,
   ) async {
     final resp = await _client.dio.post(
-      '/doctor/prescription-templates/$templateId/create-prescription',
+      '/prescriptions/from-template',
       data: {
-        'patientId': patientId,
+        'templateId': templateId,
         if (appointmentId != null) 'appointmentId': appointmentId,
       },
     );
-    return PrescriptionModel.fromJson(
-      resp.data['data'] as Map<String, dynamic>,
-    );
+    return PrescriptionModel.fromJson(resp.data as Map<String, dynamic>);
   }
 }

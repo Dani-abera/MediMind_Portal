@@ -48,7 +48,6 @@ class AdminDashboardBloc extends Bloc<AdminDashboardEvent, AdminDashboardState> 
     AdminDashboardRefreshed event,
     Emitter<AdminDashboardState> emit,
   ) async {
-    emit(const AdminDashboardLoading());
     final centerId = UserContext().centerId ?? '';
     final result = await _getDashboardData(centerId);
     result.fold(

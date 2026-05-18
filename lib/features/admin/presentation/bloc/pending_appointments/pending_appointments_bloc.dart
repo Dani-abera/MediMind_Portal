@@ -63,7 +63,6 @@ class PendingAppointmentsBloc
   }
 
   Future<void> _onRefreshed(PendingApptsRefreshed _, Emitter<PendingAppointmentsState> emit) async {
-    emit(const PendingApptsLoading());
     await _fetch(emit);
   }
 

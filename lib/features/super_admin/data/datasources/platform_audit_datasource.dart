@@ -26,10 +26,10 @@ class PlatformAuditDatasource {
       },
     );
     final data = resp.data as Map<String, dynamic>;
-    final items = (data['data'] as List? ?? [])
+    final items = (data['items'] as List? ?? [])
         .map((e) => PlatformAuditEntryModel.fromJson(e as Map<String, dynamic>))
         .toList();
-    return (entries: items, total: data['total'] as int? ?? items.length);
+    return (entries: items, total: data['totalCount'] as int? ?? items.length);
   }
 
   Future<void> exportAuditLog({String? centerId}) async {

@@ -8,8 +8,9 @@ class DoctorsRosterInitial extends DoctorsRosterState { const DoctorsRosterIniti
 class DoctorsRosterLoading extends DoctorsRosterState { const DoctorsRosterLoading(); }
 class DoctorsRosterLoaded extends DoctorsRosterState {
   final List<DoctorAtCenter> doctors;
-  const DoctorsRosterLoaded(this.doctors);
-  @override List<Object?> get props => [doctors];
+  final List<PendingDoctorInvitation> pendingInvitations;
+  const DoctorsRosterLoaded(this.doctors, {this.pendingInvitations = const []});
+  @override List<Object?> get props => [doctors, pendingInvitations];
 }
 class DoctorsRosterActionInProgress extends DoctorsRosterState { const DoctorsRosterActionInProgress(); }
 class DoctorsRosterActionSuccess extends DoctorsRosterState {

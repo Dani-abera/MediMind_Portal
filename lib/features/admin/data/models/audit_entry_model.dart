@@ -16,11 +16,11 @@ class AuditEntryModel extends AuditEntry {
   });
 
   factory AuditEntryModel.fromJson(Map<String, dynamic> j) => AuditEntryModel(
-        id: j['id'] as String? ?? '',
+        id: j['logId'] as String? ?? j['id'] as String? ?? '',
         timestamp: DateTime.tryParse(j['timestamp'] as String? ?? j['createdAt'] as String? ?? '') ?? DateTime.now(),
         userId: j['userId'] as String? ?? j['user_id'] as String? ?? '',
         userName: j['userName'] as String? ?? j['user_name'] as String? ?? '',
-        userRole: j['userRole'] as String? ?? j['user_role'] as String? ?? '',
+        userRole: j['userType'] as String? ?? j['userRole'] as String? ?? j['user_role'] as String? ?? '',
         action: AuditAction.fromString(j['action'] as String?),
         entityType: j['entityType'] as String? ?? j['entity_type'] as String? ?? '',
         entityId: j['entityId'] as String? ?? j['entity_id'] as String? ?? '',

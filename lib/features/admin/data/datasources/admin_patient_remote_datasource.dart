@@ -23,7 +23,10 @@ class AdminPatientRemoteDataSource {
         'pageSize': pageSize,
       },
     );
-    final data = resp.data['data'] as List? ?? [];
+    final raw = resp.data;
+    final data = raw is List
+        ? raw
+        : ((raw as Map<String, dynamic>)['items'] ?? raw['data'] ?? <dynamic>[]) as List;
     return data
         .map((e) => PatientAtCenterModel.fromJson(e as Map<String, dynamic>))
         .toList();

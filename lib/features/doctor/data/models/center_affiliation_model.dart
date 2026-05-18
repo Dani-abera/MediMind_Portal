@@ -16,7 +16,7 @@ class CenterAffiliationModel extends CenterAffiliation {
         centerName: json['centerName'] as String,
         centerAddress: json['centerAddress'] as String?,
         consultationFee: (json['consultationFee'] as num).toDouble(),
-        joinedAt: DateTime.parse(json['joinedAt'] as String),
+        joinedAt: DateTime.parse((json['joinedDate'] ?? json['joinedAt']) as String),
         isActive: json['isActive'] as bool? ?? true,
       );
 

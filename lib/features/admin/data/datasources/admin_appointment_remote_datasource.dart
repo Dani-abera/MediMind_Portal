@@ -28,7 +28,10 @@ class AdminAppointmentRemoteDataSource {
         'pageSize': pageSize,
       },
     );
-    final data = (resp.data['items'] ?? resp.data['data']) as List? ?? [];
+    final _raw = resp.data;
+    final data = _raw is List
+        ? _raw
+        : ((_raw as Map<String, dynamic>)['items'] ?? _raw['data'] ?? <dynamic>[]) as List;
     return data
         .map((e) => AdminAppointmentModel.fromJson(e as Map<String, dynamic>))
         .toList();

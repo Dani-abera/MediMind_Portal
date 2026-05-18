@@ -9,7 +9,7 @@ abstract class DoctorRepository {
   Future<Either<Failure, DoctorProfile>> getProfile();
   Future<Either<Failure, DoctorProfile>> updateProfile(Map<String, dynamic> data);
   Future<Either<Failure, List<CenterAffiliation>>> getCenters();
-  Future<Either<Failure, Map<String, dynamic>>> getTodaySummary();
+  Future<Either<Failure, List<Map<String, dynamic>>>> getTodayAppointments();
   Future<Either<Failure, List<QueueEntry>>> getQueue(String centerId);
   Future<Either<Failure, List<DoctorSchedule>>> getSchedules();
 }

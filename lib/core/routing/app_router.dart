@@ -20,6 +20,7 @@ import '../../features/doctor/presentation/pages/create_prescription_page.dart';
 import '../../features/doctor/presentation/pages/prescription_templates_page.dart';
 import '../../features/doctor/presentation/pages/schedule_page.dart';
 import '../../features/doctor/presentation/pages/doctor_profile_page.dart';
+import '../../features/doctor/presentation/pages/doctor_settings_page.dart';
 import '../../features/admin/presentation/pages/registration/admin_registration_status_page.dart';
 import '../../features/admin/presentation/pages/registration/register_center_page.dart';
 import '../../features/admin/admin_workspace.dart';
@@ -42,6 +43,7 @@ import '../../features/admin/center_settings/general_page.dart';
 import '../../features/admin/center_settings/branding_page.dart';
 import '../../features/admin/center_settings/hours_page.dart';
 import '../../features/admin/center_settings/booking_rules_page.dart';
+import '../../features/admin/presentation/pages/admin_profile_page.dart';
 import '../../features/super_admin/super_admin_workspace.dart';
 import '../../features/super_admin/presentation/pages/super_admin_dashboard_page.dart';
 import '../../features/super_admin/presentation/pages/centers/centers_page.dart';
@@ -52,6 +54,7 @@ import '../../features/super_admin/presentation/pages/subscriptions/platform_sub
 import '../../features/super_admin/presentation/pages/analytics/platform_analytics_page.dart';
 import '../../features/super_admin/presentation/pages/audit_log/global_audit_log_page.dart';
 import '../../features/super_admin/presentation/pages/platform_settings/platform_settings_page.dart';
+import '../../features/super_admin/presentation/pages/profile/super_admin_profile_page.dart';
 import 'route_names.dart';
 
 class AppRouter {
@@ -181,7 +184,7 @@ class AppRouter {
           StatefulShellBranch(routes: [
             GoRoute(
               path: RouteNames.doctorSettings,
-              builder: (_, __) => const ShellPlaceholderPage(title: 'Settings'),
+              builder: (_, __) => const DoctorSettingsPage(),
             ),
           ]),
           StatefulShellBranch(routes: [
@@ -253,12 +256,6 @@ class AppRouter {
           ]),
           StatefulShellBranch(routes: [
             GoRoute(
-              path: RouteNames.adminPrescriptions,
-              builder: (_, __) => const ShellPlaceholderPage(title: 'Prescriptions'),
-            ),
-          ]),
-          StatefulShellBranch(routes: [
-            GoRoute(
               path: RouteNames.adminAnalytics,
               redirect: (_, __) => RouteNames.adminAnalyticsDashboard,
             ),
@@ -316,7 +313,7 @@ class AppRouter {
           StatefulShellBranch(routes: [
             GoRoute(
               path: RouteNames.adminProfile,
-              builder: (_, __) => const ShellPlaceholderPage(title: 'Profile'),
+              builder: (_, __) => const AdminProfilePage(),
             ),
           ]),
           StatefulShellBranch(routes: [
@@ -343,19 +340,19 @@ class AppRouter {
               builder: (_, __) => const CentersPage(initialTab: 0),
               routes: [
                 GoRoute(
+                  path: 'pending',
+                  builder: (_, __) => const CentersPage(initialTab: 1),
+                ),
+                GoRoute(
+                  path: 'suspended',
+                  builder: (_, __) => const CentersPage(initialTab: 3),
+                ),
+                GoRoute(
                   path: ':id',
                   builder: (_, state) =>
                       CenterDetailPage(centerId: state.pathParameters['id']!),
                 ),
               ],
-            ),
-            GoRoute(
-              path: RouteNames.superAdminCentersPending,
-              builder: (_, __) => const CentersPage(initialTab: 1),
-            ),
-            GoRoute(
-              path: RouteNames.superAdminCentersSuspended,
-              builder: (_, __) => const CentersPage(initialTab: 3),
             ),
           ]),
           StatefulShellBranch(routes: [
@@ -413,7 +410,7 @@ class AppRouter {
           StatefulShellBranch(routes: [
             GoRoute(
               path: RouteNames.superAdminProfile,
-              builder: (_, __) => const ShellPlaceholderPage(title: 'Profile'),
+              builder: (_, __) => const SuperAdminProfilePage(),
             ),
           ]),
           StatefulShellBranch(routes: [

@@ -416,7 +416,7 @@ class _Step0CenterDetails extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
-              value: centerType,
+              initialValue: centerType,
               decoration: const InputDecoration(
                 labelText: 'Center Type *',
                 prefixIcon: Icon(Icons.category_outlined, size: 18),

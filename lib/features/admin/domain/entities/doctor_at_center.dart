@@ -164,6 +164,33 @@ class DoctorAtCenter extends Equatable {
       ];
 }
 
+// ── Pending invitation ────────────────────────────────────────────────────────
+
+class PendingDoctorInvitation extends Equatable {
+  final String invitationId;
+  final String fullName;
+  final String email;
+  final String phoneNumber;
+  final String specialization;
+  final String licenseNumber;
+  final DateTime expiresAt;
+
+  const PendingDoctorInvitation({
+    required this.invitationId,
+    required this.fullName,
+    required this.email,
+    required this.phoneNumber,
+    required this.specialization,
+    required this.licenseNumber,
+    required this.expiresAt,
+  });
+
+  bool get isExpired => expiresAt.isBefore(DateTime.now());
+
+  @override
+  List<Object?> get props => [invitationId, fullName, email, phoneNumber, specialization, licenseNumber, expiresAt];
+}
+
 // ── Invite doctor DTO ─────────────────────────────────────────────────────────
 
 class InviteDoctorDto extends Equatable {

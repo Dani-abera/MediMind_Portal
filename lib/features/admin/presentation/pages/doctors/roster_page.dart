@@ -77,7 +77,15 @@ class _DoctorsRosterView extends StatelessWidget {
               ),
             ],
           ),
-          Expanded(child: _DoctorsTable()),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _PendingInvitationsSection(),
+                Expanded(child: _DoctorsTable()),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -306,5 +314,95 @@ class _EditFeeDialogState extends State<_EditFeeDialog> {
       double.parse(_feeCtrl.text.trim()),
     ));
     Navigator.of(context).pop();
+  }
+}
+
+// ── Pending invitations banner ────────────────────────────────────────────────
+
+class _PendingInvitationsSection extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<DoctorsRosterBloc, DoctorsRosterState>(
+      builder: (ctx, state) {
+        final pending = state is DoctorsRosterLoaded && state.pendingInvitations.isNotEmpty
+            ? state.pendingInvitations
+            : <PendingDoctorInvitation>[];
+        if (pending.isEmpty) return const SizedBox.shrink();
+
+        return Container(
+          margin: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, 0),
+          decoration: BoxDecoration(
+            color: AppColors.warning.withOpacity(0.08),
+            border: Border.all(color: AppColors.warning.withOpacity(0.4)),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 10, 16, 6),
+                child: Row(
+                  children: [
+                    const Icon(Icons.hourglass_top_rounded, size: 16, color: AppColors.warning),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Pending Invitations (${pending.length})',
+                      style: AppTypography.bodySmall.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.warning,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      '— doctors appear in the list after they accept',
+                      style: AppTypography.caption.copyWith(color: AppColors.neutral500),
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(height: 1),
+              ...pending.map((inv) => _PendingInvitationTile(inv)),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _PendingInvitationTile extends StatelessWidget {
+  final PendingDoctorInvitation inv;
+  const _PendingInvitationTile(this.inv);
+
+  @override
+  Widget build(BuildContext context) {
+    final hoursLeft = inv.expiresAt.difference(DateTime.now()).inHours;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        children: [
+          const Icon(Icons.mail_outline, size: 16, color: AppColors.neutral400),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(inv.fullName,
+                    style: AppTypography.bodySmall.copyWith(fontWeight: FontWeight.w500)),
+                Text('${inv.email} · ${inv.specialization}',
+                    style: AppTypography.caption.copyWith(color: AppColors.neutral500)),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            hoursLeft > 0 ? 'Expires in ${hoursLeft}h' : 'Expired',
+            style: AppTypography.caption.copyWith(
+              color: hoursLeft > 8 ? AppColors.neutral400 : AppColors.danger,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

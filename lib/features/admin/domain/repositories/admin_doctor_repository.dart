@@ -14,4 +14,5 @@ abstract class AdminDoctorRepository {
   Future<Either<Failure, List<ScheduleException>>> getScheduleExceptions(String doctorId, String centerId);
   Future<Either<Failure, void>> addScheduleException(String doctorId, String centerId, ScheduleException exception);
   Future<Either<Failure, void>> deleteScheduleException(String doctorId, String centerId, DateTime date);
+  Future<Either<Failure, List<PendingDoctorInvitation>>> getPendingInvitations(String centerId);
 }

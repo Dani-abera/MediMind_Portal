@@ -10,42 +10,39 @@ class DoctorRemoteDataSource {
   DoctorRemoteDataSource(this._client);
 
   Future<DoctorProfileModel> getProfile() async {
-    final resp = await _client.dio.get('/doctor/profile');
-    return DoctorProfileModel.fromJson(
-      resp.data['data'] as Map<String, dynamic>,
-    );
+    final resp = await _client.dio.get('/doctors/me');
+    return DoctorProfileModel.fromJson(resp.data as Map<String, dynamic>);
   }
 
   Future<DoctorProfileModel> updateProfile(Map<String, dynamic> data) async {
-    final resp = await _client.dio.put('/doctor/profile', data: data);
-    return DoctorProfileModel.fromJson(
-      resp.data['data'] as Map<String, dynamic>,
-    );
+    final resp = await _client.dio.put('/doctors/me', data: data);
+    return DoctorProfileModel.fromJson(resp.data as Map<String, dynamic>);
   }
 
   Future<List<CenterAffiliationModel>> getCenters() async {
-    final resp = await _client.dio.get('/doctor/centers');
-    final data = resp.data['data'] as List<dynamic>;
+    final resp = await _client.dio.get('/doctors/me/centers');
+    final data = resp.data as List<dynamic>;
     return data
         .map((e) => CenterAffiliationModel.fromJson(e as Map<String, dynamic>))
         .toList();
   }
 
-  Future<Map<String, dynamic>> getTodaySummary() async {
-    final resp = await _client.dio.get('/doctor/today-summary');
-    return resp.data['data'] as Map<String, dynamic>;
+  Future<List<Map<String, dynamic>>> getTodayAppointments() async {
+    final resp = await _client.dio.get('/doctors/me/today');
+    final data = resp.data as List<dynamic>;
+    return data.map((e) => e as Map<String, dynamic>).toList();
   }
 
   Future<List<QueueEntryModel>> getQueue(String centerId) async {
-    final resp = await _client.dio.get('/doctor/me/queue/$centerId');
-    final data = resp.data['data'] as List<dynamic>;
+    final resp = await _client.dio.get('/doctors/me/queue/$centerId');
+    final data = resp.data as List<dynamic>;
     return data
         .map((e) => QueueEntryModel.fromJson(e as Map<String, dynamic>))
         .toList();
   }
 
   Future<List<DoctorScheduleModel>> getSchedules() async {
-    final resp = await _client.dio.get('/doctor/schedules');
+    final resp = await _client.dio.get('/doctors/me/schedules');
     final data = resp.data['data'] as List<dynamic>;
     return data
         .map((e) => DoctorScheduleModel.fromJson(e as Map<String, dynamic>))

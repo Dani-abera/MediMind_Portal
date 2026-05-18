@@ -2,13 +2,17 @@ import '../../../../core/network/dio_client.dart';
 import '../../domain/entities/doctor_at_center.dart';
 import '../models/doctor_at_center_model.dart';
 
+
 class AdminDoctorRemoteDataSource {
   final DioClient _client;
   AdminDoctorRemoteDataSource(this._client);
 
   Future<List<DoctorAtCenterModel>> getDoctors(String centerId) async {
-    final resp = await _client.dio.get('/healthcare-centers/$centerId/doctors');
-    final data = resp.data['data'] as List? ?? [];
+    final resp = await _client.dio.get('/healthcare-centers/$centerId/doctors/roster');
+    final raw = resp.data;
+    final data = raw is List
+        ? raw
+        : ((raw as Map<String, dynamic>)['items'] ?? raw['data'] ?? <dynamic>[]) as List;
     return data
         .map((e) => DoctorAtCenterModel.fromJson(e as Map<String, dynamic>))
         .toList();
@@ -19,6 +23,17 @@ class AdminDoctorRemoteDataSource {
       '/healthcare-centers/$centerId/doctors/invite',
       data: dto.toJson(),
     );
+  }
+
+  Future<List<PendingDoctorInvitationModel>> getPendingInvitations(String centerId) async {
+    final resp = await _client.dio.get('/healthcare-centers/$centerId/doctors/invitations');
+    final raw = resp.data;
+    final data = raw is List
+        ? raw
+        : ((raw as Map<String, dynamic>)['items'] ?? raw['data'] ?? raw) as List? ?? <dynamic>[];
+    return data
+        .map((e) => PendingDoctorInvitationModel.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   // Legacy add-by-license (kept for internal use)

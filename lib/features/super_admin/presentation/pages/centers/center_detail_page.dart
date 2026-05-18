@@ -8,7 +8,9 @@ import '../../../../../core/theme/app_typography.dart';
 import '../../../../../core/widgets/shell/page_header.dart';
 import '../../bloc/centers/centers_bloc.dart';
 import '../../bloc/platform_audit/platform_audit_bloc.dart';
+import '../../../data/datasources/platform_subscriptions_datasource.dart';
 import '../../../domain/entities/platform_center.dart';
+import '../../../domain/entities/subscription_history_entry.dart';
 import '../../../domain/usecases/get_platform_center_detail_usecase.dart';
 
 class CenterDetailPage extends StatelessWidget {
@@ -434,23 +436,66 @@ class _OverviewTab extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────
 // Subscription Tab
 // ─────────────────────────────────────────────────────────────
-class _SubscriptionTab extends StatelessWidget {
+class _SubscriptionTab extends StatefulWidget {
   final PlatformCenter center;
   const _SubscriptionTab({required this.center});
 
   @override
+  State<_SubscriptionTab> createState() => _SubscriptionTabState();
+}
+
+class _SubscriptionTabState extends State<_SubscriptionTab> {
+  CenterSubscriptionDetail? _detail;
+  bool _loading = true;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    try {
+      final ds = sl<PlatformSubscriptionsDatasource>();
+      final detail = await ds.getSubscriptionDetail(widget.center.id);
+      if (mounted) setState(() { _detail = detail; _loading = false; });
+    } catch (e) {
+      if (mounted) setState(() { _error = e.toString(); _loading = false; });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final (statusColor, statusLabel) = switch (center.status) {
+    if (_loading) return const Center(child: CircularProgressIndicator());
+    if (_error != null) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(_error!, style: TextStyle(color: AppColors.danger)),
+            const SizedBox(height: 8),
+            TextButton(onPressed: () { setState(() { _loading = true; _error = null; }); _load(); }, child: const Text('Retry')),
+          ],
+        ),
+      );
+    }
+
+    final detail = _detail!;
+    final (statusColor, statusLabel) = switch (widget.center.status) {
       CenterStatus.active => (AppColors.success, 'Active'),
       CenterStatus.pending => (AppColors.warning, 'Pending Approval'),
       CenterStatus.suspended => (AppColors.danger, 'Suspended'),
       CenterStatus.rejected => (AppColors.neutral400, 'Rejected'),
     };
+    final fmt = DateFormat('MMM d, yyyy');
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(AppSpacing.xl),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // ── Current subscription card ──
           Card(
             child: Padding(
               padding: const EdgeInsets.all(AppSpacing.base),
@@ -459,35 +504,54 @@ class _SubscriptionTab extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      Text('Subscription Details',
-                          style: AppTypography.h3),
+                      Text('Subscription Details', style: AppTypography.h3),
                       const Spacer(),
                       Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 4),
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
                           color: statusColor.withAlpha(20),
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
                           statusLabel,
-                          style: TextStyle(
-                              fontSize: 12,
-                              color: statusColor,
-                              fontWeight: FontWeight.w600),
+                          style: TextStyle(fontSize: 12, color: statusColor, fontWeight: FontWeight.w600),
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(height: AppSpacing.base),
-                  _row('Plan', center.subscriptionStatus),
-                  _row('Center Status', center.status.name),
-                  _row('Doctors', '${center.doctorCount} registered'),
-                  _row('Patients', '${center.patientCount} registered'),
+                  _row('Plan', detail.currentPlan.isEmpty ? '—' : detail.currentPlan),
+                  _row('Status', detail.subscriptionStatus),
+                  _row('Active', detail.isActive ? 'Yes' : 'No'),
+                  _row('Start Date', detail.startDate != null ? fmt.format(detail.startDate!) : '—'),
+                  _row('End Date', detail.endDate != null ? fmt.format(detail.endDate!) : '—'),
+                  if (detail.endDate != null && detail.isActive) ...[
+                    _row(
+                      'Days Remaining',
+                      '${detail.endDate!.difference(DateTime.now()).inDays.clamp(0, 9999)} days',
+                    ),
+                  ],
+                  _row('Doctors', '${widget.center.doctorCount} registered'),
+                  _row('Patients', '${widget.center.patientCount} registered'),
                 ],
               ),
             ),
           ),
+          const SizedBox(height: AppSpacing.base),
+
+          // ── Subscription history ──
+          Text('Subscription History', style: AppTypography.h3),
+          const SizedBox(height: AppSpacing.sm),
+          if (detail.history.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: AppSpacing.xl),
+              child: Center(
+                child: Text('No subscription history yet.',
+                    style: AppTypography.body.copyWith(color: AppColors.neutral400)),
+              ),
+            )
+          else
+            ...detail.history.map((e) => _HistoryRow(entry: e)),
         ],
       ),
     );
@@ -498,15 +562,97 @@ class _SubscriptionTab extends StatelessWidget {
         child: Row(
           children: [
             SizedBox(
-                width: 140,
-                child: Text(label,
-                    style: AppTypography.bodySmall
-                        .copyWith(color: AppColors.neutral500))),
-            Expanded(
-                child: Text(value, style: AppTypography.bodySmall)),
+              width: 140,
+              child: Text(label, style: AppTypography.bodySmall.copyWith(color: AppColors.neutral500)),
+            ),
+            Expanded(child: Text(value, style: AppTypography.bodySmall)),
           ],
         ),
       );
+}
+
+class _HistoryRow extends StatelessWidget {
+  final SubscriptionHistoryEntry entry;
+  const _HistoryRow({required this.entry});
+
+  @override
+  Widget build(BuildContext context) {
+    final fmt = DateFormat('MMM d, yyyy HH:mm');
+    final color = _statusColor(entry.newStatus);
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Timeline dot + line
+          Column(
+            children: [
+              Container(
+                width: 10, height: 10,
+                decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+              ),
+              Container(width: 1, height: 48, color: AppColors.neutral200),
+            ],
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Card(
+              margin: const EdgeInsets.only(bottom: 4),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.base, vertical: AppSpacing.sm),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Text(
+                          '${_fmtStatus(entry.oldStatus)} → ${_fmtStatus(entry.newStatus)}',
+                          style: AppTypography.bodySmall.copyWith(fontWeight: FontWeight.w600),
+                        ),
+                        const Spacer(),
+                        Text(fmt.format(entry.changedAt.toLocal()),
+                            style: AppTypography.caption.copyWith(color: AppColors.neutral400)),
+                      ],
+                    ),
+                    if (entry.plan != null) ...[
+                      const SizedBox(height: 2),
+                      Text('Plan: ${entry.plan}', style: AppTypography.caption.copyWith(color: AppColors.neutral500)),
+                    ],
+                    if (entry.startDate != null || entry.endDate != null) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        'Period: ${entry.startDate != null ? DateFormat('MMM d, yyyy').format(entry.startDate!) : '?'}'
+                        ' – ${entry.endDate != null ? DateFormat('MMM d, yyyy').format(entry.endDate!) : '?'}',
+                        style: AppTypography.caption.copyWith(color: AppColors.neutral500),
+                      ),
+                    ],
+                    if (entry.notes != null && entry.notes!.isNotEmpty) ...[
+                      const SizedBox(height: 2),
+                      Text(entry.notes!, style: AppTypography.caption.copyWith(color: AppColors.neutral600)),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _fmtStatus(String s) => s.replaceAllMapped(
+      RegExp(r'([A-Z])'), (m) => ' ${m.group(0)}').trim();
+
+  Color _statusColor(String status) => switch (status.toLowerCase()) {
+    'active' => AppColors.success,
+    'trial' => AppColors.primary,
+    'suspended' => AppColors.danger,
+    'expired' => AppColors.neutral400,
+    'rejected' => AppColors.danger,
+    'pendingapproval' || 'pending_approval' => AppColors.warning,
+    _ => AppColors.neutral400,
+  };
 }
 
 // ─────────────────────────────────────────────────────────────

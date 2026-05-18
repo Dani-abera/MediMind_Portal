@@ -15,13 +15,11 @@ class CreatePrescriptionSubmitted extends CreatePrescriptionEvent {
 
 class CreatePrescriptionFromTemplate extends CreatePrescriptionEvent {
   final String templateId;
-  final String patientId;
   final String? appointmentId;
   const CreatePrescriptionFromTemplate({
     required this.templateId,
-    required this.patientId,
     this.appointmentId,
   });
   @override
-  List<Object?> get props => [templateId, patientId, appointmentId];
+  List<Object?> get props => [templateId, appointmentId];
 }

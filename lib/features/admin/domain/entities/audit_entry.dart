@@ -17,6 +17,8 @@ enum AuditAction {
   queueCallNext,
   queueInsertEmergency,
   queueMarkNoShow,
+  loginSuccess,
+  centerConfigChanged,
   unknown;
 
   String get label => switch (this) {
@@ -35,6 +37,8 @@ enum AuditAction {
     AuditAction.queueCallNext          => 'QUEUE_CALL_NEXT',
     AuditAction.queueInsertEmergency   => 'QUEUE_INSERT_EMERGENCY',
     AuditAction.queueMarkNoShow        => 'QUEUE_MARK_NO_SHOW',
+    AuditAction.loginSuccess           => 'LOGIN_SUCCESS',
+    AuditAction.centerConfigChanged    => 'CENTER_CONFIG_CHANGED',
     AuditAction.unknown                => 'UNKNOWN',
   };
 

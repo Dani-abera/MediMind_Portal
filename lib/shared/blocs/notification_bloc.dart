@@ -88,7 +88,7 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
   ) async {
     try {
       final resp =
-          await _client.dio.get('/api/v1/notifications/unread-count');
+          await _client.dio.get('/notifications/unread-count');
       final count = (resp.data['data'] ?? 0) as int;
       emit(state.copyWith(unreadCount: count));
     } catch (_) {

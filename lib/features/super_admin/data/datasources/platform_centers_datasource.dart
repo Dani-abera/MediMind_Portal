@@ -11,19 +11,39 @@ class PlatformCentersDatasource {
     int page = 1,
     int pageSize = 20,
   }) async {
+    // Backend exposes status-filtered lists as path segments (/centers/pending)
+    // returning a plain array, while the unfiltered endpoint is paginated.
+    final path = status != null
+        ? '/super-admin/centers/$status'
+        : '/super-admin/centers';
+
     final resp = await _client.dio.get(
-      '/super-admin/centers',
-      queryParameters: {
-        if (status != null) 'status': status,
-        'page': page,
-        'pageSize': pageSize,
-      },
+      path,
+      queryParameters: status == null
+          ? {'page': page, 'pageSize': pageSize}
+          : null,
     );
-    final data = resp.data as Map<String, dynamic>;
-    final items = (data['data'] as List? ?? [])
-        .map((e) => PlatformCenterModel.fromJson(e as Map<String, dynamic>))
+
+    final rawData = resp.data;
+
+    // Backend returns a plain array for path-filtered endpoints (/centers/pending)
+    // and a paginated object for the base endpoint.
+    List<dynamic> rawList;
+    int total;
+
+    if (rawData is Map) {
+      rawList = (rawData['items'] as List?) ?? [];
+      total = rawData['totalCount'] as int? ?? rawList.length;
+    } else {
+      rawList = rawData as List;
+      total = rawList.length;
+    }
+
+    final items = rawList
+        .map((e) => PlatformCenterModel.fromJson(
+            Map<String, dynamic>.from(e as Map)))
         .toList();
-    return (centers: items, total: data['total'] as int? ?? items.length);
+    return (centers: items, total: total);
   }
 
   Future<PlatformCenter> getCenterDetail(String centerId) async {

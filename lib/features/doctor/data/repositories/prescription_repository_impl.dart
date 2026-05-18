@@ -126,7 +126,7 @@ class PrescriptionRepositoryImpl implements PrescriptionRepository {
 
   @override
   Future<Either<Failure, Prescription>> createFromTemplate(
-          String templateId, String patientId, String? appointmentId) =>
+          String templateId, String? appointmentId) =>
       _guardResult(
-          () => _remote.createFromTemplate(templateId, patientId, appointmentId));
+          () => _remote.createFromTemplate(templateId, appointmentId));
 }

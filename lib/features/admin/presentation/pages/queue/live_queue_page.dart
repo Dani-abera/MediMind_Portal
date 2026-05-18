@@ -151,7 +151,9 @@ class _QueueList extends StatelessWidget {
               AppButton.primary(
                 label: 'Call Next',
                 icon: FontAwesomeIcons.circleArrowRight,
-                onPressed: () => bloc.add(const AdminQueueNextCalled()),
+                onPressed: waiting.isEmpty
+                    ? null
+                    : () => bloc.add(const AdminQueueNextCalled()),
               ),
             ],
           ),

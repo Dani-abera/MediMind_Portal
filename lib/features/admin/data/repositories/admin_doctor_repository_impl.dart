@@ -59,4 +59,6 @@ class AdminDoctorRepositoryImpl implements AdminDoctorRepository {
     _guard(() => _remote.deleteScheduleException(doctorId, centerId, date));
   @override Future<Either<Failure, void>> updateConsultationFee(String centerId, String doctorId, double fee) =>
     _guard(() => _remote.updateConsultationFee(centerId, doctorId, fee));
+  @override Future<Either<Failure, List<PendingDoctorInvitation>>> getPendingInvitations(String centerId) =>
+    _guardResult(() => _remote.getPendingInvitations(centerId));
 }
