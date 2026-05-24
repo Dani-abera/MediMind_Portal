@@ -73,6 +73,7 @@ class _AuditLogView extends StatelessWidget {
                   rows: entries,
                   isLoading: isLoading,
                   selectable: false,
+                  density: TableDensity.spacious,
                   emptyMessage: 'No audit entries found',
                   pagination: PaginationConfig(
                     page: page,
