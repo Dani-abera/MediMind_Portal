@@ -2,6 +2,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import '../../../domain/entities/analytics_data.dart';
 import '../../../domain/usecases/export_analytics_usecase.dart';
+import '../../../../../core/utils/export_utils.dart';
 
 part 'export_wizard_event.dart';
 part 'export_wizard_state.dart';
@@ -77,10 +78,24 @@ class ExportWizardBloc extends Bloc<ExportWizardEvent, ExportWizardState> {
           _exportAnalyticsCsv(_centerId, from: s4.range.from, to: s4.range.to),
     };
 
-    result.fold(
-      (f) => emit(ExportWizardFailed(f.message)),
-      (_) => emit(const ExportWizardDone()),
-    );
+    String? content;
+    String? errorMsg;
+    result.fold((f) => errorMsg = f.message, (c) => content = c);
+
+    if (errorMsg != null) {
+      emit(ExportWizardFailed(errorMsg!));
+      return;
+    }
+
+    final ext = s4.format == ExportFormat.pdf ? 'pdf' : 'csv';
+    final filename = '${s4.dataType.name}_export_${DateTime.now().millisecondsSinceEpoch}';
+    final saved = await ExportUtils.saveRawString(content!, filename, ext);
+    if (saved) {
+      emit(const ExportWizardDone());
+    } else {
+      // User cancelled the save dialog — return to preview step
+      emit(s4);
+    }
   }
 
   void _onReset(ExportWizardReset event, Emitter<ExportWizardState> emit) {

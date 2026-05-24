@@ -51,7 +51,7 @@ class AdminAppointmentModel extends AdminAppointment {
     String s(String a, [String? b]) =>
         (j[a] ?? (b != null ? j[b] : null))?.toString() ?? '';
     return AdminAppointmentModel(
-      id: s('id'),
+      id: s('id') != '' ? s('id') : s('appointmentId', 'appointment_id'),
       patientId: s('patientId', 'patient_id'),
       patientName: s('patientName', 'patient_name'),
       patientAge: j['patientAge'] as int? ?? j['patient_age'] as int?,
@@ -60,7 +60,11 @@ class AdminAppointmentModel extends AdminAppointment {
       doctorName: s('doctorName', 'doctor_name'),
       doctorSpecialization: j['doctorSpecialization'] as String? ?? j['doctor_specialization'] as String?,
       centerId: s('centerId', 'center_id'),
-      dateTime: DateTime.tryParse(j['dateTime'] as String? ?? j['date_time'] as String? ?? '') ?? DateTime.now(),
+      dateTime: DateTime.tryParse(j['dateTime'] as String? ?? j['date_time'] as String? ?? '') ??
+          (j['appointmentDate'] != null
+              ? DateTime.tryParse('${j['appointmentDate']}T${j['appointmentTime'] ?? '00:00:00'}')
+              : null) ??
+          DateTime.now(),
       durationMinutes: j['durationMinutes'] as int? ?? j['duration_minutes'] as int? ?? 30,
       type: AppointmentType.fromString(j['type'] as String?),
       status: AppointmentStatus.fromString(j['status'] as String?),

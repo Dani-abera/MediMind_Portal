@@ -56,8 +56,8 @@ class _DrawerBody extends StatelessWidget {
         }
         if (state is AdminApptDetailLoaded || state is AdminApptDetailActionInProgress) {
           final appt = state is AdminApptDetailLoaded
-              ? state.appointment
-              : (context.read<AdminAppointmentDetailBloc>().state as AdminApptDetailLoaded).appointment;
+              ? (state as AdminApptDetailLoaded).appointment
+              : (state as AdminApptDetailActionInProgress).appointment;
           final isBusy = state is AdminApptDetailActionInProgress;
           return _ApptDetailContent(appointment: appt, isBusy: isBusy);
         }

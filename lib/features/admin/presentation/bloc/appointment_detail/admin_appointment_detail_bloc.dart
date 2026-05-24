@@ -50,29 +50,32 @@ class AdminAppointmentDetailBloc
   }
 
   Future<void> _onApproved(AdminApptApproved _, Emitter<AdminApptDetailState> emit) async {
-    emit(const AdminApptDetailActionInProgress());
+    final loaded = state as AdminApptDetailLoaded;
+    emit(AdminApptDetailActionInProgress(loaded.appointment));
     final result = await _approve(_id);
     result.fold(
       (f) => emit(AdminApptDetailError(f.message)),
-      (_) async { emit(const AdminApptDetailActionSuccess()); await _fetch(emit); },
+      (_) => emit(const AdminApptDetailActionSuccess()),
     );
   }
 
   Future<void> _onRejected(AdminApptRejected event, Emitter<AdminApptDetailState> emit) async {
-    emit(const AdminApptDetailActionInProgress());
+    final loaded = state as AdminApptDetailLoaded;
+    emit(AdminApptDetailActionInProgress(loaded.appointment));
     final result = await _reject(_id, reason: event.reason);
     result.fold(
       (f) => emit(AdminApptDetailError(f.message)),
-      (_) async { emit(const AdminApptDetailActionSuccess()); await _fetch(emit); },
+      (_) => emit(const AdminApptDetailActionSuccess()),
     );
   }
 
   Future<void> _onCancelled(AdminApptCancelled event, Emitter<AdminApptDetailState> emit) async {
-    emit(const AdminApptDetailActionInProgress());
+    final loaded = state as AdminApptDetailLoaded;
+    emit(AdminApptDetailActionInProgress(loaded.appointment));
     final result = await _cancel(_id, reason: event.reason);
     result.fold(
       (f) => emit(AdminApptDetailError(f.message)),
-      (_) async { emit(const AdminApptDetailActionSuccess()); await _fetch(emit); },
+      (_) => emit(const AdminApptDetailActionSuccess()),
     );
   }
 }

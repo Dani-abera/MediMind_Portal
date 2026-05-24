@@ -4,15 +4,14 @@ import 'package:bloc_concurrency/bloc_concurrency.dart';
 import '../../../domain/entities/analytics_data.dart';
 import '../../../domain/entities/revenue_data.dart';
 import '../../../domain/usecases/get_revenue_summary_usecase.dart';
-import '../../../domain/usecases/export_analytics_usecase.dart';
 import '../../../../../core/network/user_context.dart';
+import '../../../../../core/utils/export_utils.dart';
 
 part 'revenue_event.dart';
 part 'revenue_state.dart';
 
 class RevenueBloc extends Bloc<RevenueEvent, RevenueState> {
   final GetRevenueSummaryUseCase _getRevenue;
-  final ExportRevenueCsvUseCase _exportCsv;
 
   String _centerId = '';
   DateRangeSelection _range = DateRangeSelection.preset(DateRangePreset.last30);
@@ -21,9 +20,7 @@ class RevenueBloc extends Bloc<RevenueEvent, RevenueState> {
 
   RevenueBloc({
     required GetRevenueSummaryUseCase getRevenue,
-    required ExportRevenueCsvUseCase exportCsv,
   })  : _getRevenue = getRevenue,
-        _exportCsv = exportCsv,
         super(const RevenueInitial()) {
     on<RevenueStarted>(_onStarted, transformer: droppable());
     on<RevenueDateRangeChanged>(_onDateRangeChanged, transformer: droppable());
@@ -73,11 +70,24 @@ class RevenueBloc extends Bloc<RevenueEvent, RevenueState> {
   }
 
   Future<void> _onExportRequested(RevenueExportRequested event, Emitter<RevenueState> emit) async {
+    if (state is! RevenueLoaded) return;
+    final loaded = state as RevenueLoaded;
     emit(const RevenueExporting());
-    final result = await _exportCsv(_centerId, from: _range.from, to: _range.to);
-    result.fold(
-      (f) => emit(RevenueError(f.message)),
-      (_) => emit(const RevenueExportDone()),
-    );
+
+    final headers = ['Date', 'Appointment ID', 'Doctor', 'Patient', 'Amount (ETB)', 'Method', 'Status'];
+    final rows = loaded.data.rows.map((r) => [
+      r.date.toIso8601String(),
+      r.appointmentId,
+      r.doctorName,
+      r.patientMasked,
+      r.amount.toStringAsFixed(2),
+      r.method,
+      r.status,
+    ]).toList();
+
+    await ExportUtils.exportToCsv([headers, ...rows], 'revenue_${DateTime.now().millisecondsSinceEpoch}');
+
+    emit(const RevenueExportDone());
+    emit(RevenueLoaded(data: loaded.data, range: loaded.range, groupBy: loaded.groupBy, comparePeriod: loaded.comparePeriod));
   }
 }

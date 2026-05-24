@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import '../../domain/entities/audit_entry.dart';
 
 class AuditEntryModel extends AuditEntry {
@@ -26,6 +28,18 @@ class AuditEntryModel extends AuditEntry {
         entityId: j['entityId'] as String? ?? j['entity_id'] as String? ?? '',
         ipAddress: j['ipAddress'] as String? ?? j['ip_address'] as String? ?? '',
         userAgent: j['userAgent'] as String? ?? j['user_agent'] as String?,
-        metadata: (j['metadata'] as Map?)?.map((k, v) => MapEntry(k.toString(), v)) ?? {},
+        metadata: _parseMetadata(j['metadata']),
       );
+}
+
+Map<String, dynamic> _parseMetadata(dynamic raw) {
+  if (raw == null) return {};
+  if (raw is Map) return raw.map((k, v) => MapEntry(k.toString(), v));
+  if (raw is String) {
+    try {
+      final parsed = jsonDecode(raw);
+      if (parsed is Map) return parsed.map((k, v) => MapEntry(k.toString(), v));
+    } catch (_) {}
+  }
+  return {};
 }

@@ -77,15 +77,15 @@ class PatientCenterDetailModel extends PatientCenterDetail {
     final patientJson = j['patient'] as Map<String, dynamic>? ?? j;
     return PatientCenterDetailModel(
       patient: PatientAtCenterModel.fromJson(patientJson),
-      appointments: ((j['appointments']) as List?)
+      appointments: ((j['appointments'] ?? j['recentAppointments']) as List?)
               ?.map((e) => AdminAppointmentModel.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
-      payments: ((j['payments']) as List?)
+      payments: ((j['payments'] ?? j['recentPayments']) as List?)
               ?.map((e) => PaymentRecordModel.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
-      prescriptions: ((j['prescriptions']) as List?)
+      prescriptions: ((j['prescriptions'] ?? j['recentPrescriptions']) as List?)
               ?.map((e) => PrescriptionRecordModel.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],

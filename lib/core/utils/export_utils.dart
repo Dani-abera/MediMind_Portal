@@ -5,6 +5,20 @@ import 'package:syncfusion_flutter_pdf/pdf.dart';
 import 'package:flutter/material.dart';
 
 abstract class ExportUtils {
+  /// Saves a raw string (e.g. CSV content returned by the server) to a user-chosen path.
+  /// Returns false if the user cancelled the picker.
+  static Future<bool> saveRawString(String content, String filename, String ext) async {
+    final path = await FilePicker.platform.saveFile(
+      dialogTitle: 'Save ${ext.toUpperCase()}',
+      fileName: '$filename.$ext',
+      type: FileType.custom,
+      allowedExtensions: [ext],
+    );
+    if (path == null) return false;
+    await File(path).writeAsString(content);
+    return true;
+  }
+
   static Future<void> exportToCsv(
     List<List<String>> rows,
     String filename,

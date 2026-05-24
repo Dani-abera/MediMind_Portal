@@ -100,6 +100,7 @@ class _AuditLogViewState extends State<_AuditLogView> {
                   rows: entries,
                   isLoading: isLoading,
                   selectable: false,
+                  density: TableDensity.spacious,
                   emptyMessage: 'No audit entries found',
                   pagination: PaginationConfig(
                     page: page,

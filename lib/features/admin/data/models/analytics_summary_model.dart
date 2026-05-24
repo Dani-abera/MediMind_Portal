@@ -7,7 +7,7 @@ class TimeSeriesPointModel extends TimeSeriesPoint {
   factory TimeSeriesPointModel.fromJson(Map<String, dynamic> j, {String? series}) =>
       TimeSeriesPointModel(
         date: DateTime.tryParse(j['date'] as String? ?? '') ?? DateTime.now(),
-        value: (j['value'] as num?)?.toDouble() ?? 0,
+        value: (j['value'] as num?)?.toDouble() ?? (j['count'] as num?)?.toDouble() ?? 0,
         series: series ?? j['series'] as String?,
       );
 }

@@ -230,14 +230,11 @@ Future<void> initAdminFeature() async {
   sl.registerFactory(
     () => AnalyticsDashboardBloc(
       getSummary: sl<GetAnalyticsSummaryUseCase>(),
-      exportCsv: sl<ExportAnalyticsCsvUseCase>(),
-      exportPdf: sl<ExportAnalyticsPdfUseCase>(),
     ),
   );
   sl.registerFactory(
     () => RevenueBloc(
       getRevenue: sl<GetRevenueSummaryUseCase>(),
-      exportCsv: sl<ExportRevenueCsvUseCase>(),
     ),
   );
   sl.registerFactory(

@@ -88,58 +88,59 @@ class AnalyticsRemoteDataSource {
         'doctorId': doctorId,
       },
     );
-    final d = resp.data['data'] as Map<String, dynamic>;
-    // Parse doctor-specific detail from the filtered analytics response
+    final d = (resp.data as Map<String, dynamic>);
+    final summary = d['summary'] as Map<String, dynamic>? ?? {};
+    final revenueMetrics = d['revenueMetrics'] as Map<String, dynamic>? ?? {};
+    final heatmap = (d['peakHoursHeatmap'] as List?) ?? [];
+    final utilization = (d['doctorUtilization'] as List?) ?? [];
+    final noShowList = (d['noShowRateByDoctor'] as List?) ?? [];
+
+    // Resolve doctor name from available sub-lists
+    final utilEntry = utilization.isNotEmpty
+        ? utilization.first as Map<String, dynamic>
+        : null;
+    final noShowEntry = noShowList.isNotEmpty
+        ? noShowList.first as Map<String, dynamic>
+        : null;
+    final resolvedName = utilEntry?['doctorName'] as String? ??
+        noShowEntry?['doctorName'] as String? ??
+        '';
+
+    final totalAppts = summary['totalAppointments'] as int? ?? 0;
+    final completedCount = summary['completedCount'] as int? ?? 0;
+    final completionRate =
+        totalAppts > 0 ? completedCount / totalAppts * 100.0 : 0.0;
+
+    // Aggregate heatmap into day-of-week (7) and hour-of-day (24) patterns
+    final dowCounts = List<double>.filled(7, 0);
+    final hourCounts = List<double>.filled(24, 0);
+    for (final cell in heatmap) {
+      final c = cell as Map<String, dynamic>;
+      final dow = (c['dayOfWeek'] as int? ?? 1) - 1; // API is 1-based Mon
+      final hour = c['hour'] as int? ?? 0;
+      final count = (c['count'] as num?)?.toDouble() ?? 0;
+      if (dow >= 0 && dow < 7) dowCounts[dow] += count;
+      if (hour >= 0 && hour < 24) hourCounts[hour] += count;
+    }
+
     return DoctorAnalyticsDetail(
       doctorId: doctorId,
-      doctorName: d['doctorName'] as String? ?? '',
-      totalAppointments: d['totalAppointments'] as int? ?? 0,
-      completionRate: (d['completionRate'] as num?)?.toDouble() ?? 0,
-      avgRating: (d['avgRating'] as num?)?.toDouble() ?? 0,
-      totalRevenueEtb: (d['totalRevenueEtb'] as num?)?.toDouble() ?? 0,
-      volumeTrend:
-          ((d['volumeTrend']) as List?)
+      doctorName: resolvedName,
+      totalAppointments: totalAppts,
+      completionRate: completionRate,
+      avgRating: 0,
+      totalRevenueEtb:
+          (revenueMetrics['totalRevenue'] as num?)?.toDouble() ?? 0,
+      volumeTrend: ((d['patientVolumeTrends']) as List?)
               ?.map(
                 (e) => TimeSeriesPointModel.fromJson(e as Map<String, dynamic>),
               )
               .toList() ??
           [],
-      dayOfWeekPattern:
-          ((d['dayOfWeekPattern']) as List?)
-              ?.map((e) => (e as num).toDouble())
-              .toList() ??
-          List.filled(7, 0),
-      hourOfDayPattern:
-          ((d['hourOfDayPattern']) as List?)
-              ?.map((e) => (e as num).toDouble())
-              .toList() ??
-          List.filled(24, 0),
-      topPatients:
-          ((d['topPatients']) as List?)?.map((e) {
-            final p = e as Map<String, dynamic>;
-            return TopPatientRow(
-              patientName: p['patientName'] as String? ?? '',
-              visitCount: p['visitCount'] as int? ?? 0,
-              totalSpentEtb: (p['totalSpentEtb'] as num?)?.toDouble() ?? 0,
-              lastVisit:
-                  DateTime.tryParse(p['lastVisit'] as String? ?? '') ??
-                  DateTime.now(),
-            );
-          }).toList() ??
-          [],
-      recentReviews:
-          ((d['recentReviews']) as List?)?.map((e) {
-            final r = e as Map<String, dynamic>;
-            return DoctorReview(
-              patientName: r['patientName'] as String? ?? '',
-              rating: (r['rating'] as num?)?.toDouble() ?? 0,
-              comment: r['comment'] as String?,
-              date:
-                  DateTime.tryParse(r['date'] as String? ?? '') ??
-                  DateTime.now(),
-            );
-          }).toList() ??
-          [],
+      dayOfWeekPattern: dowCounts,
+      hourOfDayPattern: hourCounts,
+      topPatients: [],
+      recentReviews: [],
     );
   }
 
@@ -155,7 +156,9 @@ class AnalyticsRemoteDataSource {
         'endDate': to.toIso8601String(),
       },
     );
-    return resp.data['url'] as String? ?? '';
+    final data = resp.data;
+    if (data is String) return data;
+    return (data as Map<String, dynamic>)['url'] as String? ?? '';
   }
 
   Future<String> exportAnalyticsPdf(
@@ -170,7 +173,9 @@ class AnalyticsRemoteDataSource {
         'endDate': to.toIso8601String(),
       },
     );
-    return resp.data['url'] as String? ?? '';
+    final pdfData = resp.data;
+    if (pdfData is String) return pdfData;
+    return (pdfData as Map<String, dynamic>)['url'] as String? ?? '';
   }
 
   Future<String> exportRevenueCsv(
@@ -185,6 +190,8 @@ class AnalyticsRemoteDataSource {
         'endDate': to.toIso8601String(),
       },
     );
-    return resp.data['url'] as String? ?? '';
+    final data = resp.data;
+    if (data is String) return data;
+    return (data as Map<String, dynamic>)['url'] as String? ?? '';
   }
 }

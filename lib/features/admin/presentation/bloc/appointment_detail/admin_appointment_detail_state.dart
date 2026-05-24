@@ -11,7 +11,11 @@ class AdminApptDetailLoaded extends AdminApptDetailState {
   const AdminApptDetailLoaded(this.appointment);
   @override List<Object?> get props => [appointment];
 }
-class AdminApptDetailActionInProgress extends AdminApptDetailState { const AdminApptDetailActionInProgress(); }
+class AdminApptDetailActionInProgress extends AdminApptDetailState {
+  final AdminAppointment appointment;
+  const AdminApptDetailActionInProgress(this.appointment);
+  @override List<Object?> get props => [appointment];
+}
 class AdminApptDetailActionSuccess extends AdminApptDetailState { const AdminApptDetailActionSuccess(); }
 class AdminApptDetailError extends AdminApptDetailState {
   final String message;

@@ -40,7 +40,7 @@ class AdminPatientRemoteDataSource {
       '/healthcare-centers/$centerId/patients/$patientId',
     );
     return PatientCenterDetailModel.fromJson(
-      resp.data['data'] as Map<String, dynamic>,
+      (resp.data['data'] ?? resp.data) as Map<String, dynamic>,
     );
   }
 }
