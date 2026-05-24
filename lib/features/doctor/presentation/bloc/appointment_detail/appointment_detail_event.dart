@@ -27,3 +27,10 @@ class AppointmentCancelled extends AppointmentDetailEvent {
 class AppointmentCompleted extends AppointmentDetailEvent {
   const AppointmentCompleted();
 }
+
+class AppointmentDeclined extends AppointmentDetailEvent {
+  final String reason;
+  const AppointmentDeclined(this.reason);
+  @override
+  List<Object?> get props => [reason];
+}

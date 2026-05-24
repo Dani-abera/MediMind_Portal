@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import '../../../../core/network/dio_client.dart';
 import '../models/health_record_model.dart';
 import '../models/patient_model.dart';
@@ -45,17 +46,28 @@ class PatientRemoteDataSource {
   }
 
   Future<List<PredictionModel>> getPredictions(String patientId) async {
-    final resp = await _client.dio.get(
-      '/patients/$patientId/predictions/latest',
-    );
-    if (resp.data == null) return [];
-    return [PredictionModel.fromJson(resp.data as Map<String, dynamic>)];
+    try {
+      final resp = await _client.dio.get(
+        '/patients/$patientId/predictions/latest',
+      );
+      if (resp.data == null) return [];
+      return [PredictionModel.fromJson(resp.data as Map<String, dynamic>)];
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) return [];
+      rethrow;
+    }
   }
 
   Future<Map<String, dynamic>> getMedicalHistory(String patientId) async {
-    final resp = await _client.dio.get(
-      '/patients/$patientId/medical-history',
-    );
-    return resp.data as Map<String, dynamic>;
+    try {
+      final resp = await _client.dio.get(
+        '/patients/$patientId/medical-history',
+      );
+      if (resp.data == null) return {};
+      return resp.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) return {};
+      rethrow;
+    }
   }
 }

@@ -74,8 +74,11 @@ class VideoCallBloc extends Bloc<VideoCallEvent, VideoCallState> {
         'video': {'facingMode': 'user'},
       });
       _localRenderer!.srcObject = _localStream;
-    } catch (_) {
-      // Proceed without local stream (permission denied in browser)
+    } catch (e) {
+      emit(VideoCallError(
+          'Camera/microphone access denied. Please grant permission and try again.'));
+      _cleanup();
+      return;
     }
 
     // Create peer connection

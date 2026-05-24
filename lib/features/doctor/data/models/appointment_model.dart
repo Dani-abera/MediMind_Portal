@@ -17,13 +17,15 @@ class AppointmentModel extends Appointment {
     super.symptoms,
     super.notes,
     super.videoConsultationId,
+    super.canInitiateVideoConsultation,
+    super.videoConsultationStatus,
   });
 
   factory AppointmentModel.fromJson(Map<String, dynamic> json) => AppointmentModel(
         id: json['id'] as String,
         patientId: json['patientId'] as String,
         patientName: json['patientName'] as String,
-        patientAge: json['patientAge'] as int?,
+        patientAge: json['patientAge'] is int ? json['patientAge'] as int : null,
         patientPhone: json['patientPhone'] as String?,
         doctorId: json['doctorId'] as String,
         centerId: json['centerId'] as String,
@@ -40,10 +42,13 @@ class AppointmentModel extends Appointment {
             : json['symptoms'] != null ? [json['symptoms'] as String] : [],
         notes: json['notes'] as String?,
         videoConsultationId: json['videoConsultationId'] as String?,
+        canInitiateVideoConsultation:
+            json['canInitiateVideoConsultation'] as bool? ?? false,
+        videoConsultationStatus: json['videoConsultationStatus'] as String?,
       );
 
   static AppointmentType _parseType(String? s) => switch (s?.toLowerCase()) {
-    'video' => AppointmentType.video,
+    'videoconsultation' || 'video' => AppointmentType.video,
     _ => AppointmentType.inPerson,
   };
 

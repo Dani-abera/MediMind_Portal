@@ -15,10 +15,10 @@ class ConsultationRemoteDataSource {
   }
 
   Future<VideoConsultationModel> join(String consultationId) async {
-    final resp = await _client.dio.post(
-      '/video-consultations/$consultationId/join',
-    );
-    return VideoConsultationModel.fromJson(resp.data as Map<String, dynamic>);
+    // Register as participant (returns ConsultationJoinDto, not the full session shape)
+    await _client.dio.post('/video-consultations/$consultationId/join');
+    // Fetch full ConsultationSessionDto so fromJson has all required fields
+    return getById(consultationId);
   }
 
   Future<void> end(String consultationId) async {

@@ -58,7 +58,9 @@ class ErrorInterceptor extends Interceptor {
     try {
       final data = err.response?.data;
       if (data is Map) {
-        return data['message']?.toString() ??
+        return data['detail']?.toString() ??
+            data['message']?.toString() ??
+            data['title']?.toString() ??
             data['error']?.toString() ??
             err.message ??
             'An error occurred';

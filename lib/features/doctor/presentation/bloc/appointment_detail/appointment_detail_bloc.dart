@@ -28,6 +28,7 @@ class AppointmentDetailBloc
     on<AppointmentNoteAdded>(_onNoteAdded, transformer: droppable());
     on<AppointmentCancelled>(_onCancelled, transformer: droppable());
     on<AppointmentCompleted>(_onCompleted, transformer: droppable());
+    on<AppointmentDeclined>(_onDeclined, transformer: droppable());
   }
 
   Future<void> _onStarted(
@@ -104,6 +105,29 @@ class AppointmentDetailBloc
     if (current is! AppointmentDetailLoaded) return;
     emit(const AppointmentDetailActionInProgress());
     final result = await _appointmentRepo.markComplete(current.appointment.id);
+    result.fold(
+      (f) => emit(AppointmentDetailError(f.message)),
+      (_) async {
+        final refreshed = await _getAppointmentDetail(current.appointment.id);
+        refreshed.fold(
+          (f) => emit(AppointmentDetailError(f.message)),
+          (appointment) => emit(AppointmentDetailActionSuccess(appointment)),
+        );
+      },
+    );
+  }
+
+  Future<void> _onDeclined(
+    AppointmentDeclined event,
+    Emitter<AppointmentDetailState> emit,
+  ) async {
+    final current = state;
+    if (current is! AppointmentDetailLoaded) return;
+    emit(const AppointmentDetailActionInProgress());
+    final result = await _appointmentRepo.doctorRejectAppointment(
+      current.appointment.id,
+      event.reason,
+    );
     result.fold(
       (f) => emit(AppointmentDetailError(f.message)),
       (_) async {

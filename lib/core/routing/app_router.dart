@@ -54,6 +54,7 @@ import '../../features/super_admin/presentation/pages/subscriptions/platform_sub
 import '../../features/super_admin/presentation/pages/analytics/platform_analytics_page.dart';
 import '../../features/super_admin/presentation/pages/audit_log/global_audit_log_page.dart';
 import '../../features/super_admin/presentation/pages/platform_settings/platform_settings_page.dart';
+import '../../features/super_admin/presentation/pages/notifications/platform_notifications_page.dart';
 import '../../features/super_admin/presentation/pages/profile/super_admin_profile_page.dart';
 import 'route_names.dart';
 
@@ -416,7 +417,7 @@ class AppRouter {
           StatefulShellBranch(routes: [
             GoRoute(
               path: RouteNames.superAdminNotifications,
-              builder: (_, __) => const ShellPlaceholderPage(title: 'Notifications'),
+              builder: (_, __) => const PlatformNotificationsPage(),
             ),
           ]),
         ],

@@ -111,8 +111,11 @@ class _PendingViewState extends State<_PendingView> {
                 isDangerous: true,
               );
               if (ok && context.mounted) {
-                bloc.add(PendingSelectionChanged(_selected.map((a) => a.id).toList()));
-                bloc.add(const PendingBulkRejected());
+                final reason = await _RejectReasonDialog.show(context);
+                if (reason != null && context.mounted) {
+                  bloc.add(PendingSelectionChanged(_selected.map((a) => a.id).toList()));
+                  bloc.add(PendingBulkRejected(reason: reason));
+                }
               }
             },
           ),
@@ -240,20 +243,84 @@ class _RowActions extends StatelessWidget {
           case 'approve':
             bloc.add(PendingApptApproved(appointment.id));
           case 'reject':
-            final ok = await ConfirmDialog.show(
+            final reason = await _RejectReasonDialog.show(
               context,
-              title: 'Reject Appointment',
-              message: 'Reject appointment for ${appointment.patientName}?',
-              confirmLabel: 'Reject',
-              isDangerous: true,
+              patientName: appointment.patientName,
             );
-            if (ok && context.mounted) {
-              bloc.add(PendingApptRejected(appointment.id));
+            if (reason != null && context.mounted) {
+              bloc.add(PendingApptRejected(appointment.id, reason: reason));
             }
           case 'view':
             AdminAppointmentDetailDrawer.show(context, appointmentId: appointment.id);
         }
       },
+    );
+  }
+}
+
+class _RejectReasonDialog extends StatefulWidget {
+  final String? patientName;
+  const _RejectReasonDialog({this.patientName});
+
+  static Future<String?> show(BuildContext context, {String? patientName}) {
+    return showDialog<String>(
+      context: context,
+      builder: (_) => _RejectReasonDialog(patientName: patientName),
+    );
+  }
+
+  @override
+  State<_RejectReasonDialog> createState() => _RejectReasonDialogState();
+}
+
+class _RejectReasonDialogState extends State<_RejectReasonDialog> {
+  final _controller = TextEditingController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text(
+        widget.patientName != null
+            ? 'Reject appointment for ${widget.patientName}'
+            : 'Reject Appointments',
+      ),
+      content: SizedBox(
+        width: 400,
+        child: ValueListenableBuilder<TextEditingValue>(
+          valueListenable: _controller,
+          builder: (_, value, __) => TextField(
+            controller: _controller,
+            maxLines: 3,
+            autofocus: true,
+            decoration: const InputDecoration(
+              labelText: 'Reason for rejection',
+              hintText: 'Enter a reason the patient will see',
+              border: OutlineInputBorder(),
+            ),
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancel'),
+        ),
+        ValueListenableBuilder<TextEditingValue>(
+          valueListenable: _controller,
+          builder: (_, value, __) => TextButton(
+            onPressed: value.text.trim().isEmpty
+                ? null
+                : () => Navigator.of(context).pop(value.text.trim()),
+            child: const Text('Reject', style: TextStyle(color: Colors.red)),
+          ),
+        ),
+      ],
     );
   }
 }

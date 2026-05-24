@@ -52,7 +52,7 @@ class _InviteDoctorDialogState extends State<InviteDoctorDialog> {
   Widget build(BuildContext context) {
     return BlocListener<DoctorsRosterBloc, DoctorsRosterState>(
       listener: (ctx, state) {
-        if (state is DoctorInvitationSent) {
+        if (state is DoctorsRosterActionSuccess) {
           Navigator.of(ctx).pop();
         } else if (state is DoctorsRosterError) {
           setState(() => _submitting = false);
@@ -64,7 +64,7 @@ class _InviteDoctorDialogState extends State<InviteDoctorDialog> {
         }
       },
       child: AlertDialog(
-        title: const Text('Invite Doctor'),
+        title: const Text('Add Doctor'),
         content: SizedBox(
           width: 480,
           child: Form(
@@ -75,7 +75,7 @@ class _InviteDoctorDialogState extends State<InviteDoctorDialog> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'The doctor will receive an email with a link to set up their account.',
+                    'The account will be created immediately. The doctor will receive their badge number via SMS and email.',
                     style: AppTypography.bodySmall.copyWith(color: AppColors.neutral500),
                   ),
                   const SizedBox(height: AppSpacing.base),
@@ -173,7 +173,7 @@ class _InviteDoctorDialogState extends State<InviteDoctorDialog> {
             child: const Text('Cancel'),
           ),
           AppButton.primary(
-            label: 'Send Invitation',
+            label: 'Add Doctor',
             isLoading: _submitting,
             onPressed: _submit,
           ),

@@ -89,7 +89,10 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
     try {
       final resp =
           await _client.dio.get('/notifications/unread-count');
-      final count = (resp.data['data'] ?? 0) as int;
+      final raw = resp.data;
+      final count = raw is Map
+          ? ((raw['unreadCount'] ?? raw['data'] ?? 0) as num).toInt()
+          : 0;
       emit(state.copyWith(unreadCount: count));
     } catch (_) {
       // silently ignore

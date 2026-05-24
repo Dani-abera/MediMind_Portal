@@ -11,6 +11,7 @@ import 'data/datasources/platform_users_datasource.dart';
 import 'data/datasources/platform_subscriptions_datasource.dart';
 import 'data/datasources/platform_analytics_datasource.dart';
 import 'data/datasources/platform_audit_datasource.dart';
+import 'data/datasources/platform_notifications_datasource.dart';
 import 'data/datasources/platform_settings_datasource.dart';
 import 'data/datasources/platform_profile_datasource.dart';
 import 'data/repositories/platform_centers_repository_impl.dart';
@@ -19,6 +20,7 @@ import 'data/repositories/platform_users_repository_impl.dart';
 import 'data/repositories/platform_subscriptions_repository_impl.dart';
 import 'data/repositories/platform_analytics_repository_impl.dart';
 import 'data/repositories/platform_audit_repository_impl.dart';
+import 'data/repositories/platform_notifications_repository_impl.dart';
 import 'data/repositories/platform_settings_repository_impl.dart';
 import 'data/repositories/platform_profile_repository_impl.dart';
 import 'domain/repositories/platform_centers_repository.dart';
@@ -27,6 +29,7 @@ import 'domain/repositories/platform_users_repository.dart';
 import 'domain/repositories/platform_subscriptions_repository.dart';
 import 'domain/repositories/platform_analytics_repository.dart';
 import 'domain/repositories/platform_audit_repository.dart';
+import 'domain/repositories/platform_notifications_repository.dart';
 import 'domain/repositories/platform_settings_repository.dart';
 import 'domain/repositories/super_admin_profile_repository.dart';
 import 'domain/usecases/get_platform_centers_usecase.dart';
@@ -51,6 +54,9 @@ import 'domain/usecases/get_platform_dashboard_usecase.dart';
 import 'domain/usecases/get_platform_analytics_usecase.dart';
 import 'domain/usecases/get_platform_audit_log_usecase.dart';
 import 'domain/usecases/export_platform_audit_usecase.dart';
+import 'domain/usecases/get_platform_notifications_usecase.dart';
+import 'domain/usecases/mark_notification_read_usecase.dart';
+import 'domain/usecases/mark_all_notifications_read_usecase.dart';
 import 'domain/usecases/get_platform_settings_usecase.dart';
 import 'domain/usecases/save_platform_settings_usecase.dart';
 import 'domain/usecases/get_super_admin_profile_usecase.dart';
@@ -62,6 +68,7 @@ import 'presentation/bloc/users/platform_users_bloc.dart';
 import 'presentation/bloc/subscriptions/platform_subscriptions_bloc.dart';
 import 'presentation/bloc/platform_analytics/platform_analytics_bloc.dart';
 import 'presentation/bloc/platform_audit/platform_audit_bloc.dart';
+import 'presentation/bloc/notifications/platform_notifications_bloc.dart';
 import 'presentation/bloc/platform_settings/platform_settings_bloc.dart';
 import 'presentation/bloc/profile/super_admin_profile_bloc.dart';
 
@@ -90,6 +97,7 @@ Future<void> initSuperAdminFeature() async {
   sl.registerLazySingleton(() => PlatformSubscriptionsDatasource(sl<DioClient>()));
   sl.registerLazySingleton(() => PlatformAnalyticsDatasource(sl<DioClient>()));
   sl.registerLazySingleton(() => PlatformAuditDatasource(sl<DioClient>()));
+  sl.registerLazySingleton(() => PlatformNotificationsDatasource(sl<DioClient>()));
   sl.registerLazySingleton(() => PlatformSettingsDatasource(sl<DioClient>()));
   sl.registerLazySingleton(() => PlatformProfileDatasource(sl<DioClient>()));
 
@@ -110,6 +118,9 @@ Future<void> initSuperAdminFeature() async {
   );
   sl.registerLazySingleton<PlatformAuditRepository>(
     () => PlatformAuditRepositoryImpl(sl<PlatformAuditDatasource>(), sl<NetworkInfo>()),
+  );
+  sl.registerLazySingleton<PlatformNotificationsRepository>(
+    () => PlatformNotificationsRepositoryImpl(sl<PlatformNotificationsDatasource>(), sl<NetworkInfo>()),
   );
   sl.registerLazySingleton<PlatformSettingsRepository>(
     () => PlatformSettingsRepositoryImpl(sl<PlatformSettingsDatasource>(), sl<NetworkInfo>()),
@@ -140,6 +151,9 @@ Future<void> initSuperAdminFeature() async {
   sl.registerLazySingleton(() => GetPlatformAnalyticsUseCase(sl<PlatformAnalyticsRepository>()));
   sl.registerLazySingleton(() => GetPlatformAuditLogUseCase(sl<PlatformAuditRepository>()));
   sl.registerLazySingleton(() => ExportPlatformAuditUseCase(sl<PlatformAuditRepository>()));
+  sl.registerLazySingleton(() => GetPlatformNotificationsUseCase(sl<PlatformNotificationsRepository>()));
+  sl.registerLazySingleton(() => MarkNotificationReadUseCase(sl<PlatformNotificationsRepository>()));
+  sl.registerLazySingleton(() => MarkAllNotificationsReadUseCase(sl<PlatformNotificationsRepository>()));
   sl.registerLazySingleton(() => GetPlatformSettingsUseCase(sl<PlatformSettingsRepository>()));
   sl.registerLazySingleton(() => SavePlatformSettingsUseCase(sl<PlatformSettingsRepository>()));
   sl.registerLazySingleton(() => GetSuperAdminProfileUseCase(sl<SuperAdminProfileRepository>()));
@@ -177,6 +191,11 @@ Future<void> initSuperAdminFeature() async {
   sl.registerFactory(() => PlatformAuditBloc(
     getAuditLog: sl<GetPlatformAuditLogUseCase>(),
     exportAuditLog: sl<ExportPlatformAuditUseCase>(),
+  ));
+  sl.registerFactory(() => PlatformNotificationsBloc(
+    getNotifications: sl<GetPlatformNotificationsUseCase>(),
+    markRead: sl<MarkNotificationReadUseCase>(),
+    markAllRead: sl<MarkAllNotificationsReadUseCase>(),
   ));
   sl.registerFactory(() => PlatformSettingsBloc(
     getSettings: sl<GetPlatformSettingsUseCase>(),

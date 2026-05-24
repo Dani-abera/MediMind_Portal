@@ -11,9 +11,9 @@ class AppointmentNoteModel extends AppointmentNote {
   });
 
   factory AppointmentNoteModel.fromJson(Map<String, dynamic> json) => AppointmentNoteModel(
-        id: json['id'] as String,
-        appointmentId: json['appointmentId'] as String,
-        doctorId: json['doctorId'] as String,
+        id: (json['noteId'] ?? json['id']) as String? ?? '',
+        appointmentId: (json['appointmentId'] ?? '') as String,
+        doctorId: (json['doctorId'] ?? '') as String,
         content: json['content'] as String,
         createdAt: DateTime.parse(json['createdAt'] as String),
         updatedAt: json['updatedAt'] != null

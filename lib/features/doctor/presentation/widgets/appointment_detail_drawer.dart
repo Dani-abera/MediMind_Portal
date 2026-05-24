@@ -328,6 +328,7 @@ class _AppointmentDetailContentState
         appt.status == AppointmentStatus.inProgress;
     final canCancel = appt.status == AppointmentStatus.pending ||
         appt.status == AppointmentStatus.confirmed;
+    final canDecline = appt.status == AppointmentStatus.pending;
 
     return Row(
       children: [
@@ -338,6 +339,21 @@ class _AppointmentDetailContentState
             onPressed: () =>
                 ctx.read<AppointmentDetailBloc>().add(const AppointmentCompleted()),
           ),
+        if (canDecline) ...[
+          if (canComplete) const SizedBox(width: 8),
+          OutlinedButton.icon(
+            icon: const FaIcon(FontAwesomeIcons.circleXmark, size: 14,
+                color: AppColors.danger),
+            label: const Text('Decline',
+                style: TextStyle(color: AppColors.danger)),
+            onPressed: () async {
+              final reason = await _showDeclineReasonDialog(ctx);
+              if (reason != null && ctx.mounted) {
+                ctx.read<AppointmentDetailBloc>().add(AppointmentDeclined(reason));
+              }
+            },
+          ),
+        ],
         if (canComplete && canCancel) const SizedBox(width: 8),
         if (canCancel)
           OutlinedButton.icon(
@@ -348,10 +364,7 @@ class _AppointmentDetailContentState
             onPressed: () =>
                 ctx.read<AppointmentDetailBloc>().add(const AppointmentCancelled()),
           ),
-        if (appt.type == AppointmentType.video &&
-            (appt.status == AppointmentStatus.confirmed ||
-                appt.status == AppointmentStatus.inProgress) &&
-            appt.videoConsultationId == null) ...[
+        if (appt.canInitiateVideoConsultation) ...[
           const SizedBox(width: 8),
           FilledButton.icon(
             style: FilledButton.styleFrom(
@@ -361,7 +374,7 @@ class _AppointmentDetailContentState
             onPressed: () => _initiateAndNavigate(ctx, appt.id),
           ),
         ],
-        if (appt.type == AppointmentType.video &&
+        if (appt.videoConsultationStatus == 'InProgress' &&
             appt.videoConsultationId != null) ...[
           const Spacer(),
           FilledButton.icon(
@@ -378,4 +391,42 @@ class _AppointmentDetailContentState
       ],
     );
   }
+}
+
+Future<String?> _showDeclineReasonDialog(BuildContext context) {
+  final controller = TextEditingController();
+  return showDialog<String>(
+    context: context,
+    builder: (ctx) => StatefulBuilder(
+      builder: (ctx, setState) => AlertDialog(
+        title: const Text('Decline Appointment'),
+        content: SizedBox(
+          width: 400,
+          child: TextField(
+            controller: controller,
+            maxLines: 3,
+            autofocus: true,
+            onChanged: (_) => setState(() {}),
+            decoration: const InputDecoration(
+              labelText: 'Reason for declining',
+              hintText: 'Enter a reason the patient will see',
+              border: OutlineInputBorder(),
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: controller.text.trim().isEmpty
+                ? null
+                : () => Navigator.of(ctx).pop(controller.text.trim()),
+            child: const Text('Decline', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    ),
+  );
 }

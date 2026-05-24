@@ -236,14 +236,10 @@ class _ApptDetailContent extends StatelessWidget {
             label: 'Reject',
             isLoading: isBusy,
             onPressed: () async {
-              final ok = await ConfirmDialog.show(
-                context,
-                title: 'Reject Appointment',
-                message: 'Reject this appointment?',
-                confirmLabel: 'Reject',
-                isDangerous: true,
-              );
-              if (ok && context.mounted) bloc.add(const AdminApptRejected());
+              final reason = await _showRejectReasonDialog(context);
+              if (reason != null && context.mounted) {
+                bloc.add(AdminApptRejected(reason: reason));
+              }
             },
           ),
         ],
@@ -327,4 +323,42 @@ class _InfoGrid extends StatelessWidget {
       ),
     );
   }
+}
+
+Future<String?> _showRejectReasonDialog(BuildContext context) {
+  final controller = TextEditingController();
+  return showDialog<String>(
+    context: context,
+    builder: (ctx) => StatefulBuilder(
+      builder: (ctx, setState) => AlertDialog(
+        title: const Text('Reject Appointment'),
+        content: SizedBox(
+          width: 400,
+          child: TextField(
+            controller: controller,
+            maxLines: 3,
+            autofocus: true,
+            onChanged: (_) => setState(() {}),
+            decoration: const InputDecoration(
+              labelText: 'Reason for rejection',
+              hintText: 'Enter a reason the patient will see',
+              border: OutlineInputBorder(),
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: controller.text.trim().isEmpty
+                ? null
+                : () => Navigator.of(ctx).pop(controller.text.trim()),
+            child: const Text('Reject', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    ),
+  );
 }

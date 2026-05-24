@@ -6,8 +6,8 @@ enum ConsultationStatus {
   ended;
 
   static ConsultationStatus fromString(String? s) => switch (s?.toLowerCase()) {
-        'active' => active,
-        'ended' || 'completed' => ended,
+        'active' || 'inprogress' || 'in_progress' => active,
+        'ended' || 'completed' || 'cancelled' || 'canceled' => ended,
         _ => pending,
       };
 }

@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/di/service_locator.dart';
+import '../../../../core/routing/route_names.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../bloc/video_call/video_call_bloc.dart';
@@ -20,7 +22,7 @@ class VideoCallPage extends StatelessWidget {
       child: BlocListener<VideoCallBloc, VideoCallState>(
         listener: (ctx, state) {
           if (state is VideoCallEndedState) {
-            Navigator.of(context).pop();
+            context.go(RouteNames.doctorConsultations);
           }
         },
         child: const _VideoCallView(),
@@ -114,7 +116,7 @@ class _VideoCallViewState extends State<_VideoCallView> {
                     style: OutlinedButton.styleFrom(
                         foregroundColor: Colors.white,
                         side: const BorderSide(color: Colors.white)),
-                    onPressed: () => Navigator.of(context).pop(),
+                    onPressed: () => context.go(RouteNames.doctorConsultations),
                     child: const Text('Leave'),
                   ),
                 ],
@@ -352,8 +354,13 @@ class _VideoCallViewState extends State<_VideoCallView> {
                 duration: const Duration(milliseconds: 250),
                 width: isChatOpen ? 320 : 0,
                 color: const Color(0xFF1A1A2E),
+                clipBehavior: Clip.hardEdge,
                 child: isChatOpen
-                    ? Column(
+                    ? OverflowBox(
+                        minWidth: 320,
+                        maxWidth: 320,
+                        alignment: Alignment.topLeft,
+                        child: Column(
                         children: [
                           // Chat header
                           Container(
@@ -476,7 +483,8 @@ class _VideoCallViewState extends State<_VideoCallView> {
                             ),
                           ),
                         ],
-                      )
+                      ),
+                    )
                     : null,
               ),
             ],

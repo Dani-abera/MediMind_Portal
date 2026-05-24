@@ -149,7 +149,7 @@ class DoctorsRosterBloc extends Bloc<DoctorsRosterEvent, DoctorsRosterState> {
     final result = await _getSchedule(event.doctorId, _centerId);
     result.fold(
       (f) => emit(DoctorsRosterError(f.message)),
-      (config) => emit(DoctorScheduleLoaded(config)),
+      (config) => emit(DoctorScheduleLoaded(config, doctorId: event.doctorId, centerId: _centerId)),
     );
   }
 
@@ -159,7 +159,8 @@ class DoctorsRosterBloc extends Bloc<DoctorsRosterEvent, DoctorsRosterState> {
     await result.fold(
       (f) async => emit(DoctorsRosterError(f.message)),
       (_) async {
-        emit(const DoctorInvitationSent('Invitation sent. Doctor will appear once they accept.'));
+        emit(const DoctorsRosterActionSuccess(
+          'Doctor added successfully. They will receive their badge number via SMS and email.'));
         await _fetch(emit);
       },
     );

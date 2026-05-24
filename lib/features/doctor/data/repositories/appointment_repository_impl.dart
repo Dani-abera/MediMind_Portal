@@ -107,4 +107,8 @@ class AppointmentRepositoryImpl implements AppointmentRepository {
   @override
   Future<Either<Failure, void>> markComplete(String id) =>
       _guard(() => _remote.markComplete(id));
+
+  @override
+  Future<Either<Failure, void>> doctorRejectAppointment(String id, String reason) =>
+      _guard(() => _remote.doctorRejectAppointment(id, reason));
 }

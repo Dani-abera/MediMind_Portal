@@ -26,8 +26,10 @@ class DoctorsRosterError extends DoctorsRosterState {
 class DoctorScheduleLoading extends DoctorsRosterState { const DoctorScheduleLoading(); }
 class DoctorScheduleLoaded extends DoctorsRosterState {
   final DoctorScheduleConfig? config;
-  const DoctorScheduleLoaded(this.config);
-  @override List<Object?> get props => [config];
+  final String doctorId;
+  final String centerId;
+  const DoctorScheduleLoaded(this.config, {required this.doctorId, required this.centerId});
+  @override List<Object?> get props => [config, doctorId, centerId];
 }
 class DoctorInvitationSent extends DoctorsRosterState {
   final String message;

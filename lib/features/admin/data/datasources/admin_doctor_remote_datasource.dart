@@ -20,7 +20,7 @@ class AdminDoctorRemoteDataSource {
 
   Future<void> inviteDoctor(String centerId, InviteDoctorDto dto) async {
     await _client.dio.post(
-      '/healthcare-centers/$centerId/doctors/invite',
+      '/healthcare-centers/$centerId/doctors/create',
       data: dto.toJson(),
     );
   }

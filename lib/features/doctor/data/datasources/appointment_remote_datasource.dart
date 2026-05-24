@@ -1,3 +1,4 @@
+import '../../../../core/error/exceptions.dart';
 import '../../../../core/network/dio_client.dart';
 import '../models/appointment_model.dart';
 import '../models/appointment_note_model.dart';
@@ -24,7 +25,15 @@ class AppointmentRemoteDataSource {
         'pageSize': pageSize,
       },
     );
-    final data = (resp.data['items'] ?? resp.data['data']) as List<dynamic>;
+    final raw = resp.data;
+    final List<dynamic> data;
+    if (raw is List) {
+      data = raw;
+    } else if (raw is Map<String, dynamic>) {
+      data = (raw['items'] ?? raw['data'] ?? []) as List<dynamic>;
+    } else {
+      data = [];
+    }
     return data
         .map((e) => AppointmentModel.fromJson(e as Map<String, dynamic>))
         .toList();
@@ -32,7 +41,11 @@ class AppointmentRemoteDataSource {
 
   Future<AppointmentModel> getAppointmentById(String id) async {
     final resp = await _client.dio.get('/appointments/$id');
-    return AppointmentModel.fromJson(resp.data as Map<String, dynamic>);
+    final data = resp.data;
+    if (data is! Map<String, dynamic>) {
+      throw ServerException('Unexpected response for appointment $id');
+    }
+    return AppointmentModel.fromJson(data);
   }
 
   Future<AppointmentNoteModel> addNote({
@@ -52,12 +65,17 @@ class AppointmentRemoteDataSource {
     final resp = await _client.dio.get(
       '/appointments/$appointmentId/notes',
     );
-    final items = resp.data is List
-        ? resp.data as List<dynamic>
-        : (resp.data['items'] ?? resp.data['data'] ?? []) as List<dynamic>;
-    return items
-        .map((e) => AppointmentNoteModel.fromJson(e as Map<String, dynamic>))
-        .toList();
+    final data = resp.data;
+    if (data == null) return [];
+    if (data is List) {
+      return data
+          .map((e) => AppointmentNoteModel.fromJson(e as Map<String, dynamic>))
+          .toList();
+    }
+    if (data is Map<String, dynamic>) {
+      return [AppointmentNoteModel.fromJson(data)];
+    }
+    return [];
   }
 
   Future<void> cancelAppointment(String id) async {
@@ -69,5 +87,12 @@ class AppointmentRemoteDataSource {
 
   Future<void> markComplete(String id) async {
     await _client.dio.post('/appointments/$id/complete');
+  }
+
+  Future<void> doctorRejectAppointment(String id, String reason) async {
+    await _client.dio.post(
+      '/appointments/$id/doctor-reject',
+      data: {'reason': reason},
+    );
   }
 }

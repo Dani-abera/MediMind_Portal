@@ -23,4 +23,5 @@ abstract class AppointmentRepository {
 
   Future<Either<Failure, void>> cancelAppointment(String id);
   Future<Either<Failure, void>> markComplete(String id);
+  Future<Either<Failure, void>> doctorRejectAppointment(String id, String reason);
 }

@@ -67,7 +67,12 @@ class _AdminDashboardView extends StatelessWidget {
             IconButton(
               icon: const Icon(Icons.refresh, size: 18),
               tooltip: 'Refresh',
-              onPressed: () => context.read<AdminDashboardBloc>().add(const AdminDashboardRefreshed()),
+              onPressed: () {
+                final centerId = UserContext().centerId ?? '';
+                context.read<AdminDashboardBloc>().add(const AdminDashboardRefreshed());
+                context.read<CenterSettingsBloc>().add(CenterSettingsStarted(centerId));
+                context.read<BrandingBloc>().add(BrandingStarted(centerId));
+              },
               visualDensity: VisualDensity.compact,
             ),
           ],

@@ -46,13 +46,17 @@ class _DoctorsRosterView extends StatelessWidget {
           ScaffoldMessenger.of(ctx).showSnackBar(
             SnackBar(content: Text(state.message), backgroundColor: AppColors.success),
           );
-        } else if (state is DoctorInvitationSent) {
-          ScaffoldMessenger.of(ctx).showSnackBar(
-            SnackBar(content: Text(state.message), backgroundColor: AppColors.success),
-          );
         } else if (state is DoctorScheduleLoaded) {
           final bloc = ctx.read<DoctorsRosterBloc>();
-          ConfigureScheduleModal.show(ctx, config: state.config, onSave: (config) {
+          final config = state.config ?? DoctorScheduleConfig(
+            doctorId: state.doctorId,
+            centerId: state.centerId,
+            workingDays: const [1, 2, 3, 4, 5],
+            startTime: '08:00',
+            endTime: '17:00',
+            slotDurationMinutes: 30,
+          );
+          ConfigureScheduleModal.show(ctx, config: config, onSave: (config) {
             bloc.add(DoctorScheduleConfigured(config));
           });
         }
@@ -64,8 +68,8 @@ class _DoctorsRosterView extends StatelessWidget {
             subtitle: 'Manage doctors affiliated with this center',
             actions: [
               AppButton.primary(
-                label: 'Invite Doctor',
-                icon: FontAwesomeIcons.envelopeOpenText,
+                label: 'Add Doctor',
+                icon: FontAwesomeIcons.userPlus,
                 onPressed: () => InviteDoctorDialog.show(context),
               ),
               const SizedBox(width: AppSpacing.sm),

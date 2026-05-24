@@ -46,6 +46,8 @@ class Appointment extends Equatable {
   final List<String> symptoms;
   final String? notes;
   final String? videoConsultationId;
+  final bool canInitiateVideoConsultation;
+  final String? videoConsultationStatus;
 
   const Appointment({
     required this.id,
@@ -63,6 +65,8 @@ class Appointment extends Equatable {
     this.symptoms = const [],
     this.notes,
     this.videoConsultationId,
+    this.canInitiateVideoConsultation = false,
+    this.videoConsultationStatus,
   });
 
   @override
@@ -70,5 +74,6 @@ class Appointment extends Equatable {
         id, patientId, patientName, patientAge, patientPhone,
         doctorId, centerId, centerName, dateTime, type, status,
         reason, symptoms, notes, videoConsultationId,
+        canInitiateVideoConsultation, videoConsultationStatus,
       ];
 }
