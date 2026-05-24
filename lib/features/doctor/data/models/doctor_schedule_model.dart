@@ -37,7 +37,7 @@ class DoctorScheduleModel extends DoctorSchedule {
   factory DoctorScheduleModel.fromJson(Map<String, dynamic> json) {
     final workingDays = (json['workingDays'] as List<dynamic>? ?? []).map((e) {
       if (e is int) return DayOfWeek.fromInt(e);
-      return DayOfWeek.values.byName(e as String);
+      return DayOfWeek.values.byName((e as String).toLowerCase());
     }).toList();
 
     return DoctorScheduleModel(
