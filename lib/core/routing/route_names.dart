@@ -18,6 +18,7 @@ abstract class RouteNames {
   static const String doctorConsultations = '/doctor/consultations';
   static const String doctorConsultationDetail = '/doctor/consultation/:id';
   static const String doctorVideoCall = '/doctor/video-call/:id';
+  static const String doctorAppointmentChat = '/doctor/appointment-chat/:id';
   static const String doctorPrescriptions = '/doctor/prescriptions';
   static const String doctorPrescriptionsTemplates =
       '/doctor/prescriptions/templates';

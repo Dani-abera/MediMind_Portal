@@ -18,6 +18,7 @@ class AppointmentModel extends Appointment {
     super.notes,
     super.videoConsultationId,
     super.canInitiateVideoConsultation,
+    super.canChat,
     super.videoConsultationStatus,
   });
 
@@ -44,6 +45,7 @@ class AppointmentModel extends Appointment {
         videoConsultationId: json['videoConsultationId'] as String?,
         canInitiateVideoConsultation:
             json['canInitiateVideoConsultation'] as bool? ?? false,
+        canChat: json['canChat'] as bool? ?? false,
         videoConsultationStatus: json['videoConsultationStatus'] as String?,
       );
 

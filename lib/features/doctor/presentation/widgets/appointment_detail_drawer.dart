@@ -367,24 +367,22 @@ class _AppointmentDetailContentState
         if (appt.canInitiateVideoConsultation) ...[
           const SizedBox(width: 8),
           FilledButton.icon(
-            style: FilledButton.styleFrom(
-                backgroundColor: AppColors.info),
+            style: FilledButton.styleFrom(backgroundColor: AppColors.info),
             icon: const FaIcon(FontAwesomeIcons.video, size: 14),
-            label: const Text('Start Video Call'),
+            label: Text(appt.videoConsultationStatus == 'InProgress'
+                ? 'Join Video Call'
+                : 'Start Video Call'),
             onPressed: () => _initiateAndNavigate(ctx, appt.id),
           ),
         ],
-        if (appt.videoConsultationStatus == 'InProgress' &&
-            appt.videoConsultationId != null) ...[
-          const Spacer(),
-          FilledButton.icon(
-            style: FilledButton.styleFrom(
-                backgroundColor: AppColors.info),
-            icon: const FaIcon(FontAwesomeIcons.video, size: 14),
-            label: const Text('Join Video Call'),
+        if (appt.canChat && appt.videoConsultationId != null) ...[
+          const SizedBox(width: 8),
+          OutlinedButton.icon(
+            icon: const FaIcon(FontAwesomeIcons.comment, size: 14),
+            label: const Text('Chat'),
             onPressed: () {
               Navigator.of(context).pop();
-              context.go('/doctor/video-call/${appt.videoConsultationId}');
+              context.go('/doctor/appointment-chat/${appt.videoConsultationId}');
             },
           ),
         ],

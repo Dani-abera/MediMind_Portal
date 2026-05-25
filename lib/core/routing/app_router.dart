@@ -15,6 +15,7 @@ import '../../features/doctor/presentation/pages/patients_list_page.dart';
 import '../../features/doctor/presentation/pages/patient_detail_page.dart';
 import '../../features/doctor/presentation/pages/consultations_page.dart';
 import '../../features/doctor/presentation/pages/video_call_page.dart';
+import '../../features/doctor/presentation/pages/appointment_chat_page.dart';
 import '../../features/doctor/presentation/pages/prescriptions_list_page.dart';
 import '../../features/doctor/presentation/pages/create_prescription_page.dart';
 import '../../features/doctor/presentation/pages/prescription_templates_page.dart';
@@ -80,6 +81,11 @@ class AppRouter {
         path: '/doctor/video-call/:id',
         builder: (_, state) =>
             VideoCallPage(consultationId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/doctor/appointment-chat/:id',
+        builder: (_, state) =>
+            AppointmentChatPage(consultationId: state.pathParameters['id']!),
       ),
 
       GoRoute(

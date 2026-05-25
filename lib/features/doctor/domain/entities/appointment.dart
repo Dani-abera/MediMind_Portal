@@ -47,6 +47,7 @@ class Appointment extends Equatable {
   final String? notes;
   final String? videoConsultationId;
   final bool canInitiateVideoConsultation;
+  final bool canChat;
   final String? videoConsultationStatus;
 
   const Appointment({
@@ -66,6 +67,7 @@ class Appointment extends Equatable {
     this.notes,
     this.videoConsultationId,
     this.canInitiateVideoConsultation = false,
+    this.canChat = false,
     this.videoConsultationStatus,
   });
 
@@ -74,6 +76,6 @@ class Appointment extends Equatable {
         id, patientId, patientName, patientAge, patientPhone,
         doctorId, centerId, centerName, dateTime, type, status,
         reason, symptoms, notes, videoConsultationId,
-        canInitiateVideoConsultation, videoConsultationStatus,
+        canInitiateVideoConsultation, canChat, videoConsultationStatus,
       ];
 }
