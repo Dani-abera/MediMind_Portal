@@ -39,6 +39,7 @@ import 'domain/usecases/reject_center_usecase.dart';
 import 'domain/usecases/suspend_center_usecase.dart';
 import 'domain/usecases/reactivate_center_usecase.dart';
 import 'domain/usecases/change_center_subscription_usecase.dart';
+import 'domain/usecases/verify_payment_usecase.dart';
 import 'domain/usecases/get_platform_doctors_usecase.dart';
 import 'domain/usecases/get_platform_doctor_detail_usecase.dart';
 import 'domain/usecases/verify_doctor_license_usecase.dart';
@@ -136,6 +137,7 @@ Future<void> initSuperAdminFeature() async {
   sl.registerLazySingleton(() => SuspendCenterUseCase(sl<PlatformCentersRepository>()));
   sl.registerLazySingleton(() => ReactivateCenterUseCase(sl<PlatformCentersRepository>()));
   sl.registerLazySingleton(() => ChangeCenterSubscriptionUseCase(sl<PlatformCentersRepository>()));
+  sl.registerLazySingleton(() => VerifyPaymentUseCase(sl<PlatformCentersRepository>()));
   sl.registerLazySingleton(() => GetPlatformDoctorsUseCase(sl<PlatformDoctorsRepository>()));
   sl.registerLazySingleton(() => GetPlatformDoctorDetailUseCase(sl<PlatformDoctorsRepository>()));
   sl.registerLazySingleton(() => VerifyDoctorLicenseUseCase(sl<PlatformDoctorsRepository>()));
@@ -168,6 +170,7 @@ Future<void> initSuperAdminFeature() async {
     reject: sl<RejectCenterUseCase>(),
     suspend: sl<SuspendCenterUseCase>(),
     reactivate: sl<ReactivateCenterUseCase>(),
+    verifyPayment: sl<VerifyPaymentUseCase>(),
   ));
   sl.registerFactory(() => PlatformDoctorsBloc(
     getDoctors: sl<GetPlatformDoctorsUseCase>(),

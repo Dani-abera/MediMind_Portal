@@ -7,6 +7,7 @@ import '../../../domain/usecases/approve_center_usecase.dart';
 import '../../../domain/usecases/reject_center_usecase.dart';
 import '../../../domain/usecases/suspend_center_usecase.dart';
 import '../../../domain/usecases/reactivate_center_usecase.dart';
+import '../../../domain/usecases/verify_payment_usecase.dart';
 
 part 'centers_event.dart';
 part 'centers_state.dart';
@@ -17,6 +18,7 @@ class CentersBloc extends Bloc<CentersEvent, CentersState> {
   final RejectCenterUseCase _reject;
   final SuspendCenterUseCase _suspend;
   final ReactivateCenterUseCase _reactivate;
+  final VerifyPaymentUseCase _verifyPayment;
 
   String? _statusFilter;
   int _page = 1;
@@ -28,11 +30,13 @@ class CentersBloc extends Bloc<CentersEvent, CentersState> {
     required RejectCenterUseCase reject,
     required SuspendCenterUseCase suspend,
     required ReactivateCenterUseCase reactivate,
+    required VerifyPaymentUseCase verifyPayment,
   })  : _getCenters = getCenters,
         _approve = approve,
         _reject = reject,
         _suspend = suspend,
         _reactivate = reactivate,
+        _verifyPayment = verifyPayment,
         super(const CentersInitial()) {
     on<CentersStarted>(_onStarted, transformer: droppable());
     on<CentersFiltered>(_onFiltered, transformer: droppable());
@@ -42,6 +46,7 @@ class CentersBloc extends Bloc<CentersEvent, CentersState> {
     on<CenterRejectRequested>(_onReject, transformer: sequential());
     on<CenterSuspendRequested>(_onSuspend, transformer: sequential());
     on<CenterReactivateRequested>(_onReactivate, transformer: sequential());
+    on<CenterVerifyPaymentRequested>(_onVerifyPayment, transformer: sequential());
   }
 
   Future<void> _fetch(Emitter<CentersState> emit) async {
@@ -114,6 +119,17 @@ class CentersBloc extends Bloc<CentersEvent, CentersState> {
       (f) => emit(CentersActionError(f.message)),
       (_) {
         emit(const CentersActionSuccess('Center reactivated'));
+        add(const CentersRefreshed());
+      },
+    );
+  }
+
+  Future<void> _onVerifyPayment(CenterVerifyPaymentRequested event, Emitter<CentersState> emit) async {
+    final result = await _verifyPayment(event.centerId);
+    result.fold(
+      (f) => emit(CentersActionError(f.message)),
+      (_) {
+        emit(const CentersActionSuccess('Payment verified — center is now active'));
         add(const CentersRefreshed());
       },
     );

@@ -18,6 +18,10 @@ class PlatformCenterModel extends PlatformCenter {
     super.adminEmail,
     super.adminName,
     super.status,
+    super.pendingPlanName,
+    super.pendingPaymentRef,
+    super.pendingPaymentStatus,
+    super.pendingBillingCycle,
   });
 
   factory PlatformCenterModel.fromJson(Map<String, dynamic> j) => PlatformCenterModel(
@@ -39,12 +43,17 @@ class PlatformCenterModel extends PlatformCenter {
         adminEmail: j['adminEmail'] as String? ?? j['email'] as String? ?? '',
         adminName: j['adminName'] as String? ?? '',
         status: _parseStatus(j['status'] as String? ?? j['subscriptionStatus'] as String?),
+        pendingPlanName: j['pendingPlanName'] as String?,
+        pendingPaymentRef: j['pendingPaymentRef'] as String?,
+        pendingPaymentStatus: j['pendingPaymentStatus'] as String?,
+        pendingBillingCycle: j['pendingBillingCycle'] as String?,
       );
 
   static CenterStatus _parseStatus(String? s) => switch (s?.toLowerCase()) {
         'active' => CenterStatus.active,
         'suspended' => CenterStatus.suspended,
         'rejected' => CenterStatus.rejected,
+        'awaitingactivation' || 'awaiting_activation' => CenterStatus.awaitingActivation,
         'pendingapproval' || 'pending' => CenterStatus.pending,
         _ => CenterStatus.pending,
       };
@@ -66,5 +75,9 @@ class PlatformCenterModel extends PlatformCenter {
         'adminEmail': adminEmail,
         'adminName': adminName,
         'status': status.name,
+        if (pendingPlanName != null) 'pendingPlanName': pendingPlanName,
+        if (pendingPaymentRef != null) 'pendingPaymentRef': pendingPaymentRef,
+        if (pendingPaymentStatus != null) 'pendingPaymentStatus': pendingPaymentStatus,
+        if (pendingBillingCycle != null) 'pendingBillingCycle': pendingBillingCycle,
       };
 }

@@ -57,4 +57,8 @@ class PlatformCentersRepositoryImpl implements PlatformCentersRepository {
   @override
   Future<Either<Failure, void>> changeSubscription(String centerId, {required String plan, required DateTime startDate, required DateTime endDate, required String reason}) =>
       _guard(() => _remote.changeSubscription(centerId, plan: plan, startDate: startDate, endDate: endDate, reason: reason));
+
+  @override
+  Future<Either<Failure, PlatformCenter>> verifyPayment(String centerId) =>
+      _guard(() => _remote.verifyPayment(centerId));
 }

@@ -91,6 +91,11 @@ class PlatformCentersDatasource {
     await _client.dio.post('/super-admin/centers/$centerId/reactivate');
   }
 
+  Future<PlatformCenter> verifyPayment(String centerId) async {
+    final resp = await _client.dio.post('/super-admin/centers/$centerId/verify-payment');
+    return PlatformCenterModel.fromJson(resp.data as Map<String, dynamic>);
+  }
+
   Future<void> changeSubscription(
     String centerId, {
     required String plan,

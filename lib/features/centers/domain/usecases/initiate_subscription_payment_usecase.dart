@@ -1,3 +1,4 @@
+import '../entities/subscription_payment_details.dart';
 import '../repositories/center_repository.dart';
 
 class InitiateSubscriptionPaymentUseCase {
@@ -5,6 +6,6 @@ class InitiateSubscriptionPaymentUseCase {
 
   InitiateSubscriptionPaymentUseCase(this._repository);
 
-  Future<String> call(String centerId, String planId) =>
-      _repository.initiateSubscriptionPayment(centerId, planId);
+  Future<SubscriptionPaymentDetails> call(String centerId, String planId, String billingCycle) =>
+      _repository.initiateSubscriptionPayment(centerId, planId, billingCycle);
 }

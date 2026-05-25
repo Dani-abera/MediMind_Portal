@@ -1,5 +1,6 @@
 import '../../domain/entities/center.dart';
 import '../../domain/entities/subscription_plan.dart';
+import '../../domain/entities/subscription_payment_details.dart';
 import '../../domain/repositories/center_repository.dart';
 import '../datasources/center_remote_datasource.dart';
 
@@ -20,7 +21,7 @@ class CenterRepositoryImpl implements CenterRepository {
       _remoteDataSource.getSubscriptionPlans();
 
   @override
-  Future<String> initiateSubscriptionPayment(
-          String centerId, String planId) =>
-      _remoteDataSource.initiateSubscriptionPayment(centerId, planId);
+  Future<SubscriptionPaymentDetails> initiateSubscriptionPayment(
+          String centerId, String planId, String billingCycle) =>
+      _remoteDataSource.initiateSubscriptionPayment(centerId, planId, billingCycle);
 }

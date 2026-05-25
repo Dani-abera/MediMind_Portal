@@ -179,6 +179,16 @@ class _ActionButtons extends StatelessWidget {
                 visualDensity: VisualDensity.compact),
           ),
         ],
+        if (center.status == CenterStatus.awaitingActivation) ...[
+          FilledButton.icon(
+            icon: const Icon(Icons.verified_outlined, size: 16),
+            label: const Text('Verify Payment'),
+            onPressed: () => _showVerifyPaymentDialog(context),
+            style: FilledButton.styleFrom(
+                backgroundColor: AppColors.info,
+                visualDensity: VisualDensity.compact),
+          ),
+        ],
       ],
     );
   }
@@ -220,6 +230,17 @@ class _ActionButtons extends StatelessWidget {
     );
     if (result == true && reasonCtrl.text.trim().isNotEmpty) {
       bloc.add(CenterSuspendRequested(center.id, reasonCtrl.text.trim()));
+    }
+  }
+
+  Future<void> _showVerifyPaymentDialog(BuildContext context) async {
+    final bloc = context.read<CentersBloc>();
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (_) => _VerifyPaymentDialog(center: center),
+    );
+    if (result == true) {
+      bloc.add(CenterVerifyPaymentRequested(center.id));
     }
   }
 }
@@ -391,6 +412,71 @@ class _SuspendDialogState extends State<_SuspendDialog> {
   }
 }
 
+class _VerifyPaymentDialog extends StatelessWidget {
+  final PlatformCenter center;
+  const _VerifyPaymentDialog({required this.center});
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Verify & Activate Subscription'),
+      content: SizedBox(
+        width: 400,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'This will call Chapa to confirm the payment, then activate the subscription.',
+              style: AppTypography.body.copyWith(color: AppColors.neutral600),
+            ),
+            const SizedBox(height: 16),
+            if (center.pendingPlanName != null)
+              _row('Plan', center.pendingPlanName!),
+            if (center.pendingBillingCycle != null)
+              _row('Billing Cycle', center.pendingBillingCycle!),
+            if (center.pendingPaymentRef != null)
+              _row('Payment Ref', center.pendingPaymentRef!),
+            if (center.pendingPaymentStatus != null)
+              _row('Chapa Status', center.pendingPaymentStatus!),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context, false),
+          child: const Text('Cancel'),
+        ),
+        FilledButton.icon(
+          icon: const Icon(Icons.verified_outlined, size: 16),
+          label: const Text('Verify & Activate'),
+          onPressed: () => Navigator.pop(context, true),
+          style: FilledButton.styleFrom(backgroundColor: AppColors.info),
+        ),
+      ],
+    );
+  }
+
+  Widget _row(String label, String value) => Padding(
+        padding: const EdgeInsets.only(bottom: 6),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              width: 110,
+              child: Text(label,
+                  style: AppTypography.bodySmall
+                      .copyWith(color: AppColors.neutral500)),
+            ),
+            Expanded(
+                child: Text(value,
+                    style: AppTypography.bodySmall
+                        .copyWith(fontWeight: FontWeight.w600))),
+          ],
+        ),
+      );
+}
+
 // ─────────────────────────────────────────────────────────────
 // Overview Tab
 // ─────────────────────────────────────────────────────────────
@@ -487,6 +573,7 @@ class _SubscriptionTabState extends State<_SubscriptionTab> {
       CenterStatus.pending => (AppColors.warning, 'Pending Approval'),
       CenterStatus.suspended => (AppColors.danger, 'Suspended'),
       CenterStatus.rejected => (AppColors.neutral400, 'Rejected'),
+      CenterStatus.awaitingActivation => (AppColors.info, 'Awaiting Activation'),
     };
     final fmt = DateFormat('MMM d, yyyy');
 
@@ -538,6 +625,48 @@ class _SubscriptionTabState extends State<_SubscriptionTab> {
             ),
           ),
           const SizedBox(height: AppSpacing.base),
+
+          // ── Pending payment card (AwaitingActivation) ──
+          if (widget.center.status == CenterStatus.awaitingActivation) ...[
+            Card(
+              color: AppColors.info.withAlpha(12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+                side: BorderSide(color: AppColors.info.withAlpha(80)),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpacing.base),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.pending_actions, color: AppColors.info, size: 20),
+                        const SizedBox(width: 8),
+                        Text('Pending Payment Verification',
+                            style: AppTypography.h3.copyWith(color: AppColors.info)),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    if (widget.center.pendingPlanName != null)
+                      _row('Chosen Plan', widget.center.pendingPlanName!),
+                    if (widget.center.pendingBillingCycle != null)
+                      _row('Billing Cycle', widget.center.pendingBillingCycle!),
+                    if (widget.center.pendingPaymentRef != null)
+                      _row('Payment Ref', widget.center.pendingPaymentRef!),
+                    if (widget.center.pendingPaymentStatus != null)
+                      _row('Chapa Status', widget.center.pendingPaymentStatus!),
+                    const SizedBox(height: AppSpacing.sm),
+                    Text(
+                      'Use the "Verify Payment" button above to confirm with Chapa and activate the subscription.',
+                      style: AppTypography.caption.copyWith(color: AppColors.neutral600),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.base),
+          ],
 
           // ── Subscription history ──
           Text('Subscription History', style: AppTypography.h3),

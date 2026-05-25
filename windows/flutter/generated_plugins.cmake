@@ -8,6 +8,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   contextual_menu
   file_selector_windows
   flutter_acrylic
+  flutter_inappwebview_windows
   flutter_secure_storage_windows
   flutter_webrtc
   hotkey_manager_windows

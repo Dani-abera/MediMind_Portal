@@ -242,6 +242,7 @@ class _StatusBadge extends StatelessWidget {
       CenterStatus.suspended => ('Suspended', AppColors.danger),
       CenterStatus.rejected => ('Rejected', AppColors.neutral400),
       CenterStatus.pending => ('Pending', AppColors.warning),
+      CenterStatus.awaitingActivation => ('Awaiting Activation', AppColors.info),
     };
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),

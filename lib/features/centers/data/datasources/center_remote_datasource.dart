@@ -1,12 +1,14 @@
 import 'package:dio/dio.dart';
 import '../models/center_model.dart';
 import '../models/subscription_plan_model.dart';
+import '../models/subscription_payment_details_model.dart';
+import '../../domain/entities/subscription_payment_details.dart';
 
 abstract class CenterRemoteDataSource {
   Future<CenterModel> registerCenter(Map<String, dynamic> data);
   Future<CenterModel> getMyCenter();
   Future<List<SubscriptionPlanModel>> getSubscriptionPlans();
-  Future<String> initiateSubscriptionPayment(String centerId, String planId);
+  Future<SubscriptionPaymentDetails> initiateSubscriptionPayment(String centerId, String planId, String billingCycle);
 }
 
 class CenterRemoteDataSourceImpl implements CenterRemoteDataSource {
@@ -55,14 +57,14 @@ class CenterRemoteDataSourceImpl implements CenterRemoteDataSource {
   }
 
   @override
-  Future<String> initiateSubscriptionPayment(
-      String centerId, String planId) async {
+  Future<SubscriptionPaymentDetails> initiateSubscriptionPayment(
+      String centerId, String planId, String billingCycle) async {
     try {
       final res = await _dio.post<Map<String, dynamic>>(
-        '/payments/subscription/initiate',
-        data: {'centerId': centerId, 'planId': planId},
+        '/healthcare-centers/$centerId/subscription/pay',
+        data: {'planId': planId, 'billingCycle': billingCycle},
       );
-      return res.data?['checkoutUrl'] as String? ?? '';
+      return SubscriptionPaymentDetailsModel.fromJson(res.data!);
     } on DioException catch (e) {
       throw _toException(e);
     }

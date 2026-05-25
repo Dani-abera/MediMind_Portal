@@ -10,6 +10,7 @@ import 'package:medimind_portal/features/super_admin/domain/usecases/approve_cen
 import 'package:medimind_portal/features/super_admin/domain/usecases/reject_center_usecase.dart';
 import 'package:medimind_portal/features/super_admin/domain/usecases/suspend_center_usecase.dart';
 import 'package:medimind_portal/features/super_admin/domain/usecases/reactivate_center_usecase.dart';
+import 'package:medimind_portal/features/super_admin/domain/usecases/verify_payment_usecase.dart';
 import 'package:medimind_portal/features/super_admin/presentation/bloc/centers/centers_bloc.dart';
 
 class MockGetPlatformCentersUseCase extends Mock implements GetPlatformCentersUseCase {}
@@ -17,6 +18,7 @@ class MockApproveCenterUseCase extends Mock implements ApproveCenterUseCase {}
 class MockRejectCenterUseCase extends Mock implements RejectCenterUseCase {}
 class MockSuspendCenterUseCase extends Mock implements SuspendCenterUseCase {}
 class MockReactivateCenterUseCase extends Mock implements ReactivateCenterUseCase {}
+class MockVerifyPaymentUseCase extends Mock implements VerifyPaymentUseCase {}
 
 PlatformCenter _center(String id, {CenterStatus status = CenterStatus.active}) =>
     PlatformCenter(id: id, name: 'Center $id', createdAt: DateTime(2025, 1, 1), status: status);
@@ -27,6 +29,7 @@ void main() {
   late MockRejectCenterUseCase mockReject;
   late MockSuspendCenterUseCase mockSuspend;
   late MockReactivateCenterUseCase mockReactivate;
+  late MockVerifyPaymentUseCase mockVerifyPayment;
 
   final trialEnd = DateTime(2025, 6, 1);
 
@@ -36,6 +39,7 @@ void main() {
     mockReject = MockRejectCenterUseCase();
     mockSuspend = MockSuspendCenterUseCase();
     mockReactivate = MockReactivateCenterUseCase();
+    mockVerifyPayment = MockVerifyPaymentUseCase();
 
     registerFallbackValue(trialEnd);
   });
@@ -46,6 +50,7 @@ void main() {
         reject: mockReject,
         suspend: mockSuspend,
         reactivate: mockReactivate,
+        verifyPayment: mockVerifyPayment,
       );
 
   void stubGetSuccess([List<PlatformCenter>? centers]) {

@@ -1,8 +1,9 @@
+import 'package:chapasdk/chapasdk.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../../core/di/service_locator.dart';
 import '../../../../../core/network/user_context.dart';
@@ -11,9 +12,11 @@ import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_typography.dart';
 import '../../../../auth/data/datasources/auth_local_datasource.dart';
 import '../../../../auth/data/models/user_model.dart';
+import '../../../../auth/domain/entities/user.dart';
 import '../../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../../auth/presentation/bloc/auth_event.dart';
 import '../../../../auth/presentation/bloc/auth_state.dart';
+import '../../../../centers/domain/entities/subscription_payment_details.dart';
 import '../../../../centers/domain/entities/subscription_plan.dart';
 import '../../../../centers/domain/usecases/initiate_subscription_payment_usecase.dart';
 import '../../bloc/registration/center_registration_bloc.dart';
@@ -72,6 +75,7 @@ class _RegisterCenterPageBodyState extends State<_RegisterCenterPageBody> {
 
   // Step 3 – Subscription plan
   SubscriptionPlan? _selectedPlan;
+  String _billingCycle = 'Monthly';
 
   // Step 4 – Payment
   bool _paymentLaunched = false;
@@ -170,18 +174,52 @@ class _RegisterCenterPageBodyState extends State<_RegisterCenterPageBody> {
     context.read<CenterRegistrationBloc>().add(RegisterCenterSubmitted(_buildPayload()));
   }
 
-  Future<void> _launchPayment(String centerId) async {
+  Future<void> _launchPayment(String centerId, User? currentUser) async {
     if (_selectedPlan == null || _selectedPlan!.isFree) return;
     try {
       final useCase = sl<InitiateSubscriptionPaymentUseCase>();
-      final url = await useCase(centerId, _selectedPlan!.id);
-      if (url.isNotEmpty) {
-        await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
-        setState(() => _paymentLaunched = true);
+      final details = await useCase(centerId, _selectedPlan!.id, _billingCycle);
+      if (!mounted) return;
+      _openChapaPayment(details, currentUser);
+    } catch (e) {
+      if (mounted) {
+        _showError('Failed to initiate payment: $e');
       }
-    } catch (_) {
-      // Payment initiation not available — proceed anyway
     }
+  }
+
+  void _openChapaPayment(SubscriptionPaymentDetails details, User? currentUser) {
+    final publicKey = dotenv.env['CHAPA_PUBLIC_KEY'] ?? 'CHAPUBK-test';
+    final nameParts = (currentUser?.fullName ?? '').trim().split(' ');
+    final firstName = nameParts.isNotEmpty ? nameParts.first : 'Admin';
+    final lastName = nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '-';
+
+    Chapa.paymentParameters(
+      context: context,
+      publicKey: publicKey,
+      currency: details.currency.isEmpty ? 'ETB' : details.currency,
+      amount: details.amount.toStringAsFixed(2),
+      email: currentUser?.email ?? _emailCtrl.text.trim(),
+      phone: _phoneCtrl.text.trim(),
+      firstName: firstName,
+      lastName: lastName,
+      txRef: details.paymentRef,
+      title: 'MediMind Subscription',
+      desc: '${details.planName} — ${details.billingCycle}',
+      nativeCheckout: true,
+      namedRouteFallBack: '',
+      showPaymentMethodsOnGridView: true,
+      onPaymentFinished: (message, reference, amount) {
+        if (message == 'paymentSuccessful') {
+          setState(() => _paymentLaunched = true);
+          if (mounted) context.go(RouteNames.adminPendingApproval);
+        } else if (message == 'paymentCancelled') {
+          _showError('Payment cancelled. You can retry from your dashboard.');
+        } else {
+          _showError('Payment failed. Please try again.');
+        }
+      },
+    );
   }
 
   @override
@@ -218,7 +256,9 @@ class _RegisterCenterPageBodyState extends State<_RegisterCenterPageBody> {
                   }
 
                   if (_selectedPlan != null && !_selectedPlan!.isFree) {
-                    await _launchPayment(center.centerId);
+                    await _launchPayment(center.centerId, user);
+                    // Navigation is handled inside _openChapaPayment's onPaymentFinished.
+                    return;
                   }
 
                   if (ctx.mounted) ctx.go(RouteNames.adminPendingApproval);
@@ -272,11 +312,15 @@ class _RegisterCenterPageBodyState extends State<_RegisterCenterPageBody> {
                           ),
                           _Step3Plan(
                             selectedPlan: _selectedPlan,
+                            billingCycle: _billingCycle,
                             onPlanSelected: (p) =>
                                 setState(() => _selectedPlan = p),
+                            onBillingCycleChanged: (c) =>
+                                setState(() => _billingCycle = c),
                           ),
                           _Step4Payment(
                             selectedPlan: _selectedPlan,
+                            billingCycle: _billingCycle,
                             isSubmitting: isSubmitting,
                             paymentLaunched: _paymentLaunched,
                             onPayWithChapa: () async {
@@ -622,11 +666,15 @@ class _Step2Services extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────
 class _Step3Plan extends StatelessWidget {
   final SubscriptionPlan? selectedPlan;
+  final String billingCycle;
   final ValueChanged<SubscriptionPlan> onPlanSelected;
+  final ValueChanged<String> onBillingCycleChanged;
 
   const _Step3Plan({
     required this.selectedPlan,
+    required this.billingCycle,
     required this.onPlanSelected,
+    required this.onBillingCycleChanged,
   });
 
   @override
@@ -634,7 +682,45 @@ class _Step3Plan extends StatelessWidget {
     return _StepScaffold(
       title: 'Subscription Plan',
       subtitle: 'Choose the plan that fits your center',
-      child: BlocBuilder<SubscriptionPlansCubit, SubscriptionPlansState>(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Billing cycle toggle
+          Center(
+            child: Container(
+              decoration: BoxDecoration(
+                color: AppColors.neutral100,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              padding: const EdgeInsets.all(4),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: ['Monthly', 'Yearly'].map((cycle) {
+                  final isSelected = billingCycle == cycle;
+                  return GestureDetector(
+                    onTap: () => onBillingCycleChanged(cycle),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 150),
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: isSelected ? AppColors.primary : Colors.transparent,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        cycle == 'Yearly' ? 'Yearly (save ~17%)' : cycle,
+                        style: AppTypography.bodySmall.copyWith(
+                          color: isSelected ? Colors.white : AppColors.neutral600,
+                          fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          BlocBuilder<SubscriptionPlansCubit, SubscriptionPlansState>(
         builder: (ctx, state) {
           if (state is SubscriptionPlansLoading) {
             return const Center(
@@ -681,6 +767,8 @@ class _Step3Plan extends StatelessWidget {
           return const SizedBox.shrink();
         },
       ),
+        ],
+      ),
     );
   }
 }
@@ -690,12 +778,14 @@ class _Step3Plan extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────
 class _Step4Payment extends StatelessWidget {
   final SubscriptionPlan? selectedPlan;
+  final String billingCycle;
   final bool isSubmitting;
   final bool paymentLaunched;
   final VoidCallback onPayWithChapa;
 
   const _Step4Payment({
     required this.selectedPlan,
+    required this.billingCycle,
     required this.isSubmitting,
     required this.paymentLaunched,
     required this.onPayWithChapa,
@@ -784,43 +874,25 @@ class _Step4Payment extends StatelessWidget {
                 Expanded(
                   child: Text(
                     'After clicking "Submit Registration", your center will be registered '
-                    'and a payment link will be opened in your browser via Chapa. '
-                    'Complete the payment there, then wait for Super Admin approval.',
+                    'and a Chapa payment sheet will open. Complete the payment to proceed. '
+                    'Your subscription will be activated after Super Admin verification.',
                     style: AppTypography.caption.copyWith(color: AppColors.neutral700),
                   ),
                 ),
               ],
             ),
           ),
-          if (paymentLaunched) ...[
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AppColors.success.withAlpha(15),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: AppColors.success.withAlpha(60)),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.open_in_browser,
-                      color: AppColors.success, size: 18),
-                  const SizedBox(width: 10),
-                  Text(
-                    'Payment page opened in your browser.',
-                    style: AppTypography.caption
-                        .copyWith(color: AppColors.success),
-                  ),
-                ],
-              ),
-            ),
-          ],
         ],
       ),
     );
   }
 
   Widget _planSummary(SubscriptionPlan plan) {
+    final price = billingCycle == 'Yearly' ? plan.yearlyPrice : plan.monthlyPrice;
+    final priceLabel = plan.isFree
+        ? 'Free'
+        : 'ETB ${price.toStringAsFixed(0)} / ${billingCycle == 'Yearly' ? 'year' : 'month'}';
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -842,9 +914,7 @@ class _Step4Payment extends StatelessWidget {
                       .copyWith(fontWeight: FontWeight.w700)),
               const Spacer(),
               Text(
-                plan.isFree
-                    ? 'Free'
-                    : 'ETB ${plan.monthlyPrice.toStringAsFixed(0)}/mo',
+                priceLabel,
                 style: AppTypography.bodySmall.copyWith(
                   fontWeight: FontWeight.w700,
                   color: plan.isFree ? AppColors.success : AppColors.neutral900,
@@ -859,6 +929,13 @@ class _Step4Payment extends StatelessWidget {
                 : 'Up to ${plan.maxDoctors} doctors · ${plan.maxAppointmentsPerDay} appointments/day',
             style: AppTypography.caption.copyWith(color: AppColors.neutral500),
           ),
+          if (!plan.isFree) ...[
+            const SizedBox(height: 4),
+            Text(
+              'Billing: $billingCycle',
+              style: AppTypography.caption.copyWith(color: AppColors.primary),
+            ),
+          ],
         ],
       ),
     );

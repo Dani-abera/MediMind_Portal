@@ -14,4 +14,5 @@ abstract class PlatformCentersRepository {
   Future<Either<Failure, void>> suspendCenter(String centerId, {required String reason, DateTime? suspendUntil});
   Future<Either<Failure, void>> reactivateCenter(String centerId);
   Future<Either<Failure, void>> changeSubscription(String centerId, {required String plan, required DateTime startDate, required DateTime endDate, required String reason});
+  Future<Either<Failure, PlatformCenter>> verifyPayment(String centerId);
 }

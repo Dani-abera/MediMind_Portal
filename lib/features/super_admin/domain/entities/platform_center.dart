@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
 
-enum CenterStatus { pending, active, suspended, rejected }
+enum CenterStatus { pending, active, suspended, rejected, awaitingActivation }
 
 class PlatformCenter extends Equatable {
   final String id;
@@ -19,6 +19,10 @@ class PlatformCenter extends Equatable {
   final String adminEmail;
   final String adminName;
   final CenterStatus status;
+  final String? pendingPlanName;
+  final String? pendingPaymentRef;
+  final String? pendingPaymentStatus;
+  final String? pendingBillingCycle;
 
   const PlatformCenter({
     this.id = '',
@@ -37,6 +41,10 @@ class PlatformCenter extends Equatable {
     this.adminEmail = '',
     this.adminName = '',
     this.status = CenterStatus.pending,
+    this.pendingPlanName,
+    this.pendingPaymentRef,
+    this.pendingPaymentStatus,
+    this.pendingBillingCycle,
   });
 
   @override
@@ -44,5 +52,6 @@ class PlatformCenter extends Equatable {
         id, name, type, city, region, licenseNumber, licenseVerified,
         subscriptionStatus, doctorCount, patientCount, logoUrl, createdAt,
         lastActivityAt, adminEmail, adminName, status,
+        pendingPlanName, pendingPaymentRef, pendingPaymentStatus, pendingBillingCycle,
       ];
 }

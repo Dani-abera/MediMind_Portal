@@ -63,3 +63,10 @@ class CenterReactivateRequested extends CentersEvent {
   @override
   List<Object?> get props => [centerId];
 }
+
+class CenterVerifyPaymentRequested extends CentersEvent {
+  final String centerId;
+  const CenterVerifyPaymentRequested(this.centerId);
+  @override
+  List<Object?> get props => [centerId];
+}
