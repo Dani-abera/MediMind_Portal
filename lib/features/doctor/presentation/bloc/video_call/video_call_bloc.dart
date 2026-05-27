@@ -25,6 +25,7 @@ class VideoCallBloc extends Bloc<VideoCallEvent, VideoCallState> {
                                // persistence hits the right endpoint.
   int? _remoteUid;
   StreamSubscription<ChatMessage>? _chatSub;
+  Timer? _pollingTimer;
 
   RtcEngine? get engine => _engine;
   String? get channelId => _channelId;
@@ -45,6 +46,7 @@ class VideoCallBloc extends Bloc<VideoCallEvent, VideoCallState> {
     on<VideoCallChatToggled>(_onChatToggled);
     on<VideoCallMessageSent>(_onMessageSent);
     on<VideoCallPeerLeft>(_onPeerLeft);
+    on<VideoCallPeerJoined>(_onPeerJoined);
     on<VideoCallChatMessageReceived>(_onChatMessageReceived);
   }
 
@@ -79,10 +81,7 @@ class VideoCallBloc extends Bloc<VideoCallEvent, VideoCallState> {
       _engine!.registerEventHandler(RtcEngineEventHandler(
         onUserJoined: (connection, uid, elapsed) {
           _remoteUid = uid;
-          final current = state;
-          if (current is VideoCallActive) {
-            emit(current.copyWith(remoteUid: () => uid));
-          }
+          add(VideoCallPeerJoined(uid));
         },
         onUserOffline: (connection, uid, reason) {
           _remoteUid = null;
@@ -142,6 +141,41 @@ class VideoCallBloc extends Bloc<VideoCallEvent, VideoCallState> {
               )
             : msg;
         add(VideoCallChatMessageReceived(display));
+      }
+    });
+
+    // Fallback: poll for messages every 3 seconds if RTM is unavailable or out-of-sync
+    _pollingTimer = Timer.periodic(const Duration(seconds: 3), (_) async {
+      final current = state;
+      if (current is VideoCallActive && current.isChatOpen) {
+        final result = await _repo.getChat(_consultationId!);
+        result.fold(
+          (_) => null,
+          (history) {
+            if (isClosed) return;
+            // Get all messages we don't already have
+            final existingIds = current.messages.map((m) => m.id).toSet();
+            final newMessages = history
+                .map((m) => ChatMessage(
+                      id: m['id']?.toString() ?? '',
+                      senderId: m['senderId']?.toString() ?? '',
+                      senderName: m['senderName']?.toString() ?? 'Unknown',
+                      senderType: m['senderType']?.toString() ?? 'patient',
+                      content: m['content']?.toString() ?? '',
+                      sentAt: m['createdAt'] != null
+                          ? DateTime.parse(m['createdAt'])
+                          : DateTime.now(),
+                    ))
+                .where((m) => !existingIds.contains(m.id))
+                .toList();
+
+            if (newMessages.isNotEmpty) {
+              for (final m in newMessages) {
+                add(VideoCallChatMessageReceived(m));
+              }
+            }
+          },
+        );
       }
     });
 
@@ -226,6 +260,13 @@ class VideoCallBloc extends Bloc<VideoCallEvent, VideoCallState> {
     _cleanup();
   }
 
+  void _onPeerJoined(VideoCallPeerJoined event, Emitter<VideoCallState> emit) {
+    final current = state;
+    if (current is VideoCallActive) {
+      emit(current.copyWith(remoteUid: () => event.uid));
+    }
+  }
+
   void _onChatMessageReceived(
       VideoCallChatMessageReceived event, Emitter<VideoCallState> emit) {
     final current = state;
@@ -239,6 +280,8 @@ class VideoCallBloc extends Bloc<VideoCallEvent, VideoCallState> {
   }
 
   void _cleanup() {
+    _pollingTimer?.cancel();
+    _pollingTimer = null;
     _chatSub?.cancel();
     _chatSub = null;
     if (_channelId != null) {
@@ -254,6 +297,8 @@ class VideoCallBloc extends Bloc<VideoCallEvent, VideoCallState> {
 
   @override
   Future<void> close() async {
+    _pollingTimer?.cancel();
+    _pollingTimer = null;
     _chatSub?.cancel();
     _chatSub = null;
     if (_channelId != null) {

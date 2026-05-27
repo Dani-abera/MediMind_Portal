@@ -25,6 +25,7 @@ class _AppointmentChatPageState extends State<AppointmentChatPage> {
   final TextEditingController _input = TextEditingController();
   final ScrollController _scroll = ScrollController();
   StreamSubscription<ChatMessage>? _sub;
+  Timer? _pollingTimer;
   bool _connected = false;
 
   @override
@@ -65,11 +66,44 @@ class _AppointmentChatPageState extends State<AppointmentChatPage> {
       }
     });
 
+    _pollingTimer = Timer.periodic(const Duration(seconds: 3), (_) async {
+      if (!mounted) return;
+      final result = await sl<ConsultationRepository>().getChat(widget.consultationId);
+      result.fold(
+        (_) => null,
+        (history) {
+          if (!mounted) return;
+          final existingIds = _messages.map((m) => m.id).toSet();
+          final newMessages = history
+              .map((m) => ChatMessage(
+                    id: m['id']?.toString() ?? '',
+                    senderId: m['senderId']?.toString() ?? '',
+                    senderName: m['senderName']?.toString() ?? 'Unknown',
+                    senderType: m['senderType']?.toString() ?? 'patient',
+                    content: m['content']?.toString() ?? '',
+                    sentAt: m['createdAt'] != null
+                        ? DateTime.parse(m['createdAt'])
+                        : DateTime.now(),
+                  ))
+              .where((m) => !existingIds.contains(m.id))
+              .toList();
+
+          if (newMessages.isNotEmpty) {
+            setState(() {
+              _messages.addAll(newMessages);
+              _scrollToBottom();
+            });
+          }
+        },
+      );
+    });
+
     if (mounted) setState(() => _connected = true);
   }
 
   @override
   void dispose() {
+    _pollingTimer?.cancel();
     _sub?.cancel();
     _chatService.disconnect().ignore();
     _chatService.dispose();

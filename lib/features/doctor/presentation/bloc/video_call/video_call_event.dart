@@ -36,6 +36,13 @@ class VideoCallMessageSent extends VideoCallEvent {
   List<Object?> get props => [content];
 }
 
+class VideoCallPeerJoined extends VideoCallEvent {
+  final int uid;
+  const VideoCallPeerJoined(this.uid);
+  @override
+  List<Object?> get props => [uid];
+}
+
 class VideoCallPeerLeft extends VideoCallEvent {
   const VideoCallPeerLeft();
 }

@@ -164,8 +164,7 @@ class _VideoCallViewState extends State<_VideoCallView> {
                                 rtcEngine: bloc.engine!,
                                 canvas:
                                     VideoCanvas(uid: state.remoteUid!),
-                                connection: RtcConnection(
-                                    channelId: bloc.channelId!),
+                                connection: RtcConnection(channelId: bloc.channelId!),
                                 useFlutterTexture: kIsWeb ? false : (Platform.isMacOS || Platform.isWindows),
                               ),
                             )
