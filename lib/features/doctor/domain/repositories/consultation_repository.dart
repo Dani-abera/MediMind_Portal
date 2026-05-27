@@ -11,4 +11,5 @@ abstract class ConsultationRepository {
   Future<Either<Failure, List<VideoConsultation>>> getToday();
   Future<Either<Failure, List<VideoConsultation>>> getPast({int page = 1, int pageSize = 20});
   Future<Either<Failure, List<Map<String, dynamic>>>> getChat(String consultationId);
+  Future<Either<Failure, void>> sendMessage(String consultationId, String content);
 }

@@ -15,10 +15,35 @@ class ConsultationRemoteDataSource {
   }
 
   Future<VideoConsultationModel> join(String consultationId) async {
-    // Register as participant (returns ConsultationJoinDto, not the full session shape)
-    await _client.dio.post('/video-consultations/$consultationId/join');
-    // Fetch full ConsultationSessionDto so fromJson has all required fields
-    return getById(consultationId);
+    // POST /join to register as participant and receive Agora RTC token + roomId
+    // along with the RTM token + matching userId used for in-call chat.
+    final joinResp = await _client.dio.post('/video-consultations/$consultationId/join');
+    final joinData = joinResp.data as Map<String, dynamic>;
+    final agoraToken = (joinData['agoraToken'] as String? ?? '').replaceAll(RegExp(r'\s+'), '');
+    final agoraAppId = (joinData['agoraAppId'] as String? ?? '').trim();
+    final agoraRtmToken = (joinData['agoraRtmToken'] as String? ?? '').replaceAll(RegExp(r'\s+'), '');
+    final agoraRtmUserId = (joinData['agoraRtmUserId'] as String? ?? '').trim();
+    final roomId = joinData['roomId'] as String? ?? consultationId;
+
+    // GET full session data for display info (patient name, doctor info, etc.)
+    final session = await getById(consultationId);
+
+    // Return the session enriched with the tokens that were returned by the join call.
+    return VideoConsultationModel(
+      id: session.id,
+      appointmentId: session.appointmentId,
+      doctorId: session.doctorId,
+      patientId: session.patientId,
+      patientName: session.patientName,
+      status: session.status,
+      startedAt: session.startedAt,
+      endedAt: session.endedAt,
+      signalingRoomId: roomId,
+      joinToken: agoraToken,
+      agoraAppId: agoraAppId.isEmpty ? null : agoraAppId,
+      agoraRtmToken: agoraRtmToken.isEmpty ? null : agoraRtmToken,
+      agoraRtmUserId: agoraRtmUserId.isEmpty ? null : agoraRtmUserId,
+    );
   }
 
   Future<void> end(String consultationId) async {
@@ -76,5 +101,12 @@ class ConsultationRemoteDataSource {
     );
     final data = resp.data as List<dynamic>;
     return data.map((e) => e as Map<String, dynamic>).toList();
+  }
+
+  Future<void> sendMessage(String consultationId, String content) async {
+    await _client.dio.post(
+      '/video-consultations/$consultationId/messages',
+      data: {'content': content},
+    );
   }
 }

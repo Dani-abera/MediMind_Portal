@@ -3,6 +3,7 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
+  agora_rtc_engine
   bitsdojo_window_windows
   connectivity_plus
   contextual_menu
@@ -10,8 +11,8 @@ list(APPEND FLUTTER_PLUGIN_LIST
   flutter_acrylic
   flutter_inappwebview_windows
   flutter_secure_storage_windows
-  flutter_webrtc
   hotkey_manager_windows
+  iris_method_channel
   screen_retriever_windows
   sentry_flutter
   syncfusion_pdfviewer_windows

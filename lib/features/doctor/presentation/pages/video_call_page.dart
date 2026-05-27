@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'dart:io';
+import 'package:agora_rtc_engine/agora_rtc_engine.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/di/service_locator.dart';
@@ -9,6 +11,7 @@ import '../../../../core/routing/route_names.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../bloc/video_call/video_call_bloc.dart';
+import '../../domain/entities/chat_message.dart';
 
 class VideoCallPage extends StatelessWidget {
   final String consultationId;
@@ -95,7 +98,8 @@ class _VideoCallViewState extends State<_VideoCallView> {
                 children: [
                   CircularProgressIndicator(color: Colors.white),
                   SizedBox(height: 16),
-                  Text('Connecting...', style: TextStyle(color: Colors.white)),
+                  Text('Connecting...',
+                      style: TextStyle(color: Colors.white)),
                 ],
               ),
             );
@@ -116,7 +120,8 @@ class _VideoCallViewState extends State<_VideoCallView> {
                     style: OutlinedButton.styleFrom(
                         foregroundColor: Colors.white,
                         side: const BorderSide(color: Colors.white)),
-                    onPressed: () => context.go(RouteNames.doctorConsultations),
+                    onPressed: () =>
+                        context.go(RouteNames.doctorConsultations),
                     child: const Text('Leave'),
                   ),
                 ],
@@ -132,7 +137,7 @@ class _VideoCallViewState extends State<_VideoCallView> {
           final isChatOpen =
               state is VideoCallActive ? state.isChatOpen : false;
           final messages =
-              state is VideoCallActive ? state.messages : const [];
+              state is VideoCallActive ? state.messages : const <ChatMessage>[];
           final unreadCount =
               state is VideoCallActive ? state.unreadCount : 0;
           final patientName = state is VideoCallActive
@@ -151,11 +156,18 @@ class _VideoCallViewState extends State<_VideoCallView> {
                   children: [
                     // Remote video (full screen)
                     Positioned.fill(
-                      child: bloc.remoteRenderer != null
-                          ? RTCVideoView(
-                              bloc.remoteRenderer!,
-                              objectFit: RTCVideoViewObjectFit
-                                  .RTCVideoViewObjectFitCover,
+                      child: bloc.engine != null &&
+                              state is VideoCallActive &&
+                              state.remoteUid != null
+                          ? AgoraVideoView(
+                              controller: VideoViewController.remote(
+                                rtcEngine: bloc.engine!,
+                                canvas:
+                                    VideoCanvas(uid: state.remoteUid!),
+                                connection: RtcConnection(
+                                    channelId: bloc.channelId!),
+                                useFlutterTexture: kIsWeb ? false : (Platform.isMacOS || Platform.isWindows),
+                              ),
                             )
                           : Container(
                               color: const Color(0xFF1A1A2E),
@@ -181,7 +193,8 @@ class _VideoCallViewState extends State<_VideoCallView> {
                                     const SizedBox(height: 16),
                                     Text(patientName,
                                         style: const TextStyle(
-                                            color: Colors.white, fontSize: 20)),
+                                            color: Colors.white,
+                                            fontSize: 20)),
                                   ],
                                 ),
                               ),
@@ -202,16 +215,18 @@ class _VideoCallViewState extends State<_VideoCallView> {
                         ),
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(10),
-                          child: bloc.localRenderer != null && cameraEnabled
-                              ? RTCVideoView(
-                                  bloc.localRenderer!,
-                                  mirror: true,
-                                  objectFit: RTCVideoViewObjectFit
-                                      .RTCVideoViewObjectFitCover,
+                          child: bloc.engine != null && cameraEnabled
+                              ? AgoraVideoView(
+                                  controller: VideoViewController(
+                                    rtcEngine: bloc.engine!,
+                                    canvas: const VideoCanvas(uid: 0),
+                                    useFlutterTexture: kIsWeb ? false : (Platform.isMacOS || Platform.isWindows),
+                                  ),
                                 )
                               : const Center(
                                   child: Icon(Icons.videocam_off,
-                                      size: 28, color: Colors.white38)),
+                                      size: 28,
+                                      color: Colors.white38)),
                         ),
                       ),
                     ),
@@ -295,7 +310,9 @@ class _VideoCallViewState extends State<_VideoCallView> {
                               icon: cameraEnabled
                                   ? FontAwesomeIcons.video
                                   : FontAwesomeIcons.videoSlash,
-                              label: cameraEnabled ? 'Stop Video' : 'Start Video',
+                              label: cameraEnabled
+                                  ? 'Stop Video'
+                                  : 'Start Video',
                               active: cameraEnabled,
                               onTap: () => ctx
                                   .read<VideoCallBloc>()
@@ -361,130 +378,136 @@ class _VideoCallViewState extends State<_VideoCallView> {
                         maxWidth: 320,
                         alignment: Alignment.topLeft,
                         child: Column(
-                        children: [
-                          // Chat header
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 14),
-                            color: Colors.black38,
-                            child: Row(
-                              children: [
-                                const Text('Chat',
-                                    style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w600)),
-                                const Spacer(),
-                                IconButton(
-                                  icon: const Icon(Icons.close,
-                                      color: Colors.white54, size: 20),
-                                  onPressed: () => ctx
-                                      .read<VideoCallBloc>()
-                                      .add(const VideoCallChatToggled()),
-                                ),
-                              ],
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 14),
+                              color: Colors.black38,
+                              child: Row(
+                                children: [
+                                  const Text('Chat',
+                                      style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600)),
+                                  const Spacer(),
+                                  IconButton(
+                                    icon: const Icon(Icons.close,
+                                        color: Colors.white54, size: 20),
+                                    onPressed: () => ctx
+                                        .read<VideoCallBloc>()
+                                        .add(const VideoCallChatToggled()),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                          // Messages list
-                          Expanded(
-                            child: ListView.builder(
-                              controller: _chatScrollController,
-                              padding: const EdgeInsets.all(12),
-                              itemCount: messages.length,
-                              itemBuilder: (_, i) {
-                                final msg = messages[i];
-                                final isDoctor = msg.isFromDoctor;
-                                return Align(
-                                  alignment: isDoctor
-                                      ? Alignment.centerRight
-                                      : Alignment.centerLeft,
-                                  child: Container(
-                                    margin: const EdgeInsets.only(bottom: 8),
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 12, vertical: 8),
-                                    constraints: const BoxConstraints(maxWidth: 220),
-                                    decoration: BoxDecoration(
-                                      color: isDoctor
-                                          ? AppColors.primary
-                                          : Colors.white12,
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        if (!isDoctor)
+                            Expanded(
+                              child: ListView.builder(
+                                controller: _chatScrollController,
+                                padding: const EdgeInsets.all(12),
+                                itemCount: messages.length,
+                                itemBuilder: (_, i) {
+                                  final msg = messages[i];
+                                  final isDoctor = msg.isFromDoctor;
+                                  return Align(
+                                    alignment: isDoctor
+                                        ? Alignment.centerRight
+                                        : Alignment.centerLeft,
+                                    child: Container(
+                                      margin: const EdgeInsets.only(
+                                          bottom: 8),
+                                      padding:
+                                          const EdgeInsets.symmetric(
+                                              horizontal: 12, vertical: 8),
+                                      constraints: const BoxConstraints(
+                                          maxWidth: 220),
+                                      decoration: BoxDecoration(
+                                        color: isDoctor
+                                            ? AppColors.primary
+                                            : Colors.white12,
+                                        borderRadius:
+                                            BorderRadius.circular(12),
+                                      ),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          if (!isDoctor)
+                                            Text(
+                                              msg.senderName,
+                                              style: const TextStyle(
+                                                  color: Colors.white54,
+                                                  fontSize: 11),
+                                            ),
                                           Text(
-                                            msg.senderName,
+                                            msg.content,
                                             style: const TextStyle(
-                                                color: Colors.white54,
-                                                fontSize: 11),
+                                                color: Colors.white,
+                                                fontSize: 13),
                                           ),
-                                        Text(
-                                          msg.content,
-                                          style: const TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 13),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              color: Colors.black26,
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: TextField(
+                                      controller: _chatController,
+                                      style: const TextStyle(
+                                          color: Colors.white),
+                                      decoration: InputDecoration(
+                                        hintText: 'Type a message...',
+                                        hintStyle: const TextStyle(
+                                            color: Colors.white38),
+                                        filled: true,
+                                        fillColor: Colors.white10,
+                                        border: OutlineInputBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(20),
+                                          borderSide: BorderSide.none,
                                         ),
-                                      ],
+                                        contentPadding:
+                                            const EdgeInsets.symmetric(
+                                                horizontal: 16,
+                                                vertical: 10),
+                                      ),
+                                      onSubmitted: (text) {
+                                        if (text.trim().isNotEmpty) {
+                                          ctx.read<VideoCallBloc>().add(
+                                              VideoCallMessageSent(
+                                                  text.trim()));
+                                          _chatController.clear();
+                                        }
+                                      },
                                     ),
                                   ),
-                                );
-                              },
-                            ),
-                          ),
-                          // Message input
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            color: Colors.black26,
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: TextField(
-                                    controller: _chatController,
-                                    style: const TextStyle(color: Colors.white),
-                                    decoration: InputDecoration(
-                                      hintText: 'Type a message...',
-                                      hintStyle: const TextStyle(
-                                          color: Colors.white38),
-                                      filled: true,
-                                      fillColor: Colors.white10,
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(20),
-                                        borderSide: BorderSide.none,
-                                      ),
-                                      contentPadding:
-                                          const EdgeInsets.symmetric(
-                                              horizontal: 16, vertical: 10),
-                                    ),
-                                    onSubmitted: (text) {
-                                      if (text.trim().isNotEmpty) {
+                                  const SizedBox(width: 8),
+                                  IconButton(
+                                    icon: const Icon(Icons.send,
+                                        color: AppColors.primary),
+                                    onPressed: () {
+                                      final text =
+                                          _chatController.text.trim();
+                                      if (text.isNotEmpty) {
                                         ctx.read<VideoCallBloc>().add(
-                                            VideoCallMessageSent(text.trim()));
+                                            VideoCallMessageSent(text));
                                         _chatController.clear();
                                       }
                                     },
                                   ),
-                                ),
-                                const SizedBox(width: 8),
-                                IconButton(
-                                  icon: const Icon(Icons.send,
-                                      color: AppColors.primary),
-                                  onPressed: () {
-                                    final text = _chatController.text.trim();
-                                    if (text.isNotEmpty) {
-                                      ctx.read<VideoCallBloc>().add(
-                                          VideoCallMessageSent(text));
-                                      _chatController.clear();
-                                    }
-                                  },
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
-                    )
+                          ],
+                        ),
+                      )
                     : null,
               ),
             ],
@@ -533,7 +556,8 @@ class _ControlButton extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(label,
-              style: const TextStyle(color: Colors.white70, fontSize: 11)),
+              style:
+                  const TextStyle(color: Colors.white70, fontSize: 11)),
         ],
       ),
     );

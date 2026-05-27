@@ -98,4 +98,9 @@ class ConsultationRepositoryImpl implements ConsultationRepository {
   Future<Either<Failure, List<Map<String, dynamic>>>> getChat(
           String consultationId) =>
       _guardResult(() => _remote.getChat(consultationId));
+
+  @override
+  Future<Either<Failure, void>> sendMessage(
+          String consultationId, String content) =>
+      _guard(() => _remote.sendMessage(consultationId, content));
 }

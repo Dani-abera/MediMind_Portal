@@ -8,7 +8,6 @@ list(APPEND FLUTTER_PLUGIN_LIST
   file_selector_linux
   flutter_acrylic
   flutter_secure_storage_linux
-  flutter_webrtc
   hotkey_manager_linux
   screen_retriever_linux
   sentry_flutter

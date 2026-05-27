@@ -21,6 +21,7 @@ class VideoCallActive extends VideoCallState {
   final bool isChatOpen;
   final List<ChatMessage> messages;
   final int unreadCount;
+  final int? remoteUid;
 
   const VideoCallActive({
     required this.consultation,
@@ -29,11 +30,19 @@ class VideoCallActive extends VideoCallState {
     this.isChatOpen = false,
     this.messages = const [],
     this.unreadCount = 0,
+    this.remoteUid,
   });
 
   @override
-  List<Object?> get props =>
-      [consultation, micEnabled, cameraEnabled, isChatOpen, messages, unreadCount];
+  List<Object?> get props => [
+        consultation,
+        micEnabled,
+        cameraEnabled,
+        isChatOpen,
+        messages,
+        unreadCount,
+        remoteUid,
+      ];
 
   VideoCallActive copyWith({
     VideoConsultation? consultation,
@@ -42,6 +51,7 @@ class VideoCallActive extends VideoCallState {
     bool? isChatOpen,
     List<ChatMessage>? messages,
     int? unreadCount,
+    int? Function()? remoteUid,
   }) =>
       VideoCallActive(
         consultation: consultation ?? this.consultation,
@@ -50,6 +60,7 @@ class VideoCallActive extends VideoCallState {
         isChatOpen: isChatOpen ?? this.isChatOpen,
         messages: messages ?? this.messages,
         unreadCount: unreadCount ?? this.unreadCount,
+        remoteUid: remoteUid != null ? remoteUid() : this.remoteUid,
       );
 }
 

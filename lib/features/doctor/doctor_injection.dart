@@ -3,6 +3,7 @@ import '../../core/network/dio_client.dart';
 import '../../core/network/network_info.dart';
 import '../../core/network/realtime_service.dart';
 import '../../core/network/user_context.dart';
+import '../../core/services/agora_chat_service.dart';
 import '../../core/storage/preferences_storage.dart';
 import '../../core/widgets/shell/bloc/shell_bloc.dart';
 import '../../shared/blocs/notification_bloc.dart';
@@ -187,10 +188,12 @@ Future<void> initDoctorFeature() async {
       repo: sl<ConsultationRepository>(),
     ),
   );
+  sl.registerFactory(() => AgoraChatService());
   sl.registerFactory(
     () => VideoCallBloc(
       repo: sl<ConsultationRepository>(),
       userContext: sl<UserContext>(),
+      chatService: sl<AgoraChatService>(),
     ),
   );
   sl.registerFactory(

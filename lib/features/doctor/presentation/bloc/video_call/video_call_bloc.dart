@@ -1,12 +1,11 @@
 import 'dart:async';
-import 'dart:convert';
+import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:bloc_concurrency/bloc_concurrency.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:flutter_webrtc/flutter_webrtc.dart';
-import 'package:signalr_netcore/signalr_client.dart';
 import '../../../../../core/network/user_context.dart';
+import '../../../../../core/services/agora_chat_service.dart';
 import '../../../domain/entities/chat_message.dart';
 import '../../../domain/entities/video_consultation.dart';
 import '../../../domain/repositories/consultation_repository.dart';
@@ -17,24 +16,27 @@ part 'video_call_state.dart';
 class VideoCallBloc extends Bloc<VideoCallEvent, VideoCallState> {
   final ConsultationRepository _repo;
   final UserContext _userContext;
+  final AgoraChatService _chat;
 
-  RTCPeerConnection? _pc;
-  MediaStream? _localStream;
-  RTCVideoRenderer? _localRenderer;
-  RTCVideoRenderer? _remoteRenderer;
-  HubConnection? _hub;
-  String? _consultationId;
-  String? _peerConnectionId;
-  bool _offerSent = false;
+  RtcEngine? _engine;
+  String? _channelId;          // Agora channel == roomId from backend
+  String? _consultationId;     // backend consultation GUID — separate from
+                               // _channelId (which is room_<hex>) so REST chat
+                               // persistence hits the right endpoint.
+  int? _remoteUid;
+  StreamSubscription<ChatMessage>? _chatSub;
 
-  RTCVideoRenderer? get localRenderer => _localRenderer;
-  RTCVideoRenderer? get remoteRenderer => _remoteRenderer;
+  RtcEngine? get engine => _engine;
+  String? get channelId => _channelId;
+  int? get remoteUid => _remoteUid;
 
   VideoCallBloc({
     required ConsultationRepository repo,
     required UserContext userContext,
+    required AgoraChatService chatService,
   })  : _repo = repo,
         _userContext = userContext,
+        _chat = chatService,
         super(const VideoCallInitial()) {
     on<VideoCallJoined>(_onJoined, transformer: droppable());
     on<VideoCallEndRequested>(_onEndRequested, transformer: droppable());
@@ -50,189 +52,103 @@ class VideoCallBloc extends Bloc<VideoCallEvent, VideoCallState> {
     VideoCallJoined event,
     Emitter<VideoCallState> emit,
   ) async {
-    _consultationId = event.consultationId;
     emit(const VideoCallJoining());
 
-    // REST join — registers participant and returns peer list + chat history
     final result = await _repo.join(event.consultationId);
     if (result.isLeft()) {
-      emit(VideoCallError(result.fold((f) => f.message, (_) => 'Failed to join')));
+      emit(VideoCallError(
+          result.fold((f) => f.message, (_) => 'Failed to join')));
       return;
     }
     final consultation = result.fold((_) => null, (c) => c)!;
 
-    // Init WebRTC renderers
-    _localRenderer = RTCVideoRenderer();
-    _remoteRenderer = RTCVideoRenderer();
-    await _localRenderer!.initialize();
-    await _remoteRenderer!.initialize();
+    // Use the roomId from the backend as the Agora channel (not the consultation UUID).
+    _channelId = consultation.signalingRoomId ?? event.consultationId;
+    _consultationId = event.consultationId;
+    final token = consultation.joinToken ?? '';
+    // Prefer the App ID the backend signed the token with; fall back to .env
+    // only if the backend hasn't been redeployed yet.
+    final appId = consultation.agoraAppId ?? dotenv.env['AGORA_APP_ID'] ?? '';
 
-    // Get local camera/mic stream
     try {
-      _localStream = await navigator.mediaDevices.getUserMedia({
-        'audio': true,
-        'video': {'facingMode': 'user'},
-      });
-      _localRenderer!.srcObject = _localStream;
+      _engine = createAgoraRtcEngine();
+      await _engine!.initialize(RtcEngineContext(appId: appId));
+      await _engine!.enableVideo();
+      await _engine!.enableAudio();
+
+      _engine!.registerEventHandler(RtcEngineEventHandler(
+        onUserJoined: (connection, uid, elapsed) {
+          _remoteUid = uid;
+          final current = state;
+          if (current is VideoCallActive) {
+            emit(current.copyWith(remoteUid: () => uid));
+          }
+        },
+        onUserOffline: (connection, uid, reason) {
+          _remoteUid = null;
+          add(const VideoCallPeerLeft());
+        },
+      ));
+
+      await _engine!.startPreview();
+      await _engine!.joinChannel(
+        token: token,
+        channelId: _channelId!,
+        uid: 0,
+        options: const ChannelMediaOptions(
+          clientRoleType: ClientRoleType.clientRoleBroadcaster,
+          channelProfile: ChannelProfileType.channelProfileCommunication,
+          publishCameraTrack: true,
+          publishMicrophoneTrack: true,
+          autoSubscribeAudio: true,
+          autoSubscribeVideo: true,
+        ),
+      );
     } catch (e) {
-      emit(VideoCallError(
-          'Camera/microphone access denied. Please grant permission and try again.'));
+      emit(VideoCallError('Failed to initialize video call: $e'));
       _cleanup();
       return;
     }
 
-    // Create peer connection
-    _pc = await createPeerConnection({
-      'iceServers': [
-        {'urls': 'stun:stun.l.google.com:19302'},
-      ],
-    });
+    // RTM userId MUST match what the backend baked into the RTM token, so
+    // prefer the backend-issued id; fall back to user context only if missing.
+    final rtmUserId = consultation.agoraRtmUserId ??
+        _userContext.userId ??
+        'd_${event.consultationId.substring(0, 8)}';
+    final rtmToken = consultation.agoraRtmToken ?? '';
+    try {
+      await _chat.connect(
+        appId: appId,
+        userId: rtmUserId,
+        rtmToken: rtmToken,
+        consultationId: event.consultationId,
+      );
+    } catch (_) {
+      // RTM unavailable on this platform — video continues without in-call chat.
+    }
 
-    _localStream?.getTracks().forEach((track) {
-      _pc!.addTrack(track, _localStream!);
-    });
-
-    _pc!.onIceCandidate = (candidate) {
-      if (candidate.candidate != null && _peerConnectionId != null) {
-        _hubSend('SendIceCandidate', [
-          _consultationId!,
-          _peerConnectionId!,
-          jsonEncode(candidate.toMap()),
-        ]);
+    _chatSub = _chat.onMessage.listen((msg) {
+      final current = state;
+      if (current is VideoCallActive) {
+        // Replace senderName with the actual patient name from the consultation
+        final display = msg.senderType.toLowerCase() == 'patient'
+            ? ChatMessage(
+                id: msg.id,
+                senderId: msg.senderId,
+                senderName: current.consultation.patientName,
+                senderType: msg.senderType,
+                content: msg.content,
+                sentAt: msg.sentAt,
+              )
+            : msg;
+        add(VideoCallChatMessageReceived(display));
       }
-    };
-
-    _pc!.onTrack = (event) {
-      if (event.streams.isNotEmpty) {
-        _remoteRenderer!.srcObject = event.streams[0];
-      }
-    };
-
-    // Connect to video SignalR hub
-    await _connectSignalR(event.consultationId);
+    });
 
     emit(VideoCallActive(
       consultation: consultation,
       messages: const [],
     ));
-  }
-
-  Future<void> _connectSignalR(String consultationId) async {
-    final base =
-        dotenv.env['SIGNALR_BASE_URL'] ?? 'https://api.medimind.et';
-    final url = '$base/hubs/video';
-
-    _hub = HubConnectionBuilder()
-        .withUrl(url,
-            options: HttpConnectionOptions(
-              accessTokenFactory: () async => _userContext.accessToken ?? '',
-            ))
-        .withAutomaticReconnect()
-        .build();
-
-    _hub!.on('ReceiveOffer', (args) async {
-      if (args == null || args.length < 2) return;
-      final senderConnectionId = args[0] as String? ?? '';
-      _peerConnectionId ??= senderConnectionId;
-      final rawSdp = args[1];
-      Map<String, dynamic> sdpMap;
-      if (rawSdp is Map<String, dynamic>) {
-        sdpMap = rawSdp;
-      } else if (rawSdp is String) {
-        sdpMap = jsonDecode(rawSdp) as Map<String, dynamic>? ?? {};
-      } else {
-        return;
-      }
-      await _pc?.setRemoteDescription(
-          RTCSessionDescription(sdpMap['sdp'] as String?, sdpMap['type'] as String?));
-      final answer = await _pc?.createAnswer();
-      if (answer != null) {
-        await _pc?.setLocalDescription(answer);
-        _hubSend('SendAnswer', [
-          consultationId,
-          senderConnectionId,
-          jsonEncode({'sdp': answer.sdp, 'type': answer.type}),
-        ]);
-      }
-    });
-
-    _hub!.on('ReceiveAnswer', (args) async {
-      if (args == null || args.length < 2) return;
-      final rawSdp = args[1];
-      Map<String, dynamic> sdpMap;
-      if (rawSdp is Map<String, dynamic>) {
-        sdpMap = rawSdp;
-      } else if (rawSdp is String) {
-        sdpMap = jsonDecode(rawSdp) as Map<String, dynamic>? ?? {};
-      } else {
-        return;
-      }
-      await _pc?.setRemoteDescription(
-          RTCSessionDescription(sdpMap['sdp'] as String?, sdpMap['type'] as String?));
-    });
-
-    _hub!.on('ReceiveIceCandidate', (args) async {
-      if (args == null || args.length < 2) return;
-      final raw = args[1];
-      Map<String, dynamic> candidateMap;
-      if (raw is Map<String, dynamic>) {
-        candidateMap = raw;
-      } else if (raw is String) {
-        candidateMap = jsonDecode(raw) as Map<String, dynamic>? ?? {};
-      } else {
-        return;
-      }
-      await _pc?.addCandidate(RTCIceCandidate(
-        candidateMap['candidate'] as String?,
-        candidateMap['sdpMid'] as String?,
-        candidateMap['sdpMLineIndex'] as int?,
-      ));
-    });
-
-    _hub!.on('UserJoined', (args) async {
-      if (args == null || args.isEmpty) return;
-      final data = args[0] as Map<String, dynamic>? ?? {};
-      final connectionId = data['connectionId'] as String? ?? '';
-      if (connectionId.isNotEmpty && !_offerSent) {
-        _peerConnectionId = connectionId;
-        _offerSent = true;
-        final offer = await _pc?.createOffer();
-        if (offer != null) {
-          await _pc?.setLocalDescription(offer);
-          _hubSend('SendOffer', [
-            consultationId,
-            connectionId,
-            jsonEncode({'sdp': offer.sdp, 'type': offer.type}),
-          ]);
-        }
-      }
-    });
-
-    _hub!.on('UserLeft', (_) => add(const VideoCallPeerLeft()));
-    _hub!.on('ConsultationEnded', (_) => add(const VideoCallPeerLeft()));
-
-    _hub!.on('ReceiveChatMessage', (args) {
-      if (args == null || args.isEmpty) return;
-      final data = args[0] as Map<String, dynamic>? ?? {};
-      final msg = ChatMessage(
-        id: data['messageId'] as String? ?? '',
-        senderId: data['senderId'] as String? ?? '',
-        senderName: data['senderName'] as String? ?? '',
-        senderType: data['senderType'] as String? ?? '',
-        content: data['content'] as String? ?? '',
-        sentAt: data['sentAt'] != null
-            ? DateTime.tryParse(data['sentAt'] as String) ?? DateTime.now()
-            : DateTime.now(),
-      );
-      add(VideoCallChatMessageReceived(msg));
-    });
-
-    await _hub!.start();
-    await _hub!.invoke('JoinConsultationRoom', args: [consultationId]);
-  }
-
-  void _hubSend(String method, List<Object> args) {
-    _hub?.invoke(method, args: args).catchError((_) => null as Object?);
   }
 
   Future<void> _onEndRequested(
@@ -247,37 +163,62 @@ class VideoCallBloc extends Bloc<VideoCallEvent, VideoCallState> {
     _cleanup();
   }
 
-  void _onToggleMic(VideoCallToggleMic event, Emitter<VideoCallState> emit) {
+  Future<void> _onToggleMic(
+      VideoCallToggleMic event, Emitter<VideoCallState> emit) async {
     final current = state;
     if (current is VideoCallActive) {
       final muted = !current.micEnabled;
-      _localStream?.getAudioTracks().forEach((t) => t.enabled = !muted);
+      await _engine?.muteLocalAudioStream(muted);
       emit(current.copyWith(micEnabled: !muted));
     }
   }
 
-  void _onToggleCamera(
-      VideoCallToggleCamera event, Emitter<VideoCallState> emit) {
+  Future<void> _onToggleCamera(
+      VideoCallToggleCamera event, Emitter<VideoCallState> emit) async {
     final current = state;
     if (current is VideoCallActive) {
       final off = !current.cameraEnabled;
-      _localStream?.getVideoTracks().forEach((t) => t.enabled = !off);
+      await _engine?.muteLocalVideoStream(off);
       emit(current.copyWith(cameraEnabled: !off));
     }
   }
 
-  void _onChatToggled(VideoCallChatToggled event, Emitter<VideoCallState> emit) {
+  void _onChatToggled(
+      VideoCallChatToggled event, Emitter<VideoCallState> emit) {
     final current = state;
     if (current is! VideoCallActive) return;
     final open = !current.isChatOpen;
-    emit(current.copyWith(isChatOpen: open, unreadCount: open ? 0 : current.unreadCount));
+    emit(current.copyWith(
+        isChatOpen: open, unreadCount: open ? 0 : current.unreadCount));
   }
 
   Future<void> _onMessageSent(
       VideoCallMessageSent event, Emitter<VideoCallState> emit) async {
     final current = state;
-    if (current is! VideoCallActive || _consultationId == null) return;
-    _hubSend('SendChatMessage', [_consultationId!, event.content]);
+    if (current is! VideoCallActive || _channelId == null) return;
+
+    await _chat.sendMessage(
+      content: event.content,
+      senderName: 'You',
+      senderType: 'doctor',
+    );
+
+    // Persist via REST. The endpoint expects the consultation GUID, not the
+    // Agora channel name (`room_<hex>`) — using _channelId here causes a 404.
+    final consultationIdForRest = _consultationId;
+    if (consultationIdForRest != null) {
+      _repo.sendMessage(consultationIdForRest, event.content).ignore();
+    }
+
+    final msg = ChatMessage(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      senderId: _userContext.userId ?? '',
+      senderName: 'You',
+      senderType: 'doctor',
+      content: event.content,
+      sentAt: DateTime.now(),
+    );
+    emit(current.copyWith(messages: [...current.messages, msg]));
   }
 
   void _onPeerLeft(VideoCallPeerLeft event, Emitter<VideoCallState> emit) {
@@ -298,18 +239,33 @@ class VideoCallBloc extends Bloc<VideoCallEvent, VideoCallState> {
   }
 
   void _cleanup() {
-    _localStream?.dispose();
-    _pc?.close();
-    _localRenderer?.dispose();
-    _remoteRenderer?.dispose();
-    _hub?.stop();
-    _offerSent = false;
-    _peerConnectionId = null;
+    _chatSub?.cancel();
+    _chatSub = null;
+    if (_channelId != null) {
+      _chat.disconnect().ignore();
+    }
+    _engine?.leaveChannel();
+    _engine?.release();
+    _engine = null;
+    _channelId = null;
+    _consultationId = null;
+    _remoteUid = null;
   }
 
   @override
-  Future<void> close() {
-    _cleanup();
+  Future<void> close() async {
+    _chatSub?.cancel();
+    _chatSub = null;
+    if (_channelId != null) {
+      await _chat.disconnect();
+    }
+    _chat.dispose();
+    _engine?.leaveChannel();
+    _engine?.release();
+    _engine = null;
+    _channelId = null;
+    _consultationId = null;
+    _remoteUid = null;
     return super.close();
   }
 }

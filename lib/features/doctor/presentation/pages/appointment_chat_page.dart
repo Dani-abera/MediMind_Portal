@@ -3,11 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
-import 'package:signalr_netcore/signalr_client.dart';
+import '../../../../core/di/service_locator.dart';
 import '../../../../core/network/user_context.dart';
 import '../../../../core/routing/route_names.dart';
+import '../../../../core/services/agora_chat_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/chat_message.dart';
+import '../../domain/repositories/consultation_repository.dart';
 
 class AppointmentChatPage extends StatefulWidget {
   final String consultationId;
@@ -18,64 +20,62 @@ class AppointmentChatPage extends StatefulWidget {
 }
 
 class _AppointmentChatPageState extends State<AppointmentChatPage> {
-  HubConnection? _hub;
+  late final AgoraChatService _chatService;
   final List<ChatMessage> _messages = [];
   final TextEditingController _input = TextEditingController();
   final ScrollController _scroll = ScrollController();
+  StreamSubscription<ChatMessage>? _sub;
   bool _connected = false;
 
   @override
   void initState() {
     super.initState();
+    _chatService = AgoraChatService();
     _connect();
   }
 
-  @override
-  void dispose() {
-    _hub?.stop();
-    _input.dispose();
-    _scroll.dispose();
-    super.dispose();
-  }
-
   Future<void> _connect() async {
-    final base = dotenv.env['SIGNALR_BASE_URL'] ?? 'https://api.medimind.et';
-    final userCtx = UserContext();
+    // Backend-issued RTM credentials are required (the Agora project has
+    // App Certificate enabled — empty tokens get rejected).
+    final joinResult = await sl<ConsultationRepository>().join(widget.consultationId);
+    final fallbackAppId = dotenv.env['AGORA_APP_ID'] ?? '';
+    final fallbackUserId = sl<UserContext>().userId ??
+        'd_${widget.consultationId.substring(0, 8)}';
 
-    _hub = HubConnectionBuilder()
-        .withUrl(
-          '$base/hubs/video',
-          options: HttpConnectionOptions(
-            accessTokenFactory: () async => userCtx.accessToken ?? '',
-          ),
-        )
-        .withAutomaticReconnect()
-        .build();
+    final (appId, rtmToken, userId) = joinResult.fold(
+      (_) => (fallbackAppId, '', fallbackUserId),
+      (c) => (
+        c.agoraAppId?.isNotEmpty == true ? c.agoraAppId! : fallbackAppId,
+        c.agoraRtmToken ?? '',
+        c.agoraRtmUserId?.isNotEmpty == true ? c.agoraRtmUserId! : fallbackUserId,
+      ),
+    );
 
-    _hub!.on('ReceiveChatMessage', (args) {
-      if (args == null || args.isEmpty) return;
-      final data = args[0];
-      if (data is! Map<String, dynamic>) return;
-      final msg = ChatMessage(
-        id: data['id'] as String? ?? DateTime.now().toIso8601String(),
-        senderId: data['senderId'] as String? ?? '',
-        senderName: data['senderName'] as String? ?? 'Unknown',
-        senderType: data['senderType'] as String? ?? 'Doctor',
-        content: data['content'] as String? ?? '',
-        sentAt: data['sentAt'] != null
-            ? DateTime.tryParse(data['sentAt'] as String) ?? DateTime.now()
-            : DateTime.now(),
-      );
+    await _chatService.connect(
+      appId: appId,
+      userId: userId,
+      rtmToken: rtmToken,
+      consultationId: widget.consultationId,
+    );
+
+    _sub = _chatService.onMessage.listen((msg) {
       if (mounted) {
         setState(() => _messages.add(msg));
         _scrollToBottom();
       }
     });
 
-    await _hub!.start();
-    await _hub!.invoke('JoinConsultationRoom', args: [widget.consultationId]);
-
     if (mounted) setState(() => _connected = true);
+  }
+
+  @override
+  void dispose() {
+    _sub?.cancel();
+    _chatService.disconnect().ignore();
+    _chatService.dispose();
+    _input.dispose();
+    _scroll.dispose();
+    super.dispose();
   }
 
   void _scrollToBottom() {
@@ -93,9 +93,30 @@ class _AppointmentChatPageState extends State<AppointmentChatPage> {
   void _send() {
     final text = _input.text.trim();
     if (text.isEmpty || !_connected) return;
-    _hub?.invoke('SendChatMessage', args: [widget.consultationId, text])
-        .catchError((_) => null as Object?);
     _input.clear();
+
+    _chatService.sendMessage(
+      content: text,
+      senderName: 'You',
+      senderType: 'doctor',
+    );
+
+    sl<ConsultationRepository>()
+        .sendMessage(widget.consultationId, text)
+        .ignore();
+
+    if (mounted) {
+      final userCtx = sl<UserContext>();
+      setState(() => _messages.add(ChatMessage(
+            id: DateTime.now().millisecondsSinceEpoch.toString(),
+            senderId: userCtx.userId ?? '',
+            senderName: 'You',
+            senderType: 'doctor',
+            content: text,
+            sentAt: DateTime.now(),
+          )));
+      _scrollToBottom();
+    }
   }
 
   @override
@@ -117,7 +138,8 @@ class _AppointmentChatPageState extends State<AppointmentChatPage> {
                 Icon(
                   Icons.circle,
                   size: 10,
-                  color: _connected ? AppColors.success : AppColors.neutral400,
+                  color:
+                      _connected ? AppColors.success : AppColors.neutral400,
                 ),
                 const SizedBox(width: 6),
                 Text(
@@ -138,14 +160,16 @@ class _AppointmentChatPageState extends State<AppointmentChatPage> {
                       _connected
                           ? 'No messages yet. Say hello!'
                           : 'Connecting to chat…',
-                      style: const TextStyle(color: AppColors.neutral500),
+                      style:
+                          const TextStyle(color: AppColors.neutral500),
                     ),
                   )
                 : ListView.builder(
                     controller: _scroll,
                     padding: const EdgeInsets.all(16),
                     itemCount: _messages.length,
-                    itemBuilder: (_, i) => _MessageBubble(msg: _messages[i]),
+                    itemBuilder: (_, i) =>
+                        _MessageBubble(msg: _messages[i]),
                   ),
           ),
           _ChatInput(
@@ -170,9 +194,10 @@ class _MessageBubble extends StatelessWidget {
       alignment: isDoctor ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 4),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        constraints:
-            BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.65),
+        padding:
+            const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        constraints: BoxConstraints(
+            maxWidth: MediaQuery.of(context).size.width * 0.65),
         decoration: BoxDecoration(
           color: isDoctor ? AppColors.primary : AppColors.neutral200,
           borderRadius: BorderRadius.only(
@@ -183,8 +208,9 @@ class _MessageBubble extends StatelessWidget {
           ),
         ),
         child: Column(
-          crossAxisAlignment:
-              isDoctor ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+          crossAxisAlignment: isDoctor
+              ? CrossAxisAlignment.end
+              : CrossAxisAlignment.start,
           children: [
             Text(
               msg.senderName,
@@ -246,8 +272,8 @@ class _ChatInput extends StatelessWidget {
                 ),
                 filled: true,
                 fillColor: AppColors.neutral100,
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16, vertical: 10),
               ),
             ),
           ),
@@ -259,8 +285,8 @@ class _ChatInput extends StatelessWidget {
               shape: const CircleBorder(),
               padding: const EdgeInsets.all(12),
             ),
-            child: const FaIcon(FontAwesomeIcons.paperPlane, size: 14,
-                color: Colors.white),
+            child: const FaIcon(FontAwesomeIcons.paperPlane,
+                size: 14, color: Colors.white),
           ),
         ],
       ),

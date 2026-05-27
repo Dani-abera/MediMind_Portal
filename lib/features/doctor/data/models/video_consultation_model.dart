@@ -12,6 +12,9 @@ class VideoConsultationModel extends VideoConsultation {
     super.endedAt,
     super.signalingRoomId,
     super.joinToken,
+    super.agoraAppId,
+    super.agoraRtmToken,
+    super.agoraRtmUserId,
   });
 
   factory VideoConsultationModel.fromJson(Map<String, dynamic> json) {

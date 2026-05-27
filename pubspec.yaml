@@ -67,8 +67,9 @@ dependencies:
   data_table_2: ^2.7.2
   pluto_grid: ^8.1.0
 
-  # Video / WebRTC
-  flutter_webrtc: ^0.12.6
+  # Video / Agora
+  agora_rtc_engine: ^6.5.0
+  agora_rtm: ^2.1.0
 
   # Phone input
   intl_phone_number_input: ^0.7.5

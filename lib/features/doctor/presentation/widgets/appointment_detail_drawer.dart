@@ -330,7 +330,9 @@ class _AppointmentDetailContentState
         appt.status == AppointmentStatus.confirmed;
     final canDecline = appt.status == AppointmentStatus.pending;
 
-    return Row(
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
       children: [
         if (canComplete)
           FilledButton.icon(
@@ -339,8 +341,7 @@ class _AppointmentDetailContentState
             onPressed: () =>
                 ctx.read<AppointmentDetailBloc>().add(const AppointmentCompleted()),
           ),
-        if (canDecline) ...[
-          if (canComplete) const SizedBox(width: 8),
+        if (canDecline)
           OutlinedButton.icon(
             icon: const FaIcon(FontAwesomeIcons.circleXmark, size: 14,
                 color: AppColors.danger),
@@ -353,8 +354,6 @@ class _AppointmentDetailContentState
               }
             },
           ),
-        ],
-        if (canComplete && canCancel) const SizedBox(width: 8),
         if (canCancel)
           OutlinedButton.icon(
             icon: const FaIcon(FontAwesomeIcons.ban, size: 14,
@@ -364,8 +363,7 @@ class _AppointmentDetailContentState
             onPressed: () =>
                 ctx.read<AppointmentDetailBloc>().add(const AppointmentCancelled()),
           ),
-        if (appt.canInitiateVideoConsultation) ...[
-          const SizedBox(width: 8),
+        if (appt.canInitiateVideoConsultation)
           FilledButton.icon(
             style: FilledButton.styleFrom(backgroundColor: AppColors.info),
             icon: const FaIcon(FontAwesomeIcons.video, size: 14),
@@ -374,9 +372,7 @@ class _AppointmentDetailContentState
                 : 'Start Video Call'),
             onPressed: () => _initiateAndNavigate(ctx, appt.id),
           ),
-        ],
-        if (appt.canChat && appt.videoConsultationId != null) ...[
-          const SizedBox(width: 8),
+        if (appt.canChat && appt.videoConsultationId != null)
           OutlinedButton.icon(
             icon: const FaIcon(FontAwesomeIcons.comment, size: 14),
             label: const Text('Chat'),
@@ -385,7 +381,6 @@ class _AppointmentDetailContentState
               context.go('/doctor/appointment-chat/${appt.videoConsultationId}');
             },
           ),
-        ],
       ],
     );
   }

@@ -23,6 +23,10 @@ class VideoConsultation extends Equatable {
   final DateTime? endedAt;
   final String? signalingRoomId;
   final String? joinToken;
+  // Agora credentials returned by /join — populated only on join, null on getById.
+  final String? agoraAppId;
+  final String? agoraRtmToken;
+  final String? agoraRtmUserId;
 
   const VideoConsultation({
     required this.id,
@@ -35,6 +39,9 @@ class VideoConsultation extends Equatable {
     this.endedAt,
     this.signalingRoomId,
     this.joinToken,
+    this.agoraAppId,
+    this.agoraRtmToken,
+    this.agoraRtmUserId,
   });
 
   Duration? get duration => startedAt != null && endedAt != null
@@ -47,5 +54,6 @@ class VideoConsultation extends Equatable {
   List<Object?> get props => [
         id, appointmentId, doctorId, patientId, patientName,
         status, startedAt, endedAt, signalingRoomId, joinToken,
+        agoraAppId, agoraRtmToken, agoraRtmUserId,
       ];
 }
