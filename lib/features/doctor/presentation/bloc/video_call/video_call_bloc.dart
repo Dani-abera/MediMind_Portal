@@ -41,8 +41,8 @@ class VideoCallBloc extends Bloc<VideoCallEvent, VideoCallState> {
         super(const VideoCallInitial()) {
     on<VideoCallJoined>(_onJoined, transformer: droppable());
     on<VideoCallEndRequested>(_onEndRequested, transformer: droppable());
-    on<VideoCallToggleMic>(_onToggleMic);
-    on<VideoCallToggleCamera>(_onToggleCamera);
+    on<VideoCallToggleMic>(_onMicToggled);
+    on<VideoCallToggleCamera>(_onCameraToggled);
     on<VideoCallChatToggled>(_onChatToggled);
     on<VideoCallMessageSent>(_onMessageSent);
     on<VideoCallPeerLeft>(_onPeerLeft);
@@ -197,22 +197,22 @@ class VideoCallBloc extends Bloc<VideoCallEvent, VideoCallState> {
     _cleanup();
   }
 
-  Future<void> _onToggleMic(
+  Future<void> _onMicToggled(
       VideoCallToggleMic event, Emitter<VideoCallState> emit) async {
     final current = state;
     if (current is VideoCallActive) {
       final muted = !current.micEnabled;
-      await _engine?.muteLocalAudioStream(muted);
+      await _engine?.enableLocalAudio(!muted);
       emit(current.copyWith(micEnabled: !muted));
     }
   }
 
-  Future<void> _onToggleCamera(
+  Future<void> _onCameraToggled(
       VideoCallToggleCamera event, Emitter<VideoCallState> emit) async {
     final current = state;
     if (current is VideoCallActive) {
       final off = !current.cameraEnabled;
-      await _engine?.muteLocalVideoStream(off);
+      await _engine?.enableLocalVideo(!off);
       emit(current.copyWith(cameraEnabled: !off));
     }
   }
