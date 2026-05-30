@@ -43,28 +43,16 @@ abstract class SidebarConfigs {
       icon: FontAwesomeIcons.video,
       route: RouteNames.doctorConsultations,
     ),
-    SidebarItem(
+    const SidebarItem(
       label: 'Prescriptions',
       icon: FontAwesomeIcons.prescription,
       route: RouteNames.doctorPrescriptions,
-      children: const [
-        SidebarItem(
-          label: 'All',
-          icon: FontAwesomeIcons.listUl,
-          route: RouteNames.doctorPrescriptions,
-        ),
-        SidebarItem(
-          label: 'Templates',
-          icon: FontAwesomeIcons.fileLines,
-          route: RouteNames.doctorPrescriptionsTemplates,
-        ),
-        SidebarItem(
-          label: 'Create New',
-          icon: FontAwesomeIcons.plus,
-          route: RouteNames.doctorPrescriptionsNew,
-        ),
-      ],
     ),
+    // const SidebarItem(
+    //   label: 'Create Prescription',
+    //   icon: FontAwesomeIcons.plus,
+    //   route: RouteNames.doctorPrescriptionsNew,
+    // ),
     const SidebarItem(
       label: 'My Schedule',
       icon: FontAwesomeIcons.clock,
