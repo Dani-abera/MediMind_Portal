@@ -52,8 +52,10 @@ import 'presentation/bloc/profile/profile_bloc.dart';
 import 'presentation/bloc/queue/queue_bloc.dart';
 import 'presentation/bloc/schedule/schedule_bloc.dart';
 import 'presentation/bloc/video_call/video_call_bloc.dart';
+import '../notifications/notifications_injection.dart';
 
 Future<void> initDoctorFeature() async {
+  await initNotificationsFeature();
   // ── Shell & Notifications ──────────────────────────────────────────────
   if (!sl.isRegistered<ShellBloc>()) {
     sl.registerLazySingleton<ShellBloc>(

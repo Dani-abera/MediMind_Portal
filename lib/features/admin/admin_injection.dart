@@ -109,8 +109,10 @@ import 'presentation/bloc/patient_detail/patient_center_detail_bloc.dart';
 import 'presentation/bloc/admins/admin_staff_bloc.dart';
 import 'presentation/bloc/registration/center_registration_bloc.dart';
 import '../centers/domain/usecases/register_center_usecase.dart';
+import '../notifications/notifications_injection.dart';
 
 Future<void> initAdminFeature() async {
+  await initNotificationsFeature();
   // ── Shell & Notifications ──────────────────────────────────────────────
   if (!sl.isRegistered<ShellBloc>()) {
     sl.registerLazySingleton<ShellBloc>(

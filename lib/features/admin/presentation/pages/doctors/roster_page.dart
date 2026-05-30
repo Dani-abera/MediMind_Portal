@@ -138,13 +138,16 @@ class _DoctorsTable extends StatelessWidget {
               label: 'License',
               width: 130,
               builder: (d) => Row(
-                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(d.licenseNumber,
-                      style: AppTypography.bodySmall.copyWith(fontFamily: 'RobotoMono')),
-                  const SizedBox(width: 4),
-                  if (d.licenseVerified)
+                  Expanded(
+                    child: Text(d.licenseNumber,
+                        style: AppTypography.bodySmall.copyWith(fontFamily: 'RobotoMono'),
+                        overflow: TextOverflow.ellipsis),
+                  ),
+                  if (d.licenseVerified) ...[
+                    const SizedBox(width: 4),
                     const Icon(Icons.verified, size: 14, color: AppColors.success),
+                  ],
                 ],
               ),
             ),

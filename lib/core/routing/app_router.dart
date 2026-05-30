@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../network/user_context.dart';
-import '../widgets/shell/placeholder_page.dart';
 import '../../features/auth/presentation/pages/splash_page.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/forgot_password_page.dart';
@@ -57,6 +56,7 @@ import '../../features/super_admin/presentation/pages/audit_log/global_audit_log
 import '../../features/super_admin/presentation/pages/platform_settings/platform_settings_page.dart';
 import '../../features/super_admin/presentation/pages/notifications/platform_notifications_page.dart';
 import '../../features/super_admin/presentation/pages/profile/super_admin_profile_page.dart';
+import '../../features/notifications/presentation/pages/notifications_page.dart';
 import 'route_names.dart';
 
 class AppRouter {
@@ -199,7 +199,7 @@ class AppRouter {
           StatefulShellBranch(routes: [
             GoRoute(
               path: RouteNames.doctorNotifications,
-              builder: (_, __) => const ShellPlaceholderPage(title: 'Notifications'),
+              builder: (_, __) => const NotificationsPage(),
             ),
           ]),
         ],
@@ -328,7 +328,7 @@ class AppRouter {
           StatefulShellBranch(routes: [
             GoRoute(
               path: RouteNames.adminNotifications,
-              builder: (_, __) => const ShellPlaceholderPage(title: 'Notifications'),
+              builder: (_, __) => const NotificationsPage(),
             ),
           ]),
         ],

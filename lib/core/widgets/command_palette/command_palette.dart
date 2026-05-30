@@ -120,12 +120,12 @@ class _CommandPaletteState extends State<CommandPalette> {
       RouteNames.doctorPrescriptions,
       'Pages',
     ),
-    _nav(
-      'New Prescription',
-      FontAwesomeIcons.plus,
-      RouteNames.doctorPrescriptionsNew,
-      'Actions',
-    ),
+    // _nav(
+    //   'New Prescription',
+    //   FontAwesomeIcons.plus,
+    //   RouteNames.doctorPrescriptionsNew,
+    //   'Actions',
+    // ),
     _nav(
       'My Schedule',
       FontAwesomeIcons.clock,

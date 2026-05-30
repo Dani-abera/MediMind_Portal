@@ -2,14 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
-import '../../theme/app_colors.dart';
-import '../../theme/app_typography.dart';
+
 import '../../../features/auth/domain/entities/admin_user.dart';
 import '../../../features/auth/domain/entities/doctor_user.dart';
 import '../../../features/auth/presentation/bloc/auth_bloc.dart';
 import '../../../features/auth/presentation/bloc/auth_event.dart';
 import '../../../features/auth/presentation/bloc/auth_state.dart';
 import '../../../features/auth/presentation/widgets/change_password_dialog.dart';
+import '../../theme/app_colors.dart';
+import '../../theme/app_typography.dart';
 
 class UserMenu extends StatelessWidget {
   final String profileRoute;
@@ -26,7 +27,8 @@ class UserMenu extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<AuthBloc, AuthState>(
-      buildWhen: (_, curr) => curr is AuthAuthenticated || curr is AuthUnauthenticated,
+      buildWhen: (_, curr) =>
+          curr is AuthAuthenticated || curr is AuthUnauthenticated,
       builder: (ctx, state) {
         final user = state is AuthAuthenticated ? state.user : null;
         final name = user?.fullName ?? 'User';
@@ -37,7 +39,7 @@ class UserMenu extends StatelessWidget {
         if (user is DoctorUser) {
           roleLabel = user.specialization ?? 'Doctor';
         } else if (user is AdminUser) {
-          roleLabel = 'Admin · ${user.centerName}';
+          roleLabel = 'Admin';
         } else {
           roleLabel = 'Platform Admin';
         }
@@ -65,12 +67,25 @@ class UserMenu extends StatelessWidget {
             const PopupMenuDivider(),
             _menuItem('profile', FontAwesomeIcons.user, 'Profile'),
             _menuItem('settings', FontAwesomeIcons.gear, 'Settings'),
-            _menuItem('change_password', FontAwesomeIcons.lock, 'Change Password'),
-            _menuItem('help', FontAwesomeIcons.circleQuestion, 'Help & Support'),
+            if (user is! DoctorUser)
+              _menuItem(
+                'change_password',
+                FontAwesomeIcons.lock,
+                'Change Password',
+              ),
+            _menuItem(
+              'help',
+              FontAwesomeIcons.circleQuestion,
+              'Help & Support',
+            ),
             if (extraItems != null) ...extraItems!,
             const PopupMenuDivider(),
-            _menuItem('logout', FontAwesomeIcons.rightFromBracket, 'Logout',
-                isDestructive: true),
+            _menuItem(
+              'logout',
+              FontAwesomeIcons.rightFromBracket,
+              'Logout',
+              isDestructive: true,
+            ),
           ],
           onSelected: (value) {
             switch (value) {
@@ -157,7 +172,9 @@ class _UserChip extends StatelessWidget {
           CircleAvatar(
             radius: 14,
             backgroundColor: AppColors.primaryLight,
-            backgroundImage: avatarUrl != null ? NetworkImage(avatarUrl!) : null,
+            backgroundImage: avatarUrl != null
+                ? NetworkImage(avatarUrl!)
+                : null,
             child: avatarUrl == null
                 ? Text(
                     initials,
@@ -175,8 +192,9 @@ class _UserChip extends StatelessWidget {
             children: [
               Text(
                 name,
-                style: AppTypography.bodySmall
-                    .copyWith(fontWeight: FontWeight.w600),
+                style: AppTypography.bodySmall.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               if (roleLabel.isNotEmpty)
                 Text(
@@ -189,8 +207,11 @@ class _UserChip extends StatelessWidget {
             ],
           ),
           const SizedBox(width: 6),
-          const FaIcon(FontAwesomeIcons.chevronDown,
-              size: 10, color: AppColors.neutral400),
+          const FaIcon(
+            FontAwesomeIcons.chevronDown,
+            size: 10,
+            color: AppColors.neutral400,
+          ),
         ],
       ),
     );
@@ -235,28 +256,34 @@ class _UserHeader extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(name,
-                  style: AppTypography.bodySmall
-                      .copyWith(fontWeight: FontWeight.w700)),
+              Text(
+                name,
+                style: AppTypography.bodySmall.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
               const SizedBox(height: 2),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
                 decoration: BoxDecoration(
                   color: AppColors.primaryLight.withAlpha(80),
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
                   roleLabel,
-                  style: AppTypography.caption
-                      .copyWith(color: AppColors.primary, fontSize: 10),
+                  style: AppTypography.caption.copyWith(
+                    color: AppColors.primary,
+                    fontSize: 10,
+                  ),
                 ),
               ),
               const SizedBox(height: 2),
               Text(
                 email,
-                style: AppTypography.caption
-                    .copyWith(color: AppColors.neutral500, fontSize: 11),
+                style: AppTypography.caption.copyWith(
+                  color: AppColors.neutral500,
+                  fontSize: 11,
+                ),
                 overflow: TextOverflow.ellipsis,
               ),
             ],
