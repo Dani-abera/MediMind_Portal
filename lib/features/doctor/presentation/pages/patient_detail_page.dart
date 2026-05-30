@@ -1,17 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/di/service_locator.dart';
+import '../../../../core/routing/route_names.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/feedback/app_loading.dart';
 import '../../../../core/widgets/shell/page_header.dart';
+import '../../../../core/widgets/status_badges/status_badge.dart';
 import '../../domain/entities/health_record.dart';
 import '../../domain/entities/patient.dart';
 import '../../domain/entities/prediction.dart';
+import '../../domain/entities/prescription.dart';
 import '../bloc/patient_detail/patient_detail_bloc.dart';
+import '../bloc/prescription_list/prescription_list_bloc.dart';
 
 class PatientDetailPage extends StatelessWidget {
   final String patientId;
@@ -22,13 +27,14 @@ class PatientDetailPage extends StatelessWidget {
     return BlocProvider(
       create: (_) =>
           sl<PatientDetailBloc>()..add(PatientDetailStarted(patientId)),
-      child: const _PatientDetailView(),
+      child: _PatientDetailView(patientId: patientId),
     );
   }
 }
 
 class _PatientDetailView extends StatefulWidget {
-  const _PatientDetailView();
+  final String patientId;
+  const _PatientDetailView({required this.patientId});
 
   @override
   State<_PatientDetailView> createState() => _PatientDetailViewState();
@@ -42,9 +48,7 @@ class _PatientDetailViewState extends State<_PatientDetailView>
     'Health Records',
     'Predictions',
     'Medications',
-    'Appointments',
     'Prescriptions',
-    'Notes',
   ];
 
   @override
@@ -75,6 +79,15 @@ class _PatientDetailViewState extends State<_PatientDetailView>
                 onPressed: () => Navigator.of(context).pop(),
               ),
               actions: [
+                if (state is PatientDetailLoaded)
+                  FilledButton.icon(
+                    icon: const FaIcon(FontAwesomeIcons.filePrescription,
+                        size: 13),
+                    label: const Text('Write Prescription'),
+                    onPressed: () => context.push(
+                      '${RouteNames.doctorPrescriptionsNew}?patientId=${widget.patientId}',
+                    ),
+                  ),
                 IconButton(
                   icon: const Icon(Icons.refresh, size: 18),
                   onPressed: () => ctx
@@ -105,9 +118,7 @@ class _PatientDetailViewState extends State<_PatientDetailView>
                     _HealthRecordsTab(records: state.records),
                     _PredictionsTab(prediction: state.latestPrediction),
                     _MedicationsTab(medications: state.patient.currentMedications),
-                    const _PlaceholderTab(label: 'Appointments'),
-                    const _PlaceholderTab(label: 'Prescriptions'),
-                    const _PlaceholderTab(label: 'Notes'),
+                    _PrescriptionsTab(patientId: widget.patientId),
                   ],
                 ),
               ),
@@ -507,16 +518,136 @@ class _MedicationsTab extends StatelessWidget {
   }
 }
 
-class _PlaceholderTab extends StatelessWidget {
-  final String label;
-  const _PlaceholderTab({required this.label});
+class _PrescriptionsTab extends StatelessWidget {
+  final String patientId;
+  const _PrescriptionsTab({required this.patientId});
 
   @override
   Widget build(BuildContext context) {
-    return AppEmptyState(
-      message: '$label — Coming Soon',
-      description: 'This tab will show $label data.',
-      icon: Icons.hourglass_empty,
+    return BlocProvider(
+      create: (_) => sl<PrescriptionListBloc>()
+        ..add(PrescriptionListFiltered(patientId: patientId)),
+      child: BlocBuilder<PrescriptionListBloc, PrescriptionListState>(
+        builder: (ctx, state) {
+          if (state is PrescriptionListLoading ||
+              state is PrescriptionListInitial) {
+            return const Center(child: AppLoadingSpinner());
+          }
+          if (state is PrescriptionListError) {
+            return AppErrorState(
+              message: state.message,
+              onRetry: () => ctx.read<PrescriptionListBloc>().add(
+                    PrescriptionListFiltered(patientId: patientId),
+                  ),
+            );
+          }
+          if (state is PrescriptionListLoaded) {
+            if (state.prescriptions.isEmpty) {
+              return const AppEmptyState(
+                message: 'No prescriptions for this patient',
+                icon: Icons.medication_outlined,
+              );
+            }
+            return ListView.separated(
+              padding: const EdgeInsets.all(AppSpacing.xl),
+              itemCount: state.prescriptions.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 12),
+              itemBuilder: (_, i) =>
+                  _PrescriptionCard(prescription: state.prescriptions[i]),
+            );
+          }
+          return const SizedBox.shrink();
+        },
+      ),
     );
   }
+}
+
+class _PrescriptionCard extends StatelessWidget {
+  final Prescription prescription;
+  const _PrescriptionCard({required this.prescription});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.base),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.neutral200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(prescription.diagnosis,
+                    style: AppTypography.bodyMedium),
+              ),
+              StatusBadge(
+                label: prescription.status.label,
+                status: _mapStatus(prescription.status),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            DateFormat('MMM d, y').format(prescription.issuedAt),
+            style:
+                AppTypography.bodySmall.copyWith(color: AppColors.neutral500),
+          ),
+          if (prescription.medications.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            ...prescription.medications.take(3).map(
+                  (m) => Padding(
+                    padding: const EdgeInsets.only(bottom: 2),
+                    child: Row(
+                      children: [
+                        const FaIcon(FontAwesomeIcons.pills,
+                            size: 11, color: AppColors.neutral400),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            '${m.name}  •  ${m.dosage}  •  ${m.frequencyLabel}',
+                            style: AppTypography.caption,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+            if (prescription.medications.length > 3)
+              Padding(
+                padding: const EdgeInsets.only(top: 2),
+                child: Text(
+                  '+${prescription.medications.length - 3} more',
+                  style: AppTypography.caption
+                      .copyWith(color: AppColors.neutral500),
+                ),
+              ),
+          ],
+          if (prescription.followUpInstructions != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              'Follow-up: ${prescription.followUpInstructions}',
+              style:
+                  AppTypography.caption.copyWith(color: AppColors.neutral500),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  BadgeStatus _mapStatus(PrescriptionStatus s) => switch (s) {
+        PrescriptionStatus.active => BadgeStatus.active,
+        PrescriptionStatus.dispensed => BadgeStatus.completed,
+        PrescriptionStatus.expired => BadgeStatus.expired,
+        PrescriptionStatus.revoked => BadgeStatus.cancelled,
+      };
 }

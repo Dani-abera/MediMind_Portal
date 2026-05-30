@@ -23,9 +23,9 @@ enum MedicationFrequency {
       switch (s?.toLowerCase().replaceAll(' ', '_')) {
         'once_daily' || 'oncedaily' => onceDaily,
         'twice_daily' || 'twicedaily' => twiceDaily,
-        'three_times_daily' => threeTimesDaily,
-        'four_times_daily' => fourTimesDaily,
-        'every_8_hours' || 'everyeighthours' => everyEightHours,
+        'three_times_daily' || 'threetimesdaily' => threeTimesDaily,
+        'four_times_daily' || 'fourtimesdaily' => fourTimesDaily,
+        'every_8_hours' || 'every8hours' || 'everyeighthours' => everyEightHours,
         'as_needed' || 'asneeded' => asNeeded,
         _ => other,
       };

@@ -13,22 +13,64 @@ class PredictionModel extends Prediction {
   });
 
   factory PredictionModel.fromJson(Map<String, dynamic> json) {
+    // Build condition probabilities from individual risk fields (API returns %)
     final conditionProbabilities = <String, double>{};
-    final rawConditions = json['conditionProbabilities'] as Map<String, dynamic>?;
-    if (rawConditions != null) {
-      rawConditions.forEach((k, v) {
-        conditionProbabilities[k] = (v as num).toDouble();
-      });
+    if (json['diabetesRisk'] != null) {
+      conditionProbabilities['Diabetes'] =
+          (json['diabetesRisk'] as num).toDouble() / 100;
+    }
+    if (json['hypertensionRisk'] != null) {
+      conditionProbabilities['Hypertension'] =
+          (json['hypertensionRisk'] as num).toDouble() / 100;
+    }
+    if (json['cvdRisk'] != null) {
+      conditionProbabilities['Cardiovascular Disease'] =
+          (json['cvdRisk'] as num).toDouble() / 100;
     }
 
+    // Derive worst risk level from individual category strings
+    final categoryOrder = ['critical', 'high', 'medium', 'moderate', 'low'];
+    final categories = [
+      json['diabetesCategory'],
+      json['hypertensionCategory'],
+      json['cvdCategory'],
+      json['riskLevel'],
+    ].whereType<String>().toList();
+    final worstCategory = categories.isEmpty
+        ? null
+        : categories.reduce((a, b) =>
+            categoryOrder.indexOf(a.toLowerCase()) <
+                    categoryOrder.indexOf(b.toLowerCase())
+                ? a
+                : b);
+    // Normalise "medium" → "moderate" for RiskLevel.fromString
+    final riskLevelStr = worstCategory?.toLowerCase() == 'medium'
+        ? 'moderate'
+        : worstCategory;
+
+    // Overall risk score: highest individual risk / 100
+    final risks = [
+      json['diabetesRisk'],
+      json['hypertensionRisk'],
+      json['cvdRisk'],
+    ].whereType<num>().toList();
+    final maxRisk = risks.isEmpty
+        ? 0.0
+        : risks.reduce((a, b) => a > b ? a : b).toDouble() / 100;
+    final riskScore =
+        (json['riskScore'] as num?)?.toDouble() ?? maxRisk;
+
     return PredictionModel(
-      id: json['id'] as String,
+      id: ((json['predictionId'] ?? json['id']) as String?) ?? '',
       patientId: json['patientId'] as String,
-      predictedAt: DateTime.parse(json['predictedAt'] as String),
-      riskLevel: RiskLevel.fromString(json['riskLevel'] as String?),
-      riskScore: (json['riskScore'] as num).toDouble(),
+      predictedAt: DateTime.parse(
+          ((json['createdAt'] ?? json['predictedAt']) as String?) ??
+              DateTime.now().toIso8601String()),
+      riskLevel: RiskLevel.fromString(riskLevelStr),
+      riskScore: riskScore,
       conditionProbabilities: conditionProbabilities,
-      recommendation: json['recommendation'] as String?,
+      recommendation:
+          ((json['recommendations'] ?? json['recommendation']) as String?),
       rawData: json['rawData'] as Map<String, dynamic>?,
     );
   }

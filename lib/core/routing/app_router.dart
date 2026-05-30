@@ -173,7 +173,9 @@ class AppRouter {
             ),
             GoRoute(
               path: RouteNames.doctorPrescriptionsNew,
-              builder: (_, __) => const CreatePrescriptionPage(),
+              builder: (_, state) => CreatePrescriptionPage(
+                patientId: state.uri.queryParameters['patientId'],
+              ),
             ),
           ]),
           StatefulShellBranch(routes: [

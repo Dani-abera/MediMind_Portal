@@ -13,7 +13,8 @@ import '../../domain/repositories/prescription_repository.dart';
 import '../bloc/create_prescription/create_prescription_bloc.dart';
 
 class CreatePrescriptionPage extends StatelessWidget {
-  const CreatePrescriptionPage({super.key});
+  final String? patientId;
+  const CreatePrescriptionPage({super.key, this.patientId});
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +36,7 @@ class CreatePrescriptionPage extends StatelessWidget {
             );
           }
         },
-        child: const _CreatePrescriptionForm(),
+        child: _CreatePrescriptionForm(patientId: patientId),
       ),
     );
   }
@@ -50,7 +51,8 @@ class _MedicationEntry {
 }
 
 class _CreatePrescriptionForm extends StatefulWidget {
-  const _CreatePrescriptionForm();
+  final String? patientId;
+  const _CreatePrescriptionForm({this.patientId});
 
   @override
   State<_CreatePrescriptionForm> createState() =>
@@ -66,6 +68,14 @@ class _CreatePrescriptionFormState extends State<_CreatePrescriptionForm> {
   final _medications = <_MedicationEntry>[_MedicationEntry()];
   final _labTests = <String>[];
   DateTime? _expiresAt;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.patientId != null) {
+      _patientIdCtrl.text = widget.patientId!;
+    }
+  }
 
   @override
   void dispose() {

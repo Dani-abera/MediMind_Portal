@@ -41,7 +41,10 @@ class PatientRemoteDataSource {
     );
     final data = resp.data['data'] as List<dynamic>;
     return data
-        .map((e) => HealthRecordModel.fromJson(e as Map<String, dynamic>))
+        .map((e) => HealthRecordModel.fromJson(
+              e as Map<String, dynamic>,
+              patientId: patientId,
+            ))
         .toList();
   }
 

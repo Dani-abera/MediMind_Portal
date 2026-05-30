@@ -11,11 +11,11 @@ class MedicationModel extends Medication {
   });
 
   factory MedicationModel.fromJson(Map<String, dynamic> json) => MedicationModel(
-        name: json['name'] as String,
-        dosage: json['dosage'] as String,
+        name: (json['name'] as String?) ?? '',
+        dosage: (json['dosage'] as String?) ?? '',
         frequency: MedicationFrequency.fromString(json['frequency'] as String?),
         frequencyCustomLabel: json['frequencyCustomLabel'] as String?,
-        duration: json['duration'] as String,
+        duration: (json['duration'] as String?) ?? '',
         instructions: json['instructions'] as String?,
       );
 

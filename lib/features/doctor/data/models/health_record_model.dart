@@ -15,16 +15,26 @@ class HealthRecordModel extends HealthRecord {
     super.oxygenSaturation,
   });
 
-  factory HealthRecordModel.fromJson(Map<String, dynamic> json) => HealthRecordModel(
-        id: json['id'] as String,
-        patientId: json['patientId'] as String,
-        recordedAt: DateTime.parse(json['recordedAt'] as String),
-        bloodPressureSystolic: json['bloodPressureSystolic'] as int?,
-        bloodPressureDiastolic: json['bloodPressureDiastolic'] as int?,
+  factory HealthRecordModel.fromJson(
+    Map<String, dynamic> json, {
+    String patientId = '',
+  }) =>
+      HealthRecordModel(
+        id: ((json['recordId'] ?? json['id']) as String?) ?? '',
+        patientId: (json['patientId'] as String?) ?? patientId,
+        recordedAt: json['createdAt'] != null
+            ? DateTime.parse(json['createdAt'] as String)
+            : DateTime.now(),
+        bloodPressureSystolic:
+            ((json['systolicBp'] ?? json['bloodPressureSystolic']) as num?)
+                ?.toInt(),
+        bloodPressureDiastolic:
+            ((json['diastolicBp'] ?? json['bloodPressureDiastolic']) as num?)
+                ?.toInt(),
         glucoseLevel: (json['glucoseLevel'] as num?)?.toDouble(),
         weight: (json['weight'] as num?)?.toDouble(),
         height: (json['height'] as num?)?.toDouble(),
-        heartRate: json['heartRate'] as int?,
+        heartRate: (json['heartRate'] as num?)?.toInt(),
         temperature: (json['temperature'] as num?)?.toDouble(),
         oxygenSaturation: (json['oxygenSaturation'] as num?)?.toDouble(),
       );

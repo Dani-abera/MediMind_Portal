@@ -21,28 +21,39 @@ class PrescriptionModel extends Prescription {
     super.pdfUrl,
   });
 
-  factory PrescriptionModel.fromJson(Map<String, dynamic> json) => PrescriptionModel(
-        id: json['id'] as String,
-        patientId: json['patientId'] as String,
-        patientName: json['patientName'] as String,
-        doctorId: json['doctorId'] as String,
-        appointmentId: json['appointmentId'] as String?,
-        diagnosis: json['diagnosis'] as String,
-        medications: (json['medications'] as List<dynamic>? ?? [])
-            .map((e) => MedicationModel.fromJson(e as Map<String, dynamic>))
-            .toList(),
-        labTests: (json['labTests'] as List<dynamic>? ?? [])
-            .map((e) => e as String)
-            .toList(),
-        followUpInstructions: json['followUpInstructions'] as String?,
-        specialInstructions: json['specialInstructions'] as String?,
-        status: PrescriptionStatus.fromString(json['status'] as String?),
-        issuedAt: DateTime.parse(json['issuedAt'] as String),
-        expiresAt: DateTime.parse(json['expiresAt'] as String),
-        revokedReason: json['revokedReason'] as String?,
-        qrCode: json['qrCode'] as String?,
-        pdfUrl: json['pdfUrl'] as String?,
-      );
+  factory PrescriptionModel.fromJson(Map<String, dynamic> json) {
+    final issuedAtStr = (json['issueDate'] ?? json['issuedAt']) as String?;
+    final issuedAt =
+        issuedAtStr != null ? DateTime.parse(issuedAtStr) : DateTime.now();
+
+    final expiresAtStr = (json['expiryDate'] ?? json['expiresAt']) as String?;
+    final expiresAt = expiresAtStr != null
+        ? DateTime.parse(expiresAtStr)
+        : issuedAt.add(const Duration(days: 30));
+
+    return PrescriptionModel(
+      id: ((json['prescriptionId'] ?? json['id']) as String?) ?? '',
+      patientId: (json['patientId'] as String?) ?? '',
+      patientName: (json['patientName'] as String?) ?? '',
+      doctorId: (json['doctorId'] as String?) ?? '',
+      appointmentId: json['appointmentId'] as String?,
+      diagnosis: (json['diagnosis'] as String?) ?? '',
+      medications: (json['medications'] as List<dynamic>? ?? [])
+          .map((e) => MedicationModel.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      labTests: (json['labTests'] as List<dynamic>? ?? [])
+          .map((e) => e as String)
+          .toList(),
+      followUpInstructions: json['followUpInstructions'] as String?,
+      specialInstructions: json['specialInstructions'] as String?,
+      status: PrescriptionStatus.fromString(json['status'] as String?),
+      issuedAt: issuedAt,
+      expiresAt: expiresAt,
+      revokedReason: json['revokedReason'] as String?,
+      qrCode: (json['qrCodeBase64'] ?? json['qrCode']) as String?,
+      pdfUrl: json['pdfUrl'] as String?,
+    );
+  }
 
   Map<String, dynamic> toJson() => {
         'id': id,
