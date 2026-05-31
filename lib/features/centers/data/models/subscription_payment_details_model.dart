@@ -8,6 +8,7 @@ class SubscriptionPaymentDetailsModel extends SubscriptionPaymentDetails {
     required super.currency,
     required super.planName,
     required super.billingCycle,
+    required super.checkoutUrl,
   });
 
   factory SubscriptionPaymentDetailsModel.fromJson(Map<String, dynamic> j) =>
@@ -18,5 +19,6 @@ class SubscriptionPaymentDetailsModel extends SubscriptionPaymentDetails {
         currency: j['currency'] as String? ?? 'ETB',
         planName: j['planName'] as String? ?? '',
         billingCycle: j['billingCycle'] as String? ?? 'Monthly',
+        checkoutUrl: j['checkoutUrl'] as String? ?? '',
       );
 }

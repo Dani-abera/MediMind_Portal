@@ -22,9 +22,18 @@ class LoggerInterceptor extends Interceptor {
 
   String _formatBody(dynamic data) {
     if (data == null) return '(empty)';
-    final raw = data is String ? data : jsonEncode(data);
-    if (raw.length > _maxBodySize) return '[truncated — ${raw.length} bytes]';
-    return _prettyJson(data);
+    if (data is FormData) {
+      final fields = data.fields.map((e) => '${e.key}=${e.value}').join(', ');
+      final files = data.files.map((e) => '${e.key}: ${e.value.filename ?? "file"}').join(', ');
+      return '[multipart/form-data — fields: {$fields}, files: {$files}]';
+    }
+    try {
+      final raw = data is String ? data : jsonEncode(data);
+      if (raw.length > _maxBodySize) return '[truncated — ${raw.length} bytes]';
+      return _prettyJson(data);
+    } catch (_) {
+      return data.toString();
+    }
   }
 
   @override

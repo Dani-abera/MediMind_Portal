@@ -5,6 +5,7 @@ class SubscriptionPaymentDetails {
   final String currency;
   final String planName;
   final String billingCycle;
+  final String checkoutUrl;
 
   const SubscriptionPaymentDetails({
     required this.paymentId,
@@ -13,5 +14,6 @@ class SubscriptionPaymentDetails {
     required this.currency,
     required this.planName,
     required this.billingCycle,
+    required this.checkoutUrl,
   });
 }

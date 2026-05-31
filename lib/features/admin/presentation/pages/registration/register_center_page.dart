@@ -1,9 +1,8 @@
-import 'package:chapasdk/chapasdk.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../../core/di/service_locator.dart';
 import '../../../../../core/network/user_context.dart';
@@ -188,38 +187,19 @@ class _RegisterCenterPageBodyState extends State<_RegisterCenterPageBody> {
     }
   }
 
-  void _openChapaPayment(SubscriptionPaymentDetails details, User? currentUser) {
-    final publicKey = dotenv.env['CHAPA_PUBLIC_KEY'] ?? 'CHAPUBK-test';
-    final nameParts = (currentUser?.fullName ?? '').trim().split(' ');
-    final firstName = nameParts.isNotEmpty ? nameParts.first : 'Admin';
-    final lastName = nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '-';
+  Future<void> _openChapaPayment(SubscriptionPaymentDetails details, User? currentUser) async {
+    final uri = Uri.parse(details.checkoutUrl);
+    final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!launched && mounted) {
+      _showError('Could not open payment page. Please visit: ${details.checkoutUrl}');
+      return;
+    }
 
-    Chapa.paymentParameters(
-      context: context,
-      publicKey: publicKey,
-      currency: details.currency.isEmpty ? 'ETB' : details.currency,
-      amount: details.amount.toStringAsFixed(2),
-      email: currentUser?.email ?? _emailCtrl.text.trim(),
-      phone: _phoneCtrl.text.trim(),
-      firstName: firstName,
-      lastName: lastName,
-      txRef: details.paymentRef,
-      title: 'MediMind Subscription',
-      desc: '${details.planName} — ${details.billingCycle}',
-      nativeCheckout: true,
-      namedRouteFallBack: '',
-      showPaymentMethodsOnGridView: true,
-      onPaymentFinished: (message, reference, amount) {
-        if (message == 'paymentSuccessful') {
-          setState(() => _paymentLaunched = true);
-          if (mounted) context.go(RouteNames.adminPendingApproval);
-        } else if (message == 'paymentCancelled') {
-          _showError('Payment cancelled. You can retry from your dashboard.');
-        } else {
-          _showError('Payment failed. Please try again.');
-        }
-      },
-    );
+    // Navigate to pending approval — the webhook will confirm the payment.
+    if (mounted) {
+      setState(() => _paymentLaunched = true);
+      context.go(RouteNames.adminPendingApproval);
+    }
   }
 
   @override

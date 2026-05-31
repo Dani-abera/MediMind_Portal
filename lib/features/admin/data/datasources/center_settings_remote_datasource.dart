@@ -1,3 +1,4 @@
+import 'package:cross_file/cross_file.dart';
 import 'package:dio/dio.dart';
 
 import '../../../../core/network/dio_client.dart';
@@ -85,11 +86,14 @@ class CenterSettingsRemoteDataSource {
     String imageType,
     String filePath,
   ) async {
+    final xfile = XFile(filePath);
+    final bytes = await xfile.readAsBytes();
+    final fileName = xfile.name.isNotEmpty ? xfile.name : filePath.split('/').last;
     final resp = await _client.dio.post(
       '/healthcare-centers/$centerId/upload-image',
       data: FormData.fromMap({
         'imageType': imageType,
-        'file': await MultipartFile.fromFile(filePath),
+        'file': MultipartFile.fromBytes(bytes, filename: fileName),
       }),
     );
     return resp.data['url'] as String;

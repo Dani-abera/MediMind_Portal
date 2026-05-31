@@ -50,6 +50,7 @@ dependencies:
   easy_localization: ^3.0.8
 
   # Media
+  cross_file: ^0.3.4+2
   image_picker: ^1.1.2
   file_picker: ^8.1.7
   cached_network_image: ^3.4.1
