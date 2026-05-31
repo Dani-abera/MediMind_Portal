@@ -1,9 +1,9 @@
 import 'package:equatable/equatable.dart';
 
-enum Gender { male, female, other;
-  String get label => switch (this) { male => 'Male', female => 'Female', other => 'Other' };
+enum Gender { male, female, notMentioned;
+  String get label => switch (this) { male => 'Male', female => 'Female', notMentioned => 'Not Mentioned' };
   static Gender fromString(String? s) => switch (s?.toLowerCase()) {
-    'male' => male, 'female' => female, _ => other,
+    'male' => male, 'female' => female, 'notmentioned' => notMentioned, 'not mentioned' => notMentioned, _ => notMentioned,
   };
 }
 

@@ -4,19 +4,20 @@ import 'admin_appointment.dart';
 enum Gender {
   male,
   female,
-  other;
+  notMentioned;
 
   static Gender? fromString(String? s) => switch (s?.toLowerCase()) {
         'male' => male,
         'female' => female,
-        'other' => other,
+        'notmentioned' => notMentioned,
+        'not mentioned' => notMentioned,
         _ => null,
       };
 
   String get label => switch (this) {
         male => 'Male',
         female => 'Female',
-        other => 'Other',
+        notMentioned => 'Not Mentioned',
       };
 }
 

@@ -33,7 +33,7 @@ class _ProfileViewState extends State<_ProfileView> {
   DateTime? _selectedDob;
   bool _populated = false;
 
-  static const _genders = ['Male', 'Female', 'Other'];
+  static const _genders = ['Male', 'Female', 'Not Mentioned'];
 
   @override
   void dispose() {
