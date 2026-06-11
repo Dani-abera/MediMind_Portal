@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:medimind_portal/core/utils/fa_compat.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -104,7 +104,7 @@ class _ScheduleCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              const FaIcon(FontAwesomeIcons.hospital,
+              const Icon(FontAwesomeIcons.hospital,
                   size: 14, color: AppColors.primary),
               const SizedBox(width: 8),
               Text(schedule.centerName, style: AppTypography.h3),
@@ -129,7 +129,7 @@ class _ScheduleCard extends StatelessWidget {
           const SizedBox(height: 12),
           Row(
             children: [
-              const FaIcon(FontAwesomeIcons.calendarWeek,
+              const Icon(FontAwesomeIcons.calendarWeek,
                   size: 12, color: AppColors.neutral400),
               const SizedBox(width: 8),
               Wrap(
@@ -163,7 +163,7 @@ class _ScheduleCard extends StatelessWidget {
           const SizedBox(height: 12),
           Row(
             children: [
-              const FaIcon(FontAwesomeIcons.clock,
+              const Icon(FontAwesomeIcons.clock,
                   size: 12, color: AppColors.neutral400),
               const SizedBox(width: 8),
               Text(
@@ -178,7 +178,7 @@ class _ScheduleCard extends StatelessWidget {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const FaIcon(FontAwesomeIcons.pause,
+                const Icon(FontAwesomeIcons.pause,
                     size: 12, color: AppColors.neutral400),
                 const SizedBox(width: 8),
                 Expanded(

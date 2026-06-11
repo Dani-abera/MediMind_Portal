@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:medimind_portal/core/utils/fa_compat.dart';
 import 'package:intl/intl.dart';
 import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 import '../../../../core/di/service_locator.dart';
@@ -149,7 +149,7 @@ class _PrescriptionContent extends StatelessWidget {
           const SizedBox(height: 12),
           Row(
             children: [
-              FaIcon(FontAwesomeIcons.calendar,
+              Icon(FontAwesomeIcons.calendar,
                   size: 12, color: AppColors.neutral400),
               const SizedBox(width: 6),
               Text(
@@ -158,7 +158,7 @@ class _PrescriptionContent extends StatelessWidget {
                     .copyWith(color: AppColors.neutral500),
               ),
               const SizedBox(width: 16),
-              FaIcon(FontAwesomeIcons.clockRotateLeft,
+              Icon(FontAwesomeIcons.clockRotateLeft,
                   size: 12, color: AppColors.neutral400),
               const SizedBox(width: 6),
               Text(
@@ -178,7 +178,7 @@ class _PrescriptionContent extends StatelessWidget {
       children: [
         if (rx.status == PrescriptionStatus.active) ...[
           OutlinedButton.icon(
-            icon: const FaIcon(FontAwesomeIcons.ban,
+            icon: const Icon(FontAwesomeIcons.ban,
                 size: 13, color: AppColors.danger),
             label: const Text('Revoke',
                 style: TextStyle(color: AppColors.danger)),
@@ -249,7 +249,7 @@ class _MedicationTile extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const FaIcon(FontAwesomeIcons.pills,
+          const Icon(FontAwesomeIcons.pills,
               size: 14, color: AppColors.primary),
           const SizedBox(width: 10),
           Expanded(

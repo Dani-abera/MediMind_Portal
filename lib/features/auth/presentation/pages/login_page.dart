@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:medimind_portal/core/utils/fa_compat.dart';
 import 'package:go_router/go_router.dart';
 import 'package:pinput/pinput.dart';
 import '../../../../core/di/service_locator.dart';
@@ -262,7 +262,7 @@ class _BrandingPanel extends StatelessWidget {
             border: Border.all(color: Colors.white.withAlpha(60), width: 1.5),
           ),
           child: const Center(
-            child: FaIcon(FontAwesomeIcons.heartPulse,
+            child: Icon(FontAwesomeIcons.heartPulse,
                 color: Colors.white, size: 22),
           ),
         ),
@@ -330,7 +330,7 @@ class _BrandingPanel extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Center(
-                  child: FaIcon(f.$1, color: Colors.white, size: 14),
+                  child: Icon(f.$1, color: Colors.white, size: 14),
                 ),
               ),
               const SizedBox(width: 12),
@@ -1119,7 +1119,7 @@ class _SuperAdminLoginFormState extends State<_SuperAdminLoginForm> {
             ),
             child: Row(
               children: [
-                const FaIcon(FontAwesomeIcons.shieldHalved,
+                const Icon(FontAwesomeIcons.shieldHalved,
                     size: 14, color: AppColors.primary),
                 const SizedBox(width: 8),
                 Expanded(

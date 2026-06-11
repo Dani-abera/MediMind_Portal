@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:medimind_portal/core/utils/fa_compat.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -152,7 +152,7 @@ class _AppointmentsListViewState extends State<_AppointmentsListView> {
           ),
           const SizedBox(width: 16),
           TextButton.icon(
-            icon: const FaIcon(FontAwesomeIcons.calendar, size: 13),
+            icon: const Icon(FontAwesomeIcons.calendar, size: 13),
             label: Text(
               _fromDate != null
                   ? DateFormat('MMM d').format(_fromDate!)
@@ -163,7 +163,7 @@ class _AppointmentsListViewState extends State<_AppointmentsListView> {
           ),
           const Text('–', style: TextStyle(color: AppColors.neutral400)),
           TextButton.icon(
-            icon: const FaIcon(FontAwesomeIcons.calendar, size: 13),
+            icon: const Icon(FontAwesomeIcons.calendar, size: 13),
             label: Text(
               _toDate != null ? DateFormat('MMM d').format(_toDate!) : 'To',
               style: const TextStyle(fontSize: 13),

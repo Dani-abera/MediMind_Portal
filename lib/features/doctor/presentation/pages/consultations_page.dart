@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:medimind_portal/core/utils/fa_compat.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/di/service_locator.dart';
@@ -213,7 +213,7 @@ class _ConsultationCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(8),
             ),
             child: Center(
-              child: FaIcon(FontAwesomeIcons.video,
+              child: Icon(FontAwesomeIcons.video,
                   size: 18, color: _statusColor(c.status)),
             ),
           ),
@@ -254,7 +254,7 @@ class _ConsultationCard extends StatelessWidget {
               if (showJoinButton && c.status == ConsultationStatus.active) ...[
                 const SizedBox(height: 8),
                 FilledButton.icon(
-                  icon: const FaIcon(FontAwesomeIcons.video, size: 12),
+                  icon: const Icon(FontAwesomeIcons.video, size: 12),
                   label: const Text('Join'),
                   style: FilledButton.styleFrom(
                     backgroundColor: AppColors.info,

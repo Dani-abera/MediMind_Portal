@@ -1,4 +1,4 @@
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:medimind_portal/core/utils/fa_compat.dart';
 
 import '../widgets/shell/sidebar.dart';
 import 'route_names.dart';

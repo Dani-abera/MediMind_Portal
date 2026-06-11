@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:medimind_portal/core/utils/fa_compat.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -123,7 +123,7 @@ class _TemplateCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Center(
-                  child: FaIcon(FontAwesomeIcons.prescription,
+                  child: Icon(FontAwesomeIcons.prescription,
                       size: 16, color: AppColors.primary),
                 ),
               ),
@@ -171,7 +171,7 @@ class _TemplateCard extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               IconButton(
-                icon: const FaIcon(FontAwesomeIcons.trash,
+                icon: const Icon(FontAwesomeIcons.trash,
                     size: 13, color: AppColors.danger),
                 onPressed: () => context
                     .read<PrescriptionTemplatesBloc>()

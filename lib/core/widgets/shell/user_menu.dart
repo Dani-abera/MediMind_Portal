@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:medimind_portal/core/utils/fa_compat.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../features/auth/domain/entities/admin_user.dart';
@@ -140,7 +140,7 @@ class UserMenu extends StatelessWidget {
       height: 36,
       child: Row(
         children: [
-          FaIcon(icon, size: 13, color: color),
+          Icon(icon, size: 13, color: color),
           const SizedBox(width: 10),
           Text(label, style: AppTypography.bodySmall.copyWith(color: color)),
         ],
@@ -207,7 +207,7 @@ class _UserChip extends StatelessWidget {
             ],
           ),
           const SizedBox(width: 6),
-          const FaIcon(
+          const Icon(
             FontAwesomeIcons.chevronDown,
             size: 10,
             color: AppColors.neutral400,

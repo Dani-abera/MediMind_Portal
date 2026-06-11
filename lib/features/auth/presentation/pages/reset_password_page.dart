@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:medimind_portal/core/utils/fa_compat.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/routing/route_names.dart';
@@ -100,7 +100,7 @@ class _ResetPasswordViewState extends State<_ResetPasswordView> {
             borderRadius: BorderRadius.circular(10),
           ),
           child: const Center(
-            child: FaIcon(FontAwesomeIcons.heartPulse,
+            child: Icon(FontAwesomeIcons.heartPulse,
                 color: Colors.white, size: 18),
           ),
         ),
@@ -257,7 +257,7 @@ class _ResetPasswordViewState extends State<_ResetPasswordView> {
             shape: BoxShape.circle,
           ),
           child: const Center(
-            child: FaIcon(FontAwesomeIcons.circleCheck,
+            child: Icon(FontAwesomeIcons.circleCheck,
                 color: AppColors.success, size: 24),
           ),
         ),
@@ -294,7 +294,7 @@ class _ResetPasswordViewState extends State<_ResetPasswordView> {
             shape: BoxShape.circle,
           ),
           child: const Center(
-            child: FaIcon(FontAwesomeIcons.triangleExclamation,
+            child: Icon(FontAwesomeIcons.triangleExclamation,
                 color: AppColors.danger, size: 24),
           ),
         ),

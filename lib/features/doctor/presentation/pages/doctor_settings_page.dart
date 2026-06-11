@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:medimind_portal/core/utils/fa_compat.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/routing/route_names.dart';
@@ -132,7 +132,7 @@ class _DoctorSettingsPageState extends State<DoctorSettingsPage> {
                       children: [
                         ListTile(
                           contentPadding: EdgeInsets.zero,
-                          leading: const FaIcon(FontAwesomeIcons.idCard,
+                          leading: const Icon(FontAwesomeIcons.idCard,
                               size: 15, color: AppColors.neutral500),
                           title: Text('Edit my profile', style: AppTypography.body),
                           trailing: const Icon(Icons.chevron_right),
@@ -140,7 +140,7 @@ class _DoctorSettingsPageState extends State<DoctorSettingsPage> {
                         ),
                         ListTile(
                           contentPadding: EdgeInsets.zero,
-                          leading: const FaIcon(FontAwesomeIcons.calendarDays,
+                          leading: const Icon(FontAwesomeIcons.calendarDays,
                               size: 15, color: AppColors.neutral500),
                           title: Text('Manage schedules', style: AppTypography.body),
                           trailing: const Icon(Icons.chevron_right),
@@ -156,7 +156,7 @@ class _DoctorSettingsPageState extends State<DoctorSettingsPage> {
                       children: [
                         ListTile(
                           contentPadding: EdgeInsets.zero,
-                          leading: const FaIcon(FontAwesomeIcons.rightFromBracket,
+                          leading: const Icon(FontAwesomeIcons.rightFromBracket,
                               size: 15, color: AppColors.danger),
                           title: Text('Sign out',
                               style: AppTypography.body
@@ -193,7 +193,7 @@ class _DoctorSettingsPageState extends State<DoctorSettingsPage> {
         children: [
           Row(
             children: [
-              FaIcon(icon, size: 13, color: AppColors.primary),
+              Icon(icon, size: 13, color: AppColors.primary),
               const SizedBox(width: 8),
               Text(title, style: AppTypography.h3),
             ],

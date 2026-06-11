@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:medimind_portal/core/utils/fa_compat.dart';
 import 'package:go_router/go_router.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_typography.dart';
@@ -27,7 +27,7 @@ class NotificationBell extends StatelessWidget {
         children: [
           const Padding(
             padding: EdgeInsets.all(8),
-            child: FaIcon(FontAwesomeIcons.bell, size: 16, color: AppColors.neutral500),
+            child: Icon(FontAwesomeIcons.bell, size: 16, color: AppColors.neutral500),
           ),
           if (unreadCount > 0)
             Positioned(

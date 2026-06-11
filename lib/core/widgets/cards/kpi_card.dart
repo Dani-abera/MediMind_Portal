@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:medimind_portal/core/utils/fa_compat.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_radius.dart';
 import '../../theme/app_typography.dart';
@@ -49,7 +49,7 @@ class KPICard extends StatelessWidget {
                   borderRadius: AppRadius.radiusMd,
                 ),
                 child: Center(
-                  child: FaIcon(icon, size: 16, color: AppColors.primary),
+                  child: Icon(icon, size: 16, color: AppColors.primary),
                 ),
               ),
               const Spacer(),
@@ -100,7 +100,7 @@ class KPICard extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          FaIcon(arrow, size: 10, color: color),
+          Icon(arrow, size: 10, color: color),
           const SizedBox(width: 4),
           Text(trend!,
               style: AppTypography.caption.copyWith(

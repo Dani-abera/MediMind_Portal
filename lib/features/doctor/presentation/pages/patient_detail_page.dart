@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:medimind_portal/core/utils/fa_compat.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/di/service_locator.dart';
@@ -81,7 +81,7 @@ class _PatientDetailViewState extends State<_PatientDetailView>
               actions: [
                 if (state is PatientDetailLoaded)
                   FilledButton.icon(
-                    icon: const FaIcon(FontAwesomeIcons.filePrescription,
+                    icon: const Icon(FontAwesomeIcons.filePrescription,
                         size: 13),
                     label: const Text('Write Prescription'),
                     onPressed: () => context.push(
@@ -253,7 +253,7 @@ class _OverviewTab extends StatelessWidget {
         children: [
           Row(
             children: [
-              FaIcon(icon, size: 14, color: AppColors.primary),
+              Icon(icon, size: 14, color: AppColors.primary),
               const SizedBox(width: 8),
               Text(title, style: AppTypography.h3),
             ],
@@ -364,7 +364,7 @@ class _HealthRecordCard extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        FaIcon(icon, size: 12, color: AppColors.neutral400),
+        Icon(icon, size: 12, color: AppColors.neutral400),
         const SizedBox(width: 6),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -433,7 +433,7 @@ class _RiskLevelCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          FaIcon(FontAwesomeIcons.triangleExclamation,
+          Icon(FontAwesomeIcons.triangleExclamation,
               size: 32, color: color),
           const SizedBox(width: 16),
           Column(
@@ -510,7 +510,7 @@ class _MedicationsTab extends StatelessWidget {
       itemCount: medications.length,
       separatorBuilder: (_, __) => const Divider(height: 1),
       itemBuilder: (_, i) => ListTile(
-        leading: const FaIcon(FontAwesomeIcons.pills,
+        leading: const Icon(FontAwesomeIcons.pills,
             size: 16, color: AppColors.primary),
         title: Text(medications[i], style: AppTypography.body),
       ),
@@ -604,7 +604,7 @@ class _PrescriptionCard extends StatelessWidget {
                     padding: const EdgeInsets.only(bottom: 2),
                     child: Row(
                       children: [
-                        const FaIcon(FontAwesomeIcons.pills,
+                        const Icon(FontAwesomeIcons.pills,
                             size: 11, color: AppColors.neutral400),
                         const SizedBox(width: 6),
                         Expanded(

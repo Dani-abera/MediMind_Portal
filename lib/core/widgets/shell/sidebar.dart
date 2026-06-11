@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:medimind_portal/core/utils/fa_compat.dart';
 import 'package:go_router/go_router.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
@@ -159,7 +159,7 @@ class _SidebarState extends State<Sidebar> {
             item,
             isSelected: isSelected,
             isCollapsed: false,
-            trailing: FaIcon(
+            trailing: Icon(
               isExpanded
                   ? FontAwesomeIcons.chevronDown
                   : FontAwesomeIcons.chevronRight,
@@ -246,7 +246,7 @@ class _SidebarState extends State<Sidebar> {
   }
 
   Widget _itemIcon(SidebarItem item, bool isSelected) {
-    return FaIcon(
+    return Icon(
       item.icon,
       size: 15,
       color: isSelected ? Colors.white : AppColors.neutral500,
@@ -343,7 +343,7 @@ class _SidebarState extends State<Sidebar> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: IconButton(
-        icon: FaIcon(
+        icon: Icon(
           isCollapsed
               ? FontAwesomeIcons.anglesRight
               : FontAwesomeIcons.anglesLeft,

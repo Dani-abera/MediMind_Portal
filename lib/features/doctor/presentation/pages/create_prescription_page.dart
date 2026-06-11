@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:medimind_portal/core/utils/fa_compat.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/di/service_locator.dart';
@@ -142,7 +142,7 @@ class _CreatePrescriptionFormState extends State<_CreatePrescriptionForm> {
                         height: 14,
                         child: CircularProgressIndicator(
                             strokeWidth: 2, color: Colors.white))
-                    : const FaIcon(FontAwesomeIcons.fileCircleCheck, size: 13),
+                    : const Icon(FontAwesomeIcons.fileCircleCheck, size: 13),
                 label: const Text('Issue Prescription'),
                 onPressed: state is CreatePrescriptionInProgress
                     ? null

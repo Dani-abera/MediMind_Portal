@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:medimind_portal/core/utils/fa_compat.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/routing/route_names.dart';
@@ -80,7 +80,7 @@ class _ForgotPasswordViewState extends State<_ForgotPasswordView> {
             borderRadius: BorderRadius.circular(10),
           ),
           child: const Center(
-            child: FaIcon(FontAwesomeIcons.heartPulse,
+            child: Icon(FontAwesomeIcons.heartPulse,
                 color: Colors.white, size: 18),
           ),
         ),
@@ -202,7 +202,7 @@ class _ForgotPasswordViewState extends State<_ForgotPasswordView> {
             shape: BoxShape.circle,
           ),
           child: const Center(
-            child: FaIcon(FontAwesomeIcons.envelopeCircleCheck,
+            child: Icon(FontAwesomeIcons.envelopeCircleCheck,
                 color: AppColors.success, size: 24),
           ),
         ),

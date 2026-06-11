@@ -4,7 +4,7 @@ import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:medimind_portal/core/utils/fa_compat.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/routing/route_names.dart';
@@ -247,7 +247,7 @@ class _VideoCallViewState extends State<_VideoCallView> {
                         ),
                         child: Row(
                           children: [
-                            const FaIcon(FontAwesomeIcons.video,
+                            const Icon(FontAwesomeIcons.video,
                                 size: 16, color: Colors.white54),
                             const SizedBox(width: 8),
                             Text(
@@ -548,7 +548,7 @@ class _ControlButton extends StatelessWidget {
               ),
             ),
             child: Center(
-              child: FaIcon(icon,
+              child: Icon(icon,
                   size: 18,
                   color: active ? Colors.white : Colors.white54),
             ),
@@ -582,7 +582,7 @@ class _EndCallButton extends StatelessWidget {
               shape: BoxShape.circle,
             ),
             child: const Center(
-              child: FaIcon(FontAwesomeIcons.phoneSlash,
+              child: Icon(FontAwesomeIcons.phoneSlash,
                   size: 22, color: Colors.white),
             ),
           ),

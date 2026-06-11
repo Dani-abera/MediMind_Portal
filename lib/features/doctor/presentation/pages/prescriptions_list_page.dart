@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:medimind_portal/core/utils/fa_compat.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/di/service_locator.dart';
@@ -46,7 +46,7 @@ class _PrescriptionsListViewState extends State<_PrescriptionsListView> {
           title: 'Prescriptions',
           actions: [
             FilledButton.icon(
-              icon: const FaIcon(FontAwesomeIcons.plus, size: 13),
+              icon: const Icon(FontAwesomeIcons.plus, size: 13),
               label: const Text('New Prescription'),
               onPressed: () =>
                   context.push(RouteNames.doctorPrescriptionsNew),

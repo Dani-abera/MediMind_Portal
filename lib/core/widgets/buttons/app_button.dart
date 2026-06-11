@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:medimind_portal/core/utils/fa_compat.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_radius.dart';
 import '../../theme/app_typography.dart';
@@ -97,7 +97,7 @@ class AppButton extends StatelessWidget {
                   width: 14,
                   height: 14,
                   child: CircularProgressIndicator(strokeWidth: 2))
-              : FaIcon(icon!, size: 15),
+              : Icon(icon!, size: 15),
           onPressed: isLoading ? null : onPressed,
           visualDensity: VisualDensity.compact,
         );
@@ -148,7 +148,7 @@ class _ElevatedBtn extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   if (icon != null) ...[
-                    FaIcon(icon!, size: 13),
+                    Icon(icon!, size: 13),
                     const SizedBox(width: 6),
                   ],
                   Text(label,
@@ -198,7 +198,7 @@ class _OutlinedBtn extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   if (icon != null) ...[
-                    FaIcon(icon!, size: 13, color: AppColors.primary),
+                    Icon(icon!, size: 13, color: AppColors.primary),
                     const SizedBox(width: 6),
                   ],
                   Text(label,
@@ -247,7 +247,7 @@ class _TextBtn extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   if (icon != null) ...[
-                    FaIcon(icon!, size: 13, color: AppColors.primary),
+                    Icon(icon!, size: 13, color: AppColors.primary),
                     const SizedBox(width: 6),
                   ],
                   Text(label,

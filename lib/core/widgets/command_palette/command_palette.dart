@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:medimind_portal/core/utils/fa_compat.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../di/service_locator.dart';
@@ -421,7 +421,7 @@ class _CommandPaletteState extends State<CommandPalette> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         children: [
-          const FaIcon(
+          const Icon(
             FontAwesomeIcons.magnifyingGlass,
             size: 16,
             color: AppColors.neutral400,
@@ -483,7 +483,7 @@ class _CommandPaletteState extends State<CommandPalette> {
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Center(
-                  child: FaIcon(
+                  child: Icon(
                     item.icon,
                     size: 12,
                     color: AppColors.neutral500,

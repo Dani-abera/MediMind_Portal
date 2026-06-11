@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:medimind_portal/core/utils/fa_compat.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/di/service_locator.dart';
@@ -286,7 +286,7 @@ class _AppointmentDetailContentState
             ),
             const SizedBox(width: 8),
             IconButton(
-              icon: const FaIcon(FontAwesomeIcons.paperPlane, size: 15),
+              icon: const Icon(FontAwesomeIcons.paperPlane, size: 15),
               color: AppColors.primary,
               onPressed: () {
                 final content = _noteController.text.trim();
@@ -336,14 +336,14 @@ class _AppointmentDetailContentState
       children: [
         if (canComplete)
           FilledButton.icon(
-            icon: const FaIcon(FontAwesomeIcons.circleCheck, size: 14),
+            icon: const Icon(FontAwesomeIcons.circleCheck, size: 14),
             label: const Text('Mark Complete'),
             onPressed: () =>
                 ctx.read<AppointmentDetailBloc>().add(const AppointmentCompleted()),
           ),
         if (canDecline)
           OutlinedButton.icon(
-            icon: const FaIcon(FontAwesomeIcons.circleXmark, size: 14,
+            icon: const Icon(FontAwesomeIcons.circleXmark, size: 14,
                 color: AppColors.danger),
             label: const Text('Decline',
                 style: TextStyle(color: AppColors.danger)),
@@ -356,7 +356,7 @@ class _AppointmentDetailContentState
           ),
         if (canCancel)
           OutlinedButton.icon(
-            icon: const FaIcon(FontAwesomeIcons.ban, size: 14,
+            icon: const Icon(FontAwesomeIcons.ban, size: 14,
                 color: AppColors.danger),
             label: const Text('Cancel',
                 style: TextStyle(color: AppColors.danger)),
@@ -366,7 +366,7 @@ class _AppointmentDetailContentState
         if (appt.canInitiateVideoConsultation)
           FilledButton.icon(
             style: FilledButton.styleFrom(backgroundColor: AppColors.info),
-            icon: const FaIcon(FontAwesomeIcons.video, size: 14),
+            icon: const Icon(FontAwesomeIcons.video, size: 14),
             label: Text(appt.videoConsultationStatus == 'InProgress'
                 ? 'Join Video Call'
                 : 'Start Video Call'),
@@ -374,7 +374,7 @@ class _AppointmentDetailContentState
           ),
         if (appt.canChat && appt.videoConsultationId != null)
           OutlinedButton.icon(
-            icon: const FaIcon(FontAwesomeIcons.comment, size: 14),
+            icon: const Icon(FontAwesomeIcons.comment, size: 14),
             label: const Text('Chat'),
             onPressed: () {
               Navigator.of(context).pop();

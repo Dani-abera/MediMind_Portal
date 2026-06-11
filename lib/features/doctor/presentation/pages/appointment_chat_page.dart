@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:medimind_portal/core/utils/fa_compat.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/network/user_context.dart';
@@ -159,7 +159,7 @@ class _AppointmentChatPageState extends State<AppointmentChatPage> {
       appBar: AppBar(
         title: const Text('Appointment Chat'),
         leading: IconButton(
-          icon: const FaIcon(FontAwesomeIcons.arrowLeft, size: 16),
+          icon: const Icon(FontAwesomeIcons.arrowLeft, size: 16),
           onPressed: () => context.canPop()
               ? context.pop()
               : context.go(RouteNames.doctorConsultations),
@@ -319,7 +319,7 @@ class _ChatInput extends StatelessWidget {
               shape: const CircleBorder(),
               padding: const EdgeInsets.all(12),
             ),
-            child: const FaIcon(FontAwesomeIcons.paperPlane,
+            child: const Icon(FontAwesomeIcons.paperPlane,
                 size: 14, color: Colors.white),
           ),
         ],

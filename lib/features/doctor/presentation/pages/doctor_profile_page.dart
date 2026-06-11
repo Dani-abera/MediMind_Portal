@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:medimind_portal/core/utils/fa_compat.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -133,7 +133,7 @@ class _ProfileContent extends StatelessWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const FaIcon(FontAwesomeIcons.circleCheck,
+                      const Icon(FontAwesomeIcons.circleCheck,
                           size: 11, color: AppColors.success),
                       const SizedBox(width: 4),
                       Text('Verified',
@@ -145,7 +145,7 @@ class _ProfileContent extends StatelessWidget {
                 ),
               const SizedBox(height: 16),
               FilledButton.icon(
-                icon: const FaIcon(FontAwesomeIcons.pen, size: 13),
+                icon: const Icon(FontAwesomeIcons.pen, size: 13),
                 label: const Text('Edit Profile'),
                 onPressed: () {},
                 style: FilledButton.styleFrom(
@@ -173,7 +173,7 @@ class _ProfileContent extends StatelessWidget {
         children: [
           Row(
             children: [
-              const FaIcon(FontAwesomeIcons.hospital,
+              const Icon(FontAwesomeIcons.hospital,
                   size: 13, color: AppColors.primary),
               const SizedBox(width: 8),
               Text('Centers', style: AppTypography.h3),
@@ -275,7 +275,7 @@ class _ProfileContent extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         children: [
-          FaIcon(icon, size: 13, color: AppColors.neutral400),
+          Icon(icon, size: 13, color: AppColors.neutral400),
           const SizedBox(width: 10),
           SizedBox(
             width: 120,

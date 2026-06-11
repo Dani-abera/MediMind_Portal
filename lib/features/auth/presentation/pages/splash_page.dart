@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:medimind_portal/core/utils/fa_compat.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/routing/route_names.dart';
@@ -59,7 +59,7 @@ class _SplashPageState extends State<SplashPage> {
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: const Center(
-                  child: FaIcon(
+                  child: Icon(
                     FontAwesomeIcons.heartPulse,
                     color: Colors.white,
                     size: 32,

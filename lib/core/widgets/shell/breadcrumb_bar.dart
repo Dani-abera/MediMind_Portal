@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:medimind_portal/core/utils/fa_compat.dart';
 import 'package:go_router/go_router.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_typography.dart';
@@ -23,7 +23,7 @@ class BreadcrumbBar extends StatelessWidget {
         items.add(
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 6),
-            child: FaIcon(FontAwesomeIcons.chevronRight, size: 10, color: AppColors.neutral300),
+            child: Icon(FontAwesomeIcons.chevronRight, size: 10, color: AppColors.neutral300),
           ),
         );
       }

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:medimind_portal/core/utils/fa_compat.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_typography.dart';
@@ -85,7 +85,7 @@ class TopBar extends StatelessWidget {
               ),
               const SizedBox(width: 4),
               IconButton(
-                icon: FaIcon(
+                icon: Icon(
                   isDark ? FontAwesomeIcons.sun : FontAwesomeIcons.moon,
                   size: 16,
                   color: AppColors.neutral500,
@@ -103,7 +103,7 @@ class TopBar extends StatelessWidget {
                           value: 'readonly',
                           child: Row(
                             children: [
-                              FaIcon(FontAwesomeIcons.eye,
+                              Icon(FontAwesomeIcons.eye,
                                   size: 13, color: AppColors.neutral700),
                               const SizedBox(width: 10),
                               Text('Switch to read-only mode',
@@ -142,7 +142,7 @@ class _SearchHint extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 10),
         child: Row(
           children: [
-            const FaIcon(FontAwesomeIcons.magnifyingGlass,
+            const Icon(FontAwesomeIcons.magnifyingGlass,
                 size: 13, color: AppColors.neutral400),
             const SizedBox(width: 8),
             Expanded(
