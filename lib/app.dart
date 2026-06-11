@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'core/di/service_locator.dart';
 import 'core/network/user_context.dart';
@@ -20,15 +21,33 @@ class MediMindPortalApp extends StatefulWidget {
   State<MediMindPortalApp> createState() => _MediMindPortalAppState();
 }
 
-class _MediMindPortalAppState extends State<MediMindPortalApp> {
+class _MediMindPortalAppState extends State<MediMindPortalApp>
+    with WidgetsBindingObserver {
   late final AppRouter _appRouter;
   AppVersionInfo? _updateInfo;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _appRouter = AppRouter(sl<UserContext>());
     _checkForUpdate();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      // Clear stale keyboard state that accumulates when the app loses focus
+      // on macOS, which causes duplicate KeyDownEvent assertions in Flutter.
+      // ignore: invalid_use_of_visible_for_testing_member
+      HardwareKeyboard.instance.clearState();
+    }
   }
 
   Future<void> _checkForUpdate() async {
